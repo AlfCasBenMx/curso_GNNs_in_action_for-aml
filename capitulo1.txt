@@ -1,0 +1,548 @@
+CAPITULO 1: Discovering graph neural networks
+Graph Neural Networks in Action - Keita Broadwater
+================================================================================
+Paginas PDF: 30 a 47 (18 paginas)
+================================================================================
+
+
+================================================================================
+PAGINA 30
+================================================================================
+
+1 Discovering graph neural
+networks
+This chapter covers
+Defining gr aphs and gr aph neur al networks
+Understanding why people are excited about graph
+neural networks
+Recognizing when to use gr aph neur al networks
+Taking a big picture look at solving a problem with a
+graph neur al network
+For data pr actitioners, the fields of machine learning and
+data science initially ex cite us because of the potential to
+draw nonintuitiv e and useful insights from data. In
+particular , the insights from machine learning and deep
+learning promise to enhance our understanding of the world.
+For the working engineer , these tools promise to deliv er
+business v alue in unprecedented w ays.
+Experience deviates from this ideal. R eal-world data is
+usually messy , dirty and biased. Furthermore, statistical
+methods and learning systems come with their own set of
+limitations. An essential role of the pr actitioner is to
+comprehend these limitations and bridge the gap between
+real data and a feasible solution. F or example, we ma y want
+to predict fr audulent activit y in a bank, but we first need to
+make sure that our tr aining data has been correctly labeled.
+Even more importantly , we’ll need to check that our models
+won’t incorrectly assign fr audulent activit y to normal
+behaviors, possibly due to some hidden confounders in the
+data.
+
+
+================================================================================
+PAGINA 31
+================================================================================
+
+For graph data, until recently , bridging this gap has been
+particularly challenging. Gr aphs are a data structure that is
+rich with information and especially adept at capturing the
+intricacies of data where relationships pla y a crucial role.
+Graphs are omnipresent, with relational data appearing in
+different forms such as atoms in molecules (nature), social
+networks (societ y), and ev en models the connection of web
+pages on the internet (technology) [1]. It ’s important to
+note that the term relational  here doesn’ t refer to relational
+databases , but r ather to data where relationships are of
+significance.
+Previously , if you wanted to incorpor ate relational features
+from a gr aph into a deep learning model, it had to be done
+in an indirect w ay, with different models used to process,
+analyz e, and then use the gr aph data. These separ ate
+models often couldn’ t be easily scaled and had trouble
+taking into account all the node and edge properties of
+graph data. T o mak e the best use of this rich and ubiquitous
+data t ype for machine learning, we needed a specializ ed
+machine learning technique specifically designed for the
+distinct qualities of gr aphs and relational data. This is the
+gap that gr aph neur al networks (GNNs) fill.
+The deep learning field often contains a lot of h ype around
+new technologies and methods. Howev er, GNNs are widely
+recogniz ed as a genuine leap forw ard for gr aph-based
+learning [2]. This doesn’ t mean that GNNs are a silv er bullet.
+Careful comparisons should be done between predictiv e
+results deriv ed from GNNs and other machine learning and
+deep learning methods.
+The k ey thing to remember is that if y our data science
+problem in volves data that can be structured as a gr aph—
+that is, the data is connected or relational—then GNNs could
+offer a v aluable approach, ev en if y ou weren’ t aware that
+
+
+================================================================================
+PAGINA 32
+================================================================================
+
+something w as missing in y our approach. GNNs can be
+designed to handle v ery large data, to scale, and to adapt to
+graphs of different siz es and shapes. This can mak e working
+with relationship-centric data easier and more efficient, as
+well as yield richer results.
+The standout adv antages of GNNs are wh y data scientists
+and engineers are increasingly recognizing the importance of
+mastering them. GNNs ha ve the abilit y to un veil unique
+insights from relational data—from identif ying new drug
+candidates to optimizing ET A prediction accur acy in y our
+Google Maps app— acting as a catalyst for disco very and
+innovation, and empowering professionals to push the
+boundaries of con ventional data analysis. Their div erse
+applicabilit y spans v arious fields, offering professionals a
+versatile tool that is as relev ant in e-commerce (e.g. ,
+recommendation engines) as it is in bioinformatics (e.g. ,
+drug to xicity prediction). Proficiency in GNNs equips data
+professionals with a multifaceted tool for enhanced,
+accur ate, and inno vative data analysis of gr aphs.
+For all these reasons, GNNs are now the popular choice for
+recommender engines, analyzing social networks, detecting
+fraud, understanding how biomolecules beha ve, and man y
+other pr actical examples that we’ll meet o ver the course of
+this book.
+1.1 Goals of this book
+Graph Neural Networks in Action  is aimed at pr actitioners
+who w ant to begin to deplo y GNNs to solv e real problems.
+This could be a machine learning engineer not familiar with
+graph data structures, a data scientist who hasn’ t yet tried
+GNNs, or ev en a softw are engineer who ma y be unfamiliar
+with either . Throughout this book, we’ll be co vering topics
+
+
+================================================================================
+PAGINA 33
+================================================================================
+
+from the basics of gr aphs all the w ay to more complex GNN
+models. W e’ll be building up the architecture of a GNN, step-
+by-step. This includes the o verall architecture of a GNN and
+the critical aspect of message passing. W e then go on to add
+different features and extensions to these basic aspects,
+such as introducing con volution and sampling, attention
+mechanisms, a gener ative model, and oper ating on dynamic
+graphs. When building our GNNs, we’ll be working in Python
+and using some standard libr aries. GNN libr aries are either
+standalone or use T ensorFlow or PyT orch as a back end. In
+this text, the focus will be on PyT orch Geometric (PyG).
+Other popular libr aries include Deep Gr aph Libr ary (DGL, a
+standalone libr ary) and Spektr al (which uses K eras and
+TensorFlow as a back end). There is also Jr aph for J AX users.
+Our aim throughout this book is to enable y ou to
+assess the sui tability of a GNN solution f or your pr oblem.
+understand when traditional neural networks won’t perform as
+well as a GNN for graph structur ed data and when GNNs may
+not be the best tool f or tabular data.
+design and implement a GNN architectur e to solve problems
+specific to y ou.
+make clear the l imitations of GNNs.
+This book is weighted tow ard implementation using
+progr amming. W e also dev ote some time on essential theory
+and concepts, so that the techniques co vered can be
+sufficiently understood. These are co vered in an “Under the
+Hood” section at the end of most chapters to separ ate the
+technical reasons from the actual implementation. There are
+many different models and packages that build on the k ey
+concepts we introduce in this book. So , this book shouldn’ t
+be seen as a comprehensiv e review of all GNN methods and
+models, which could run to sev eral thousands of pages, but
+
+
+================================================================================
+PAGINA 34
+================================================================================
+
+rather the starting point for the curious and eager -to-learn
+practitioner .
+The book is divided into three parts. P art 1 co vers the basics
+of GNNs, especially the w ays in which they differ from other
+neural networks, such as message passing  and embeddings ,
+which ha ve specific meaning for GNNs. P art 2, the heart of
+the book, goes o ver the models themselv es, where we co ver
+a handful of k ey model t ypes. Then, in part 3, we’ll go into
+more detail with some of the harder models and concepts,
+including how to scale gr aphs and deal with tempor al data.
+Graph Neural Networks in Action  is designed for people to
+jump quickly into this new field and start building
+applications. Our aim for this book is to reduce the friction of
+implementing new technologies b y filling in the gaps and
+answering k ey dev elopment questions whose answers ma y
+not be easy to find or ma y not be co vered elsewhere at all.
+Each method is introduced through an example application
+so you can understand how GNNs are applied in pr actice. W e
+strongly advise y ou to try out the code for y ourself along the
+way.
+1.1.1 Catching up on graph fundamentals
+Yes, you do need to understand the basics of gr aphs before
+you can understand GNNs. Y et our goal for this book is to
+teach GNNs to deep learning pr actitioners and builders of
+traditional neur al networks who ma y not know much about
+graphs. A t the same time, we also recogniz e that readers of
+this book ma y vary enormously in their knowledge of
+graphs. How to address these differences and mak e sure
+everyone has what they need to mak e the most of this
+book? In this chapter , we pro vide an introduction to the
+fundamental gr aph concepts that are most essential to
+understanding GNNs. If y ou’re well- versed in gr aphs, y ou
+
+
+================================================================================
+PAGINA 35
+================================================================================
+
+may choose to skip this section, although we recommend
+skimming through as we co ver some specific terminology
+and use-cases that will be helpful to understand for the
+remainder of the book. F or those of y ou who ha ve more
+questions about gr aphs, we’v e also included a full tutorial on
+basic gr aph concepts and terminology in appendix A. This
+primer should also serv e as a reference for looking up
+specific concepts.
+After the refresher on k ey concepts in gr aphs and gr aph
+learning, we’ll look into some case studies in sev eral fields
+where GNNs are being successfully applied. Then, we’ll
+break down those specific cases to see what mak es a good
+case for using a GNN, as well as how to know if y ou ha ve a
+GNN problem on y our hands. A t the end of the chapter , we
+introduce the mechanics of GNNs, the barebone sk eleton
+that the rest of the book will add to .
+1.2 Graph-based learning
+This section defines gr aphs, gr aph-based learning, and some
+fundamentals of GNNs, including the basic structure of a
+graph and a tax onom y of different t ypes of gr aphs. Then,
+we’ll review gr aph-based learning, putting GNNs in context
+with other learning methods. Finally , we’ll explain the v alue
+of graphs, ending with an example of data deriv ed from the
+Titanic dataset.
+1.2.1 What  are graphs?
+Graphs are data structures with elements, expressed as
+nodes or vertices , and relationships between elements,
+expressed as edges or links , as shown in figure 1.1. All
+nodes in the gr aph will ha ve additional feature data . This is
+node-specific data, relating to things such as the names or
+
+
+================================================================================
+PAGINA 36
+================================================================================
+
+ages of individuals in a social network. The links are k ey to
+the power of relational data, as they allow us to learn more
+about the system, giv e new tools for analyzing data, and
+predict new properties from it. This is in contr ast to tabular
+data such as a database table, datafr ame, or spreadsheet,
+where the data is fix ed in rows and columns.
+Figure 1.1 A graph. Individual elements, represented here by
+letters A through E, are nodes, also called vertices, and their
+relationships are described by edges, also known as links.
+To describe and learn from the edges between the nodes, we
+need a w ay to write them down. This can be done explicitly ,
+stating that the A node is connected to B and E, and that the
+B node is connected to A, C, D , and E. Quickly , we can see
+that describing things in this w ay becomes un wieldy and that
+
+
+================================================================================
+PAGINA 37
+================================================================================
+
+we might be repeating redundant information (that A is
+connected to B and that B is connected to A). Luckily , there
+are man y mathematical formalisms for describing relations
+in graphs. One of the most common is to describe the
+adjacency matrix , which we write out in table 1.1. Notice
+that the adjacency matrix is symmetric across the diagonal
+and that all v alues are ones or z ero.
+Table 1.1 The adjacency matrix for the simple graph in figure 1.1
+ABCDE
+A01001
+B10111
+C01010
+D01101
+E11010
+The adjacency matrix of a gr aph is an important concept
+that mak es it easy to observ e all the connections of a gr aph
+in a single table [3]. Here, we assumed that there is no
+directionalit y in our gr aph; that is, if 0 is connected to 1,
+then 1 is also connected to 0. This is known as an undirected
+graph . Undirected gr aphs can be easily inferred from an
+adjacency matrix because, in this case, the matrix is
+symmetric across the diagonal (e.g. , in table 1.1, the upper -
+right triangle is reflected onto the bottom left).
+We also assume here that all the relations between nodes
+are identical. If we w anted the relation of nodes B –E to
+mean more than the relation of nodes B –A, then we could
+increase the weight of this edge. This tr anslates to
+increasing the v alue in the adjacency matrix, making the
+entry for the B –A edge in table 1.1 equal to 10 instead of 1,
+for example.
+
+
+================================================================================
+PAGINA 38
+================================================================================
+
+Graphs where all relations are of equal importance are
+known as unweighted graphs  and can also be easily
+observ ed from the adjacency matrix because all gr aph
+entries are either 1s or 0s. Gr aphs where edges ha ve
+multiple v alues are known as weighted.
+If any of the nodes in the gr aph don’ t have an edge that
+connects to itself , then the nodes will also ha ve 0s at their
+own v alue in the adjacency matrix (0s along the diagonal).
+This means a gr aph doesn’ t have self -loops. A self-loop
+occurs when a node has an edge that connects to that same
+node. T o add a self -loop, we just mak e the v alue for that
+node nonz ero at its position in the diagonal.
+In practice, an adjacency matrix is only one of man y ways to
+describe relations in a gr aph. Others include adjacency lists,
+edge lists, or an incidence matrix. Understanding these
+types of data structures well is vital to gr aph-based learning.
+If you’re unfamiliar with these terms, or need a refresher , we
+recommend looking through appendix A, which has
+additional details and explanations.
+1.2.2 Different types of graphs
+Understanding the man y different t ypes of gr aphs can help
+us work out what methods to use to analyz e and tr ansform
+the gr aph, and what machine learning methods to apply . In
+the following, we giv e a very quick o verview of some of the
+most common properties for gr aphs to ha ve. As before, we
+recommend y ou look through appendix A for further
+information.
+HOMOGENEOUS AND HETEROGENEOUS GRAPHS
+The most basic gr aphs are homogenous graphs , which are
+made up of one t ype of node and one t ype of edge. Consider
+
+
+================================================================================
+PAGINA 39
+================================================================================
+
+a homogeneous gr aph that describes a recruitment network.
+In this t ype of gr aph, the nodes would represent job
+candidates, and the edges would represent relationships
+between the candidates.
+If we w ant to expand the power of our gr aph to describe our
+recruitment network, we could giv e it more t ypes of nodes
+and edges, making it a heterogeneous graph . With this
+expansion, some nodes ma y be candidates and others ma y
+be companies. Edges could now consist of relationships
+between candidates and current or past emplo yment of job
+candidates at the companies. See figure 1.2 for a
+comparison of a homogeneous gr aph (all nodes or edges
+have the same shade) with a heterogeneous gr aph (nodes
+and edges ha ve a variety of shades).
+Figure 1.2 A homogeneous graph and a heterogeneous graph.
+Here, the shade of a node or edge represents its type or class.
+For the homogeneous graph, all nodes are of the same type, and
+all edges are of the same type. For the heterogeneous graph,
+nodes and edges have multip le types.
+
+
+================================================================================
+PAGINA 40
+================================================================================
+
+BIPARTITE GRAPHS
+Similar to heterogeneous gr aphs, bipartite graphs  also can
+be separ ated or partitioned into different subsets. Howev er,
+bipartite gr aphs (figure 1.3) ha ve a very specific network
+structure such that nodes in each subset connect to nodes
+outside of their subset and not inside. Later , we’ll be
+discussing recommendation systems and the Pinterest
+graph. This gr aph is bipartite because one set of nodes
+(pins) connects another set of nodes (boards) but not to
+nodes within their set (pins).
+Figure 1.3 A bipartite graph. There are two types of nodes (two
+shades of circles). In a bipartite graph, nodes can’t be connected
+to nodes of the same type. This is also an example of a
+heterogeneous graph.
+CYCLIC GRAPHS, ACYCLIC GRAPHS, AND DIRECTED
+ACYCLIC GRAPHS
+A graph is cyclic  if it allows y ou to start at a node, tr avel
+along its edges, and return to the starting node without
+retracing an y steps, creating a circular path within the
+graph. In contr ast, in an acyclic  graph, no matter which path
+
+
+================================================================================
+PAGINA 41
+================================================================================
+
+you tak e from an y starting node, y ou can’ t return to the
+starting point without backtr acking. These gr aphs, as shown
+in figure 1.4, often resemble tree-lik e structures or paths
+that don’ t loop back on themselv es.
+While both cy clic and acy clic gr aphs can be either undirected
+or directed, a directed acyclic graph (DAG)  is a specific t ype
+of acy clic gr aph that is ex clusiv ely directed. In a DAG, all
+edges ha ve a direction, and no cy cles are allowed. DAGs
+represent one- way relationships where y ou can’ t follow the
+arrows and end up back at the starting point. This
+characteristic mak es DAGs essential in causal analysis, as
+they reflect causal structures where causalit y is assumed to
+be unidirectional. F or example, A can cause B , but B can’ t
+simultaneously cause A. This unidirectional nature aligns
+perfectly with the structure of DAGs, making them ideal for
+modeling workflow processes, dependency chains, and
+causal relationships in v arious fields.
+
+
+================================================================================
+PAGINA 42
+================================================================================
+
+
+
+
+================================================================================
+PAGINA 43
+================================================================================
+
+Figure 1.4 A cyclic graph (left), an acyclic graph (right), and a
+DAG (bottom). In the cyclic graph, the cycle is shown by the
+arrows (directed edges) connecting nodes A-E-D-C-B-A. Note
+that two nodes, G and F are part of the graph, but not part of its
+defining  cycle. The acyclic graph is composed of undirected
+edges, and no cycle is possible. In the DAG, all directed edges
+flow in one direction, from A to F.
+KNOWLEDGE GRAPHS
+A knowledge graph  is a specializ ed type of heterogeneous
+graph that represents data with enriched semantic meaning,
+capturing not only the relationships between different
+entities but also the context and nature of these
+relationships. Unlik e con ventional gr aphs, which primarily
+emphasiz e structure and connectivit y, a knowledge gr aph
+incorpor ates metadata and follows specific schemas to
+provide deeper contextual information. This allows for
+advanced reasoning and querying capabilities, such as
+identif ying patterns, unco vering specific t ypes of
+connections, or inferring new relationships.
+In the example of an academic research network at a
+university, a knowledge gr aph might represent v arious
+entities such as Professors, Students, P apers, and R esearch
+Topics, and explicitly define the relationships between them.
+For instance, Professors and Students could be associated
+with P apers through an A uthorship relationship , while
+Professors might also Supervise Students. Furthermore, the
+graph would reflect hier archical structures, such as
+Professors and Students being categoriz ed under
+Departments. Y ou can see this knowledge gr aph depicted in
+figure 1.5.
+
+
+================================================================================
+PAGINA 44
+================================================================================
+
+Figure 1.5 A knowledge graph representing an academic research
+network within a univ ersity’s physics department. The graph
+illustrates both hierarchical relationships, such as professors and
+students as members of the department, and behavioral
+relationships, such as professors supervising students and
+authoring papers. Entities such as Professors, Students, Papers,
+
+
+================================================================================
+PAGINA 45
+================================================================================
+
+and Topics are connected through semantically meaningful
+relationships (Supervises, Wrote, Inspires). Entities also have
+detailed features (Name, Department, Type) providing further
+context. The semantic connections and features enable advanced
+querying and analysis of complex academic interactions.
+A key feature of knowledge gr aphs is their abilit y to pro vide
+explicit context. Unlik e con ventional heterogeneous gr aphs,
+which displa y different t ypes of entities and their basic
+connections without detailed semantic meaning, knowledge
+graphs go further b y defining the specific t ypes and
+meanings of relationships. F or example, while a tr aditional
+graph might show that Professors are connected to
+Departments or that Students are link ed to P apers, a
+knowledge gr aph would specif y that Professors supervise
+Students or that Students and Professors W rote P apers. This
+added la yer of meaning enables more powerful querying and
+analysis, making knowledge gr aphs particularly v aluable in
+fields such as natur al language processing, recommendation
+systems, and academic research analysis.
+HYPERGRAPHS
+One of the more complex and difficult gr aphs to work with is
+the hypergr aph. Hypergraphs  are those where a single edge
+can be connected to multiple different nodes. F or graphs
+that aren’ t hypergr aphs, edges are used to connect exactly
+two nodes (or a node to itself for self -loops). As shown in
+figure 1.6, edges in a h ypergr aph can connect between an y
+number of nodes. The complexit y of a h ypergr aph is
+reflected in its adjacency data. F or typical gr aphs, network
+connectivit y is represented b y a two-dimensional adjacency
+matrix. F or hypergr aphs, the adjacency matrix extends to a
+higher dimensional tensor , referred to as an incidence
+tensor . This tensor is N-dimensional, where N is the
+maximum number of nodes connected b y a single edge. An
+example of a h ypergr aph might be a communication
+
+
+================================================================================
+PAGINA 46
+================================================================================
+
+platform that allows for group chats as well as single person
+conversations.  In an ordinary gr aph, edges would only
+connect two people. In a h ypergr aph, one h yperedge could
+connect multiple people, representing a group chat.
+
+
+================================================================================
+PAGINA 47
+================================================================================
+
+Figure 1.6 One undirected hypergraph, illustrated in two ways.
+On the left, we have a graph whose edges are represented by
+shaded areas, mark ed by letters, and whose vertices are dots,
+marked by numb ers. On the right, we have a graph whose edge
+lines (marked by letters) connect up to 3 nodes (circles marked
+by numb ers). Node 8 has no edge. Node 7 has a self-loop.
+
+
+================================================================================
+PAGINA 48
+================================================================================
+
+1.2.3 Graph-based learning
+As we’ll see in the rest of this chapter , graphs are ubiquitous
+in our ev eryday life. Graph-based learning  takes graphs as
+input data to build models that giv e insight into questions
+about this data. Later in this chapter , we look at different
+examples of gr aph data as well as at the sort of questions
+and tasks we can use gr aph-based learning to answer .
+Graph-based learning uses a v ariety of machine learning
+methods to build representations  of gr aphs. These
+representations are then used for downstream tasks such as
+node or link prediction or gr aph classification. In chapter 2,
+you’ll learn about one of the essential tools in gr aph-based
+learning, building embeddings. Briefly , embeddings are low-
+dimensional vector representations. W e can build an
+embedding of different nodes, edges, or entire gr aphs, and
+there are a number of different w ays to do this such as the
+Node2V ec (N2V) or DeepW alk algorithms.
+Methods for analysis on gr aph data ha ve been around for a
+long time, at least as early as the 1950s when clique
+methods  used certain features of a gr aph to identif y subsets
+or communities in the gr aph data [4].
+One of the most famous gr aph-based algorithms is
+PageRank, which w as dev eloped b y Larry P age and Sergey
+Brin in 1996 and formed the basis for Google’ s search
+algorithms. Some believ e that this algorithm w as a k ey
+element in the compan y’s meteoric rise in the following
+years. This highlights that a successful gr aph-based learning
+algorithm can ha ve a huge effect.
+These methods are only a small subset of gr aph-based
+learning and analysis techniques. Others include belief
+propagation [5], gr aph k ernel methods [6], label
+

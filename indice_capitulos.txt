@@ -1,0 +1,30 @@
+INDICE DE CAPITULOS - Graph Neural Networks in Action
+================================================================================
+
+Capitulo 1: Discovering graph neural networks
+  PDF Pagina: 7
+  Paginas del cap: 7 a 7
+
+Capitulo 2: Graph embeddings
+  PDF Pagina: 8
+  Paginas del cap: 8 a 8
+
+Capitulo 3: Graph convolutional networks and GraphSAGE
+  PDF Pagina: 9
+  Paginas del cap: 9 a 9
+
+Capitulo 4: Graph attention networks
+  PDF Pagina: 10
+  Paginas del cap: 10 a 10
+
+Capitulo 5: Graph autoencoders
+  PDF Pagina: 11
+  Paginas del cap: 11 a 11
+
+Capitulo 6: Dynamic graphs: Spatiotemporal GNNs
+  PDF Pagina: 12
+  Paginas del cap: 12 a 11
+
+Capitulo 7: Learning and inference at scale
+  PDF Pagina: 12
+

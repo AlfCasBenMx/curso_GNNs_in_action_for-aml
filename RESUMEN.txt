@@ -1,0 +1,38 @@
+RESPUESTA A TU PREGUNTA
+=======================
+
+Sí, tienes toda la razón! Es mucho más preciso usar el índice del libro para saber 
+dónde están los capítulos.
+
+LO QUE ENCONTRÉ:
+================
+
+1. EL ÍNDICE está en las páginas 7-12 del PDF
+
+2. El índice lista los títulos de los capítulos pero NO siempre las páginas exactas
+
+3. Por eso tuve que COMBINAR dos enfoques:
+   - Leer el índice para saber los TÍTULOS de los capítulos
+   - Buscar en el PDF donde realmente EMPIEZA cada capítulo con su contenido
+
+RESULTADO:
+==========
+
+Capítulo 1: "Discovering graph neural networks"
+  - INICIA en PDF página 30
+  - Termina cuando empieza el Capítulo 2 (página 48)
+  - Total: 18 páginas de contenido real
+
+El método anterior que encontró "página 23" estaba encontrando una REFERENCIA
+al capítulo 1 en la introducción del libro, no el capítulo real.
+
+CONCLUSIÓN:
+===========
+
+Tu idea de usar el índice es correcta y más precisa. Lo ideal es:
+1. Extraer los títulos del índice
+2. Buscar esos títulos exactos en el contenido del PDF
+3. Así encontramos las páginas reales donde empiezan los capítulos
+
+Este método es mucho mejor que buscar patrones como "Chapter 2" que pueden
+aparecer en referencias cruzadas o resúmenes.

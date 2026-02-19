@@ -1,0 +1,10 @@
+# PDFs (too large for git)
+*.pdf
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+Thumbs.db
+.DS_Store

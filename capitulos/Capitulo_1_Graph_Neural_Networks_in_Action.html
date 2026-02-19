@@ -1,0 +1,1349 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capitulo 1: Discovering Graph Neural Networks - Estudio Completo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Capitulo 1: Discovering Graph Neural Networks</h1>
+        <p class="subtitle">Graph Neural Networks in Action - Keita Broadwater</p>
+        <p class="book-info">Guia de Estudio Interactiva | Enfoque Banca & AML | Paginas 30-47</p>
+        <p style="margin-top:10px; color: var(--dc-green); font-weight:600; font-size: 0.9em; letter-spacing: 0.5px;">PRECURSORES DE FENTANILO &nbsp;|&nbsp; CONTRABANDO DE PETROLEO &nbsp;|&nbsp; TRAFICO DE PERSONAS &nbsp;|&nbsp; FRAUDE DE TIEMPOS COMPARTIDOS &nbsp;|&nbsp; MULAS FINANCIERAS</p>
+    </header>
+
+    <div class="global-progress" id="globalProgress">
+        <span class="global-progress-label">Progreso del Capitulo</span>
+        <div class="global-progress-bar"><div class="global-progress-fill" id="globalFill"></div></div>
+        <span class="global-progress-pct" id="globalPct">0%</span>
+    </div>
+
+    <nav id="mainNav">
+        <button data-section="intro" onclick="navClick('intro',this)">Intro<span class="lock-icon"></span></button>
+        <button data-section="conceptos" onclick="navClick('conceptos',this)">Conceptos<span class="lock-icon"></span></button>
+        <button data-section="tipos" onclick="navClick('tipos',this)">Tipos<span class="lock-icon"></span></button>
+        <button data-section="diagramas" onclick="navClick('diagramas',this)">Diagramas<span class="lock-icon"></span></button>
+        <button data-section="flujo" onclick="navClick('flujo',this)">Flujo GNN<span class="lock-icon"></span></button>
+        <button data-section="aplicaciones" onclick="navClick('aplicaciones',this)">AML/Banca<span class="lock-icon"></span></button>
+        <button data-section="quiz1" onclick="navClick('quiz1',this)">Quiz Basico<span class="lock-icon"></span></button>
+        <button data-section="quiz2" onclick="navClick('quiz2',this)">Quiz Avanzado<span class="lock-icon"></span></button>
+        <button data-section="flashcards" onclick="navClick('flashcards',this)">Flashcards<span class="lock-icon"></span></button>
+        <button data-section="ejercicios" onclick="navClick('ejercicios',this)">Ejercicios<span class="lock-icon"></span></button>
+        <button data-section="resumen" onclick="navClick('resumen',this)">Resumen<span class="lock-icon"></span></button>
+    </nav>
+
+    <!-- ====================== SECCION: INTRODUCCION ====================== -->
+    <div id="intro" class="section active">
+        <h2>Introduccion al Capitulo 1</h2>
+
+        <div class="stat-cards">
+            <div class="stat-card"><div class="number">18</div><div class="label">Paginas del capitulo</div></div>
+            <div class="stat-card"><div class="number">8+</div><div class="label">Tipos de grafos</div></div>
+            <div class="stat-card"><div class="number">5</div><div class="label">Escenarios AML</div></div>
+            <div class="stat-card"><div class="number">3</div><div class="label">Senales para usar GNNs</div></div>
+        </div>
+
+        <h3>De que trata este capitulo?</h3>
+        <p>Este primer capitulo establece las bases de todo el libro. Cubre los <strong>fundamentos de grafos</strong>, explica <strong>que son las GNNs</strong> y por que importan, y muestra <strong>cuando y como usarlas</strong>.</p>
+
+        <div class="danger-box">
+            <h4>Enfoque AML/Banca de esta guia</h4>
+            <p>Hemos adaptado los conceptos del libro a <strong>5 escenarios reales de Anti-Money Laundering (AML)</strong> en banca:</p>
+            <ol>
+                <li><strong>Precursores de Fentanilo:</strong> Rastrear cadenas de suministro de quimicos usados para fabricar fentanilo</li>
+                <li><strong>Contrabando de Petroleo:</strong> Detectar redes de comercio ilicito de crudo y derivados</li>
+                <li><strong>Trafico de Personas:</strong> Identificar patrones financieros de redes de trata</li>
+                <li><strong>Fraude de Tiempos Compartidos:</strong> Detectar esquemas de estafa con propiedades vacacionales</li>
+                <li><strong>Mulas Financieras:</strong> Identificar cuentas que mueven dinero ilicito para organizaciones criminales</li>
+            </ol>
+        </div>
+
+        <div class="highlight">
+            <h4>Al terminar este capitulo seras capaz de:</h4>
+            <ul>
+                <li>Definir que son los grafos y las Graph Neural Networks</li>
+                <li>Entender por que las GNNs son un avance genuino</li>
+                <li>Reconocer cuando un problema requiere GNNs</li>
+                <li>Comprender el panorama general de resolver un problema con GNNs</li>
+                <li>Diferenciar entre grafos homogeneos, heterogeneos, bipartitos, DAGs, etc.</li>
+            </ul>
+        </div>
+
+        <h3>Contexto: Por que surgieron las GNNs?</h3>
+        <div class="timeline">
+            <div class="timeline-item" data-year="1950s">
+                <div class="timeline-content">
+                    <h4>Clique Methods</h4>
+                    <p>Primeros metodos de analisis de grafos. Identificaban subconjuntos o comunidades en datos de grafos.</p>
+                </div>
+            </div>
+            <div class="timeline-item" data-year="1996">
+                <div class="timeline-content">
+                    <h4>PageRank</h4>
+                    <p>Larry Page y Sergey Brin crean el algoritmo que dio origen a Google. Un hito en graph-based learning.</p>
+                </div>
+            </div>
+            <div class="timeline-item" data-year="2010s">
+                <div class="timeline-content">
+                    <h4>Deep Learning Boom</h4>
+                    <p>CNNs y RNNs dominan, pero no estan disenadas para datos de grafos. Se necesitaba algo especifico.</p>
+                </div>
+            </div>
+            <div class="timeline-item" data-year="2020s">
+                <div class="timeline-content">
+                    <h4>GNNs: La revolucion</h4>
+                    <p>GNNs se consolidan como la herramienta ideal para datos relacionales. PyTorch Geometric, DGL y otras librerias maduran.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h4>Idea Central del Capitulo</h4>
+            <p><em>"Si tu problema de data science involucra datos que pueden estructurarse como un grafo - es decir, los datos estan conectados o son relacionales - entonces las GNNs podrian ofrecer un enfoque valioso, incluso si no eras consciente de que algo faltaba en tu enfoque."</em></p>
+        </div>
+
+        <h3>Estructura del Libro</h3>
+        <div class="flow-diagram">
+            <div class="flow-step">Parte 1: Primeros Pasos<br><small>Capitulo 1: Descubrimiento - Capitulo 2: Embeddings</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step green">Parte 2: Modelos GNN<br><small>Cap 3: GCN/GraphSAGE - Cap 4: GAT - Cap 5: Autoencoders</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step pink">Parte 3: Avanzado<br><small>Cap 6: Grafos Dinamicos - Cap 7: Escalabilidad</small></div>
+        </div>
+
+        <div class="checkpoint" id="cp-intro">
+            <h4>&#9881; Checkpoint — Desbloquea la siguiente seccion</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">Segun la idea central del capitulo, cuando deberiamos considerar usar GNNs?</p>
+            <div class="cp-option" onclick="checkCP('intro',this,false)">Cuando tenemos imagenes de alta resolucion</div>
+            <div class="cp-option" onclick="checkCP('intro',this,true)">Cuando los datos estan conectados o son relacionales (pueden estructurarse como grafo)</div>
+            <div class="cp-option" onclick="checkCP('intro',this,false)">Cuando necesitamos procesar texto en lenguaje natural</div>
+            <div class="cp-feedback" id="cpFb-intro"></div>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: CONCEPTOS ====================== -->
+    <div id="conceptos" class="section">
+        <h2>Conceptos Clave en Profundidad</h2>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                Que es un Grafo?
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <p>Un <strong>grafo</strong> es una estructura de datos compuesta por:</p>
+                <ul>
+                    <li><strong>Nodos (vertices)</strong>: Elementos individuales del grafo</li>
+                    <li><strong>Aristas (edges/links)</strong>: Relaciones entre los elementos</li>
+                    <li><strong>Features</strong>: Datos adicionales asociados a cada nodo o arista</li>
+                </ul>
+                <div class="info-box">
+                    <p><strong>Ejemplo:</strong> En una red social, los nodos son personas y las aristas son relaciones de amistad. Los features pueden ser edad, ubicacion, intereses, etc.</p>
+                </div>
+                <p><strong>Diferencia fundamental con datos tabulares:</strong></p>
+                <table class="comparison-table">
+                    <tr><th>Aspecto</th><th>Datos Tabulares</th><th>Datos de Grafos</th></tr>
+                    <tr><td>Estructura</td><td>Filas y columnas fijas</td><td>Nodos y aristas flexibles</td></tr>
+                    <tr><td>Relaciones</td><td>Implicitas / ausentes</td><td>Explicitas en las aristas</td></tr>
+                    <tr><td>Tamano</td><td>Fijo (NxM)</td><td>Variable, dinamico</td></tr>
+                    <tr><td>Vecindario</td><td>No existe</td><td>Nodos conectados directamente</td></tr>
+                    <tr><td>Informacion</td><td>Individual por fila</td><td>Contextual por relaciones</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                Matriz de Adyacencia
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <p>La <strong>matriz de adyacencia</strong> es una representacion matricial de todas las conexiones en un grafo.</p>
+                <table>
+                    <tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
+                    <tr><th>A</th><td>0</td><td>1</td><td>0</td><td>0</td><td>1</td></tr>
+                    <tr><th>B</th><td>1</td><td>0</td><td>1</td><td>1</td><td>1</td></tr>
+                    <tr><th>C</th><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+                    <tr><th>D</th><td>0</td><td>1</td><td>1</td><td>0</td><td>1</td></tr>
+                    <tr><th>E</th><td>1</td><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+                </table>
+                <h4>Propiedades importantes:</h4>
+                <ul>
+                    <li><strong>1</strong> = Hay conexion / <strong>0</strong> = No hay conexion</li>
+                    <li><strong>Simetrica</strong> = Grafo no dirigido (A-B implica B-A)</li>
+                    <li><strong>Asimetrica</strong> = Grafo dirigido</li>
+                    <li><strong>Diagonal con 0s</strong> = No hay self-loops</li>
+                    <li><strong>Solo 1s y 0s</strong> = Grafo no ponderado (unweighted)</li>
+                    <li><strong>Valores mayores a 1</strong> = Grafo ponderado (weighted)</li>
+                </ul>
+                <div class="highlight">
+                    <p><strong>Otras representaciones:</strong> Adjacency list, Edge list, Incidence matrix</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                Que es una GNN?
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <p>Una <strong>Graph Neural Network (GNN)</strong> es una tecnica de machine learning especializada disenada especificamente para las cualidades distintivas de grafos y datos relacionales.</p>
+                <h4>Por que no usar redes neuronales tradicionales?</h4>
+                <div class="danger-box">
+                    <ul>
+                        <li>CNNs estan disenadas para grids regulares (imagenes)</li>
+                        <li>RNNs estan disenadas para secuencias</li>
+                        <li>MLPs no capturan relaciones entre datos</li>
+                        <li>Modelos separados para grafos no escalaban bien</li>
+                    </ul>
+                </div>
+                <h4>Que hace especial a una GNN?</h4>
+                <div class="success-box">
+                    <ul>
+                        <li>Disenada especificamente para datos de grafos</li>
+                        <li>Captura propiedades de nodos Y aristas</li>
+                        <li>Escala a grafos de diferentes tamanos y formas</li>
+                        <li>Usa <strong>message passing</strong> para propagar informacion</li>
+                        <li>Genera representaciones (embeddings) ricas</li>
+                    </ul>
+                </div>
+                <div class="purple-box">
+                    <h4>Concepto Clave: Message Passing</h4>
+                    <p>Es el mecanismo central de las GNNs. Cada nodo recibe informacion de sus vecinos, la agrega y actualiza su propia representacion. Este proceso se repite varias capas, permitiendo capturar informacion de vecindarios cada vez mas amplios.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                Cuando usar GNNs? - Las 3 Senales Clave
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <div class="flow-diagram">
+                    <div class="flow-step">Mi problema necesita una GNN?</div>
+                    <div class="flow-arrow">&#8595;</div>
+                    <div class="flow-row">
+                        <div class="flow-step orange"><strong>Senal 1</strong><br>Relaciones implicitas e interdependencias<br><small>Los datos tienen conexiones que afectan el resultado</small></div>
+                        <div class="flow-step orange"><strong>Senal 2</strong><br>Alta dimensionalidad y dispersion<br><small>Muchas features, datos sparse</small></div>
+                        <div class="flow-step orange"><strong>Senal 3</strong><br>Interacciones no locales complejas<br><small>Influencias que se propagan por la red</small></div>
+                    </div>
+                    <div class="flow-arrow">&#8595;</div>
+                    <div class="flow-step green">Si cumple al menos 1 senal: Considera usar GNNs</div>
+                </div>
+
+                <h4>Ejemplos por senal:</h4>
+                <table class="comparison-table">
+                    <tr><th>Senal</th><th>Ejemplo</th><th>Por que GNN?</th></tr>
+                    <tr><td>Relaciones</td><td>Red social</td><td>Amistades influyen en comportamiento</td></tr>
+                    <tr><td>Dispersion</td><td>Moleculas</td><td>Muchos tipos de atomos, pocas conexiones por atomo</td></tr>
+                    <tr><td>No local</td><td>Trafico urbano</td><td>Un accidente afecta rutas lejanas</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                Embeddings y Representaciones (Explicado Facil)
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+
+                <!-- ANALOGIA PRINCIPAL -->
+                <div class="highlight">
+                    <h4>Primero: Que problema resuelven los embeddings?</h4>
+                    <p>Las computadoras no entienden grafos directamente. Solo entienden <strong>numeros</strong>. Entonces necesitamos una forma de <em>traducir</em> un grafo (nodos, aristas, conexiones) a numeros que la computadora pueda procesar. Esa traduccion se llama <strong>embedding</strong>.</p>
+                </div>
+
+                <h4>Analogia: El Perfil de Instagram</h4>
+                <div class="info-box">
+                    <p>Imagina que quieres describir a una persona de Instagram para que una computadora la entienda. No puedes darle su foto ni su biografia en texto. Pero si puedes darle <strong>numeros</strong>:</p>
+                    <table class="comparison-table" style="margin: 15px 0;">
+                        <tr><th>Caracteristica</th><th>Valor numerico</th></tr>
+                        <tr><td>Seguidores</td><td>1,500</td></tr>
+                        <tr><td>Posts por semana</td><td>3.2</td></tr>
+                        <tr><td>% fotos de viajes</td><td>0.65</td></tr>
+                        <tr><td>Comentarios promedio</td><td>25</td></tr>
+                        <tr><td>Amigos en comun contigo</td><td>12</td></tr>
+                    </table>
+                    <p>Esos 5 numeros <strong>[1500, 3.2, 0.65, 25, 12]</strong> son un <strong>embedding</strong> de esa persona. Es un "resumen numerico" que captura su esencia.</p>
+                </div>
+
+                <h4>Definicion Simple</h4>
+                <div class="success-box">
+                    <p><strong>Embedding = una lista de numeros que RESUME algo complejo de forma que la computadora pueda trabajar con ello.</strong></p>
+                    <p>Es como convertir algo del "mundo real" (una persona, una molecula, una relacion) en coordenadas que la computadora entiende.</p>
+                </div>
+
+                <h4>Por que se llaman "de baja dimension"? (Paso a paso)</h4>
+
+                <div class="purple-box">
+                    <h4>El problema: la matriz de adyacencia es ENORME</h4>
+                    <p>Imagina una red social con <strong>5 usuarios</strong>. Para representar TODAS las conexiones posibles necesitas una tabla asi:</p>
+                </div>
+
+                <table class="comparison-table" style="max-width: 400px;">
+                    <tr><th></th><th>Ana</th><th>Bob</th><th>Carlos</th><th>Diana</th><th>Eva</th></tr>
+                    <tr><td><strong>Ana</strong></td><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+                    <tr><td><strong>Bob</strong></td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+                    <tr><td><strong>Carlos</strong></td><td>0</td><td>1</td><td>0</td><td>0</td><td>1</td></tr>
+                    <tr><td><strong>Diana</strong></td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td></tr>
+                    <tr><td><strong>Eva</strong></td><td>0</td><td>0</td><td>1</td><td>1</td><td>0</td></tr>
+                </table>
+
+                <div class="info-box">
+                    <p>Para describir a <strong>Ana</strong> en esta tabla necesitas <strong>5 numeros</strong> (su fila): <strong>[0, 1, 0, 1, 0]</strong></p>
+                    <p>Eso significa: "Ana NO es amiga de si misma, SI es amiga de Bob, NO de Carlos, SI de Diana, NO de Eva".</p>
+                    <p style="margin-top:10px;">Con 5 usuarios cada persona necesita <strong>5 numeros</strong>. Parece facil...</p>
+                </div>
+
+                <div class="danger-box">
+                    <h4>Pero que pasa cuando escalamos?</h4>
+                    <table class="comparison-table">
+                        <tr><th>Usuarios</th><th>Numeros por persona (su fila)</th><th>Total en la tabla</th></tr>
+                        <tr><td>5</td><td>5</td><td>25 &#x2705; facil</td></tr>
+                        <tr><td>100</td><td>100</td><td>10,000 &#x1F610; manejable</td></tr>
+                        <tr><td>1,000</td><td>1,000</td><td>1 millon &#x1F630;</td></tr>
+                        <tr><td>10,000</td><td>10,000</td><td>100 millones &#x1F92F;</td></tr>
+                        <tr><td>1 millon (Facebook)</td><td>1,000,000</td><td>1 BILLON &#x1F440;</td></tr>
+                    </table>
+                    <p style="margin-top:10px;"><strong>El problema:</strong> Para describir a Ana en una red de 10,000 personas, necesitas <strong>10,000 numeros</strong> (uno por cada posible amistad). Y la mayoria de esos numeros son <strong>0</strong> porque Ana no conoce a 9,990 de esas personas. Es un desperdicio enorme.</p>
+                </div>
+
+                <div class="success-box">
+                    <h4>La solucion: el Embedding COMPRIME esa fila</h4>
+                    <p>En vez de describir a Ana con 10,000 numeros (su fila entera en la matriz), un algoritmo de embedding <strong>aprende a resumirla</strong> en solo 128 numeros.</p>
+
+                    <p style="margin-top:15px;"><strong>ANTES (sin embedding):</strong></p>
+                    <p style="font-family: monospace; background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 0.85em;">Ana = [0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, ... <strong>10,000 numeros</strong>, casi todos 0]</p>
+
+                    <p style="margin-top:10px;"><strong>DESPUES (con embedding):</strong></p>
+                    <p style="font-family: monospace; background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 0.85em;">Ana = [0.82, -0.31, 0.55, 1.21, -0.08, 0.93, ... <strong>solo 128 numeros</strong>, todos informativos]</p>
+                </div>
+
+                <div class="highlight">
+                    <h4>Pero como es posible? Como metes 10,000 numeros en 128?</h4>
+                    <p>No estas "metiendo" los 10,000 en 128. Estas <strong>aprendiendo un RESUMEN inteligente</strong>. Veamos con una analogia:</p>
+                </div>
+
+                <div class="info-box">
+                    <h4>Analogia: Describir a una persona</h4>
+                    <p><strong>Forma 1 (la matriz de adyacencia):</strong> Para describir a Ana, listas a CADA persona del mundo y dices si la conoce o no:</p>
+                    <p style="font-family: monospace; font-size: 0.85em; padding: 5px;">Conoce a Bob? SI. Conoce a Carlos? NO. Conoce a Diana? SI. Conoce a Eduardo? NO... (x10,000)</p>
+
+                    <p style="margin-top:15px;"><strong>Forma 2 (el embedding):</strong> Describes a Ana con sus CARACTERISTICAS esenciales:</p>
+                    <ul>
+                        <li>Que tan social es? → <strong>0.82</strong> (bastante social)</li>
+                        <li>En que "grupo" esta? → <strong>-0.31</strong> (mas cercana al grupo de deportistas)</li>
+                        <li>Que tan activa es? → <strong>0.55</strong> (moderadamente activa)</li>
+                        <li>Nivel de influencia? → <strong>1.21</strong> (bastante influyente)</li>
+                        <li>... y asi hasta 128 caracteristicas</li>
+                    </ul>
+
+                    <p style="margin-top:15px;">Con estos 128 numeros <strong>ya sabes lo suficiente</strong>. Si Bob tambien es social (0.85), deportista (-0.28), activo (0.60)... sus embeddings se PARECEN, asi que probablemente son amigos. <strong>No necesitas memorizar la lista completa de 10,000 amistades!</strong></p>
+                </div>
+
+                <div class="purple-box">
+                    <h4>El truco matematico (simplificado)</h4>
+                    <p>El algoritmo de embedding hace algo como esto:</p>
+                    <ol>
+                        <li>Mira TODOS los patrones de conexiones en el grafo</li>
+                        <li>Descubre que hay "temas" ocultos (ej: "grupo de deportistas", "grupo de musicos", "zona norte de la ciudad")</li>
+                        <li>Describe a cada persona segun esos temas en vez de listar a cada amigo individualmente</li>
+                    </ol>
+                    <p style="margin-top:10px;">Es exactamente lo que hace <strong>Netflix</strong> contigo: en vez de guardar tu opinion sobre 50,000 peliculas, te describe con ~100 "gustos" (te gusta accion: 0.9, te gusta romance: 0.2, te gustan peliculas largas: 0.7...) y con eso te recomienda.</p>
+                </div>
+
+                <div class="success-box">
+                    <h4>Resultado final: los numeros</h4>
+                    <table class="comparison-table">
+                        <tr><th></th><th>Matriz de Adyacencia</th><th>Con Embeddings (dim=128)</th></tr>
+                        <tr><td><strong>Numeros por persona</strong></td><td>10,000 (1 por cada usuario)</td><td>128</td></tr>
+                        <tr><td><strong>Total para 10,000 personas</strong></td><td>10,000 × 10,000 = <strong>100 millones</strong></td><td>10,000 × 128 = <strong>1.28 millones</strong></td></tr>
+                        <tr><td><strong>Reduccion</strong></td><td>-</td><td><strong>98.7% menos datos!</strong></td></tr>
+                        <tr><td><strong>Informacion util?</strong></td><td>Mayoria son 0s (desperdicio)</td><td>TODOS los 128 numeros son utiles</td></tr>
+                    </table>
+                </div>
+
+                <h3 style="margin-top:30px;">Los 3 Tipos de Embeddings</h3>
+                <p>Dependiendo de QUE queremos "traducir a numeros", hay 3 tipos:</p>
+
+                <div class="concepts-grid">
+                    <div class="concept-card" style="cursor:default;">
+                        <h4>1. Embedding de Nodo</h4>
+                        <p style="font-size:1.1em; margin-bottom:10px;">Convierte UN nodo en una lista de numeros</p>
+                        <p><strong>Ejemplo:</strong> En una red social, convertir al usuario "Maria" en [0.8, -0.3, 0.5, 1.2]. Estos numeros capturan: quien es Maria, con quien se conecta, que tan influyente es, etc.</p>
+                        <p style="margin-top:8px;"><strong>Para que sirve?</strong> Clasificar nodos (es bot o real?), recomendar amigos</p>
+                    </div>
+                    <div class="concept-card" style="cursor:default; background: linear-gradient(135deg, #28a745, #20c997);">
+                        <h4>2. Embedding de Arista</h4>
+                        <p style="font-size:1.1em; margin-bottom:10px;">Convierte UNA RELACION entre dos nodos en numeros</p>
+                        <p><strong>Ejemplo:</strong> La amistad entre Maria y Juan se convierte en [0.9, 0.1, -0.4]. Captura: que tan fuerte es la relacion, desde cuando existe, que tipo de interaccion tienen.</p>
+                        <p style="margin-top:8px;"><strong>Para que sirve?</strong> Predecir si dos personas se haran amigos (prediccion de links)</p>
+                    </div>
+                    <div class="concept-card" style="cursor:default; background: linear-gradient(135deg, #fd7e14, #ffc107);">
+                        <h4>3. Embedding de Grafo</h4>
+                        <p style="font-size:1.1em; margin-bottom:10px;">Convierte TODO EL GRAFO COMPLETO en una sola lista de numeros</p>
+                        <p><strong>Ejemplo:</strong> Una molecula entera (con todos sus atomos y enlaces) se convierte en [0.2, -0.7, 1.1, 0.4]. Captura: la forma general, las propiedades quimicas globales.</p>
+                        <p style="margin-top:8px;"><strong>Para que sirve?</strong> Clasificar moleculas (es toxica o no?)</p>
+                    </div>
+                </div>
+
+                <h3 style="margin-top:30px;">Como se CREAN los embeddings? - 3 Metodos</h3>
+
+                <div class="accordion-item" style="border-color: #667eea;">
+                    <div class="accordion-header" onclick="toggleAccordion(this)" style="background: #f0f4ff;">
+                        Metodo 1: DeepWalk - "El Caminante Aleatorio"
+                        <span class="accordion-icon">&#9660;</span>
+                    </div>
+                    <div class="accordion-body">
+                        <div class="info-box">
+                            <h4>Analogia: Explorar una ciudad caminando</h4>
+                            <p>Imagina que llegas a una ciudad nueva y quieres conocerla. Una forma seria caminar al azar: sales del hotel, giras a la derecha, caminas 3 cuadras, giras a la izquierda, etc.</p>
+                            <p>Despues de muchas caminatas aleatorias, tendrias una idea de que barrios estan cerca de cuales, cuales son las zonas centricas, etc.</p>
+                        </div>
+                        <h4>Como funciona en un grafo:</h4>
+                        <ol>
+                            <li><strong>Empiezas en un nodo</strong> (ej: nodo A)</li>
+                            <li><strong>Saltas a un vecino al azar</strong> (ej: A -> B)</li>
+                            <li><strong>Repites</strong> varias veces (ej: A -> B -> D -> E -> B -> C)</li>
+                            <li><strong>Anotas el camino</strong> que recorriste</li>
+                            <li><strong>Haces esto muchas veces</strong> desde cada nodo</li>
+                            <li><strong>Resultado:</strong> Los nodos que aparecen juntos frecuentemente en los caminos son "similares" y tendran embeddings parecidos</li>
+                        </ol>
+                        <div class="highlight">
+                            <p><strong>En resumen:</strong> DeepWalk fue el PIONERO. Fue el primero en decir "oye, podemos usar caminatas aleatorias en grafos para crear embeddings, igual que Word2Vec usa contexto de palabras". Salio en 2014.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item" style="border-color: #28a745;">
+                    <div class="accordion-header" onclick="toggleAccordion(this)" style="background: #f0fff0;">
+                        Metodo 2: Node2Vec (N2V) - "El Caminante Inteligente"
+                        <span class="accordion-icon">&#9660;</span>
+                    </div>
+                    <div class="accordion-body">
+                        <div class="success-box">
+                            <h4>Analogia: Explorar con estrategia</h4>
+                            <p>Ahora imagina que en vez de caminar 100% al azar, puedes elegir <strong>dos estrategias</strong>:</p>
+                            <ul>
+                                <li><strong>BFS (Breadth-First):</strong> Te quedas explorando el barrio local, yendo a vecinos cercanos. Como conocer bien tu colonia.</li>
+                                <li><strong>DFS (Depth-First):</strong> Te alejas lo mas posible, explorando barrios lejanos. Como irte al otro lado de la ciudad.</li>
+                            </ul>
+                        </div>
+                        <h4>Que mejora respecto a DeepWalk?</h4>
+                        <p>Node2Vec te permite <strong>controlar</strong> que tan "local" o "global" quieres explorar con dos parametros (p y q). Es como tener un GPS donde puedes decir "quedate por aqui" o "explora lejos".</p>
+                        <div class="highlight">
+                            <p><strong>En resumen:</strong> Node2Vec es DeepWalk MEJORADO. En vez de caminar 100% al azar, te permite elegir si explorar cerca o lejos, capturando mejor la estructura del grafo. Salio en 2016.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item" style="border-color: #764ba2;">
+                    <div class="accordion-header" onclick="toggleAccordion(this)" style="background: #f5f0ff;">
+                        Metodo 3: GNN Embeddings - "El Estudiante que Aprende Solo"
+                        <span class="accordion-icon">&#9660;</span>
+                    </div>
+                    <div class="accordion-body">
+                        <div class="purple-box">
+                            <h4>Analogia: Aprender haciendo</h4>
+                            <p>DeepWalk y Node2Vec son como <strong>leer un mapa</strong> de la ciudad. Utiles, pero el mapa se hizo ANTES de saber que tarea vas a hacer.</p>
+                            <p>Los GNN embeddings son como <strong>aprender en el trabajo</strong>. La red neuronal crea los embeddings MIENTRAS intenta resolver la tarea (ej: detectar fraude). Asi los embeddings se optimizan especificamente para lo que necesitas.</p>
+                        </div>
+                        <h4>La diferencia clave:</h4>
+                        <table class="comparison-table">
+                            <tr><th>Aspecto</th><th>DeepWalk / Node2Vec</th><th>GNN Embeddings</th></tr>
+                            <tr><td>Cuando se crean?</td><td>ANTES de la tarea (2 pasos separados)</td><td>DURANTE la tarea (todo junto)</td></tr>
+                            <tr><td>Usan features?</td><td>No, solo la estructura del grafo</td><td>Si! Usan features de nodos Y estructura</td></tr>
+                            <tr><td>Se adaptan?</td><td>No, son fijos una vez creados</td><td>Si, se ajustan para la tarea especifica</td></tr>
+                            <tr><td>Analogia</td><td>Leer un mapa turistico generico</td><td>Un guia local que sabe exactamente lo que buscas</td></tr>
+                        </table>
+                        <div class="highlight">
+                            <p><strong>End-to-end significa:</strong> "de principio a fin". La GNN toma los datos crudos del grafo, crea los embeddings, Y hace la prediccion, todo en un solo proceso. No necesitas pasos separados.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 style="margin-top:30px;">Resumen Visual: El Flujo Completo</h3>
+                <div class="flow-diagram">
+                    <div class="flow-step">GRAFO ORIGINAL<br><small>Nodos con datos + conexiones entre ellos</small></div>
+                    <div class="flow-arrow">&#8595;</div>
+                    <div class="flow-step orange">ALGORITMO DE EMBEDDING<br><small>DeepWalk, Node2Vec, o una GNN</small></div>
+                    <div class="flow-arrow">&#8595;</div>
+                    <div class="flow-step blue">EMBEDDING = LISTA DE NUMEROS<br><small>Ej: Nodo "Maria" = [0.8, -0.3, 0.5, 1.2, 0.9, ...]</small></div>
+                    <div class="flow-arrow">&#8595;</div>
+                    <div class="flow-step green">USAR PARA TAREAS<br><small>Clasificar, recomendar, predecir, detectar fraude...</small></div>
+                </div>
+
+                <div class="danger-box">
+                    <h4>Lo mas importante que debes recordar:</h4>
+                    <p><strong>Embedding = traducir algo complejo (un nodo, una relacion, un grafo entero) a una lista corta de numeros que la computadora puede procesar.</strong></p>
+                    <p>Es como el "DNI numerico" de cada elemento del grafo. Dos nodos similares tendran embeddings con numeros parecidos. Dos nodos muy diferentes tendran numeros muy distintos.</p>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="checkpoint" id="cp-conceptos">
+            <h4>&#9881; Checkpoint — Desbloquea la siguiente seccion</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">Que mecanismo usan las GNNs para que cada nodo aprenda de sus vecinos?</p>
+            <div class="cp-option" onclick="checkCP('conceptos',this,false)">Backpropagation</div>
+            <div class="cp-option" onclick="checkCP('conceptos',this,false)">Convolucion 2D</div>
+            <div class="cp-option" onclick="checkCP('conceptos',this,true)">Message passing</div>
+            <div class="cp-feedback" id="cpFb-conceptos"></div>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: TIPOS DE GRAFOS ====================== -->
+    <div id="tipos" class="section">
+        <h2>Tipos de Grafos - Guia Completa</h2>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab(this, 'tab-homogeneo')">Homogeneo</button>
+            <button class="tab-btn" onclick="showTab(this, 'tab-heterogeneo')">Heterogeneo</button>
+            <button class="tab-btn" onclick="showTab(this, 'tab-bipartito')">Bipartito</button>
+            <button class="tab-btn" onclick="showTab(this, 'tab-ciclico')">Ciclico/Aciclico</button>
+            <button class="tab-btn" onclick="showTab(this, 'tab-dag')">DAG</button>
+            <button class="tab-btn" onclick="showTab(this, 'tab-knowledge')">Knowledge Graph</button>
+            <button class="tab-btn" onclick="showTab(this, 'tab-hiper')">Hipergrafo</button>
+        </div>
+
+        <div id="tab-homogeneo" class="tab-content active">
+            <h3>Grafo Homogeneo</h3>
+            <canvas id="canvasHomogeneo" width="500" height="300"></canvas>
+            <p><strong>Definicion:</strong> Un solo tipo de nodo y un solo tipo de arista.</p>
+            <div class="info-box">
+                <p><strong>Ejemplo AML:</strong> Red de transferencias entre cuentas bancarias sospechosas. Todos los nodos son "cuentas" y todas las aristas son "transferencias". Ideal para detectar <strong>mulas financieras</strong> que se transfieren dinero entre si.</p>
+            </div>
+            <ul>
+                <li>Mas simple de modelar</li>
+                <li>Todos los nodos se tratan igual</li>
+                <li>Ideal para redes de mulas donde todas las entidades son cuentas bancarias</li>
+            </ul>
+        </div>
+
+        <div id="tab-heterogeneo" class="tab-content">
+            <h3>Grafo Heterogeneo</h3>
+            <canvas id="canvasHeterogeneo" width="500" height="300"></canvas>
+            <p><strong>Definicion:</strong> Multiples tipos de nodos y/o aristas.</p>
+            <div class="info-box">
+                <p><strong>Ejemplo AML - Precursores de Fentanilo:</strong> Nodos de tipo "empresa quimica", "cuenta bancaria", "persona", "direccion de envio". Aristas de tipo "pago", "envio de quimicos", "es propietario de". Multiples tipos permiten modelar toda la cadena de suministro ilicita.</p>
+            </div>
+        </div>
+
+        <div id="tab-bipartito" class="tab-content">
+            <h3>Grafo Bipartito</h3>
+            <canvas id="canvasBipartito" width="500" height="300"></canvas>
+            <p><strong>Definicion:</strong> Dos conjuntos de nodos donde las conexiones solo existen ENTRE conjuntos, nunca dentro del mismo conjunto.</p>
+            <div class="info-box">
+                <p><strong>Ejemplo AML - Fraude Tiempos Compartidos:</strong> Un conjunto son "victimas" y el otro "empresas fachada de timeshare". Las aristas son "pagos". Las victimas pagan a empresas pero no se conectan entre si. Detectar que empresas reciben pagos de muchas victimas revela el esquema.</p>
+            </div>
+        </div>
+
+        <div id="tab-ciclico" class="tab-content">
+            <h3>Grafo Ciclico vs Aciclico</h3>
+            <div class="graph-container">
+                <div class="graph-card">
+                    <h4 style="text-align:center">Ciclico</h4>
+                    <canvas id="canvasCiclico" width="420" height="280"></canvas>
+                    <p><strong>Definicion:</strong> Puedes empezar en un nodo, seguir las aristas, y volver al mismo nodo.</p>
+                </div>
+                <div class="graph-card">
+                    <h4 style="text-align:center">Aciclico</h4>
+                    <canvas id="canvasAciclico" width="420" height="280"></canvas>
+                    <p><strong>Definicion:</strong> Es imposible volver al nodo de inicio sin retroceder. Parecen arboles.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-dag" class="tab-content">
+            <h3>DAG - Directed Acyclic Graph</h3>
+            <canvas id="canvasDAG" width="600" height="300"></canvas>
+            <p><strong>Definicion:</strong> Grafo dirigido sin ciclos.</p>
+            <div class="success-box">
+                <h4>Por que son importantes los DAGs?</h4>
+                <ul>
+                    <li>Esenciales en <strong>analisis causal</strong></li>
+                    <li>Modelan <strong>workflows</strong> y procesos</li>
+                    <li>Cadenas de <strong>dependencia</strong></li>
+                    <li>A causa B, pero B no puede causar A simultaneamente</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="tab-knowledge" class="tab-content">
+            <h3>Knowledge Graph</h3>
+            <canvas id="canvasKnowledge" width="700" height="400"></canvas>
+            <p><strong>Definicion:</strong> Grafo heterogeneo con semantica enriquecida, metadata y schemas especificos.</p>
+            <div class="purple-box">
+                <h4>Que lo hace diferente?</h4>
+                <ul>
+                    <li>Define el <strong>tipo y significado</strong> de cada relacion</li>
+                    <li>Permite <strong>razonamiento avanzado</strong> y consultas</li>
+                    <li>Tiene <strong>contexto explicito</strong></li>
+                    <li>Sigue <strong>schemas</strong> especificos</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="tab-hiper" class="tab-content">
+            <h3>Hipergrafo</h3>
+            <canvas id="canvasHipergrafo" width="600" height="350"></canvas>
+            <p><strong>Definicion:</strong> Grafo donde una sola arista (hiperarista) puede conectar <strong>multiples nodos</strong> a la vez.</p>
+            <div class="danger-box">
+                <h4>Complejidad</h4>
+                <ul>
+                    <li>En grafos normales: aristas conectan exactamente 2 nodos</li>
+                    <li>En hipergrafos: una hiperarista conecta N nodos</li>
+                    <li>La matriz de adyacencia se extiende a un <strong>tensor de incidencia N-dimensional</strong></li>
+                </ul>
+            </div>
+        </div>
+
+        <h3 style="margin-top: 40px;">Tabla Comparativa Completa</h3>
+        <div style="overflow-x: auto;">
+            <table class="comparison-table">
+                <tr><th>Tipo</th><th>Tipos de Nodo</th><th>Direccion</th><th>Ciclos</th><th>Ejemplo AML/Banca</th></tr>
+                <tr><td>Homogeneo</td><td>1</td><td>No</td><td>Posible</td><td>Red de mulas financieras</td></tr>
+                <tr><td>Heterogeneo</td><td>Varios</td><td>Posible</td><td>Posible</td><td>Cadena de precursores fentanilo</td></tr>
+                <tr><td>Bipartito</td><td>2 conjuntos</td><td>Posible</td><td>Posible</td><td>Victimas - Empresas timeshare</td></tr>
+                <tr><td>Ciclico</td><td>Cualquiera</td><td>Posible</td><td>Si</td><td>Lavado circular de dinero</td></tr>
+                <tr><td>Aciclico</td><td>Cualquiera</td><td>Posible</td><td>No</td><td>Cadena jerarquica de trafico</td></tr>
+                <tr><td>DAG</td><td>Cualquiera</td><td>Si</td><td>No</td><td>Flujo de contrabando de petroleo</td></tr>
+                <tr><td>Knowledge</td><td>Varios + Semantica</td><td>Si</td><td>Posible</td><td>Red de inteligencia AML</td></tr>
+                <tr><td>Hipergrafo</td><td>Cualquiera</td><td>Posible</td><td>Posible</td><td>Operaciones coordinadas multi-actor</td></tr>
+            </table>
+        </div>
+
+        <div class="checkpoint" id="cp-tipos">
+            <h4>&#9881; Checkpoint — Desbloquea la siguiente seccion</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">Que tipo de grafo tiene dos conjuntos de nodos donde las conexiones solo existen ENTRE conjuntos?</p>
+            <div class="cp-option" onclick="checkCP('tipos',this,false)">Homogeneo</div>
+            <div class="cp-option" onclick="checkCP('tipos',this,true)">Bipartito</div>
+            <div class="cp-option" onclick="checkCP('tipos',this,false)">DAG</div>
+            <div class="cp-feedback" id="cpFb-tipos"></div>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: DIAGRAMAS ====================== -->
+    <div id="diagramas" class="section">
+        <h2>Diagramas Interactivos</h2>
+
+        <div class="graph-card">
+            <h3>Grafo del Libro (Figura 1.1)</h3>
+            <p>Grafo no dirigido con nodos A-E y sus conexiones. Usa los botones para interactuar.</p>
+            <canvas id="mainGraph" width="800" height="450"></canvas>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="drawMainGraph()">Redibujar</button>
+                <button class="btn btn-success" onclick="animateMessagePassing()">Simular Message Passing</button>
+                <button class="btn btn-warning" onclick="highlightPath()">Mostrar Camino A-B-D-E</button>
+            </div>
+        </div>
+
+        <h3>Matriz de Adyacencia Interactiva</h3>
+        <div class="graph-card">
+            <p>Haz clic en las celdas para activar/desactivar conexiones. El grafo se actualiza automaticamente.</p>
+            <div style="display:flex; flex-wrap:wrap; gap:30px; justify-content:center; align-items:center;">
+                <table id="interactiveMatrix">
+                    <tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th></tr>
+                    <tr><th>A</th><td onclick="toggleCell(0,0)" id="c00">0</td><td onclick="toggleCell(0,1)" id="c01">0</td><td onclick="toggleCell(0,2)" id="c02">1</td><td onclick="toggleCell(0,3)" id="c03">0</td></tr>
+                    <tr><th>B</th><td onclick="toggleCell(1,0)" id="c10">0</td><td onclick="toggleCell(1,1)" id="c11">0</td><td onclick="toggleCell(1,2)" id="c12">1</td><td onclick="toggleCell(1,3)" id="c13">1</td></tr>
+                    <tr><th>C</th><td onclick="toggleCell(2,0)" id="c20">1</td><td onclick="toggleCell(2,1)" id="c21">1</td><td onclick="toggleCell(2,2)" id="c22">0</td><td onclick="toggleCell(2,3)" id="c23">0</td></tr>
+                    <tr><th>D</th><td onclick="toggleCell(3,0)" id="c30">0</td><td onclick="toggleCell(3,1)" id="c31">1</td><td onclick="toggleCell(3,2)" id="c32">0</td><td onclick="toggleCell(3,3)" id="c33">0</td></tr>
+                </table>
+                <canvas id="matrixGraph" width="350" height="300"></canvas>
+            </div>
+        </div>
+
+        <h3>Comparacion Visual: Tipos de Grafos</h3>
+        <div class="graph-container">
+            <div class="graph-card">
+                <h4 style="text-align:center">No Dirigido</h4>
+                <canvas id="compUndirected" width="420" height="280"></canvas>
+                <p style="text-align:center"><small>Aristas bidireccionales</small></p>
+            </div>
+            <div class="graph-card">
+                <h4 style="text-align:center">Dirigido</h4>
+                <canvas id="compDirected" width="420" height="280"></canvas>
+                <p style="text-align:center"><small>Aristas con flechas (direccion)</small></p>
+            </div>
+        </div>
+        <div class="graph-container">
+            <div class="graph-card">
+                <h4 style="text-align:center">Ponderado</h4>
+                <canvas id="compWeighted" width="420" height="280"></canvas>
+                <p style="text-align:center"><small>Aristas con valores/pesos</small></p>
+            </div>
+            <div class="graph-card">
+                <h4 style="text-align:center">Con Self-Loops</h4>
+                <canvas id="compSelfLoop" width="420" height="280"></canvas>
+                <p style="text-align:center"><small>Nodos conectados a si mismos</small></p>
+            </div>
+        </div>
+
+        <div class="checkpoint" id="cp-diagramas">
+            <h4>&#9881; Checkpoint — Desbloquea la siguiente seccion</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">Si un grafo no dirigido tiene 4 nodos (A-B, B-C, C-D, D-A), que forma tiene su matriz de adyacencia?</p>
+            <div class="cp-option" onclick="checkCP('diagramas',this,true)">Simetrica (porque es no dirigido)</div>
+            <div class="cp-option" onclick="checkCP('diagramas',this,false)">Diagonal (solo tiene 1s en la diagonal)</div>
+            <div class="cp-option" onclick="checkCP('diagramas',this,false)">Triangular (solo tiene valores arriba)</div>
+            <div class="cp-feedback" id="cpFb-diagramas"></div>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: FLUJO GNN ====================== -->
+    <div id="flujo" class="section">
+        <h2>Flujo de Trabajo con GNNs</h2>
+
+        <h3>Como funciona una GNN paso a paso? (Ejemplo: Red de Mulas)</h3>
+        <div class="flow-diagram">
+            <div class="flow-step">DATOS CRUDOS<br><small>Transacciones bancarias, datos KYC, alertas SAR, registros de dispositivos</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step blue">REPRESENTACION COMO GRAFO<br><small>Cuentas=Nodos, Transferencias=Aristas, Montos/Fechas/Pais=Features</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step orange">MESSAGE PASSING<br><small>Cada cuenta "aprende" del comportamiento de las cuentas con las que transacciona</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step">EMBEDDINGS<br><small>Cada cuenta se convierte en un vector que resume su perfil transaccional y sus relaciones</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step green">PREDICCION<br><small>Es mula financiera? (clasificacion de nodo) | Habra transaccion sospechosa? (prediccion de link)</small></div>
+        </div>
+
+        <h3>Message Passing: El Corazon de las GNNs</h3>
+        <div class="graph-card">
+            <canvas id="messagePassing" width="800" height="400"></canvas>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="drawMessagePassingDiagram()">Reiniciar</button>
+                <button class="btn btn-success" onclick="startMessagePassingAnimation()">Animar Message Passing</button>
+            </div>
+            <div id="mpExplanation" class="info-box" style="margin-top:15px;">
+                <p>Presiona <strong>"Animar"</strong> para ver como la informacion fluye de nodo a nodo.</p>
+            </div>
+        </div>
+
+        <h3>Flujo de Decision: Necesito una GNN?</h3>
+        <div class="flow-diagram">
+            <div class="flow-step">Tengo datos?</div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step orange">Los datos tienen relaciones?<br><small>Conexiones, interacciones, dependencias</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-row">
+                <div class="flow-step pink"><strong>NO</strong><br><small>Usa ML tradicional (Random Forest, SVM, etc.)</small></div>
+                <div class="flow-step green"><strong>SI</strong><br><small>Candidato para GNN!</small></div>
+            </div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step blue">Son las relaciones importantes para la prediccion?</div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-row">
+                <div class="flow-step pink"><strong>NO</strong><br><small>Embeddings simples (Node2Vec)</small></div>
+                <div class="flow-step green"><strong>SI</strong><br><small>Implementa una GNN (GCN, GAT, GraphSAGE)</small></div>
+            </div>
+        </div>
+
+        <h3>Tipos de Tareas con GNNs (Aplicadas a AML)</h3>
+        <div class="concepts-grid">
+            <div class="concept-card" style="cursor:default">
+                <h4>Clasificacion de Nodos</h4>
+                <p>Predecir si una cuenta/persona es sospechosa.</p>
+                <p><small>Ej: Es esta cuenta una mula financiera? Esta persona involucrada en trafico?</small></p>
+            </div>
+            <div class="concept-card" style="cursor:default; background: linear-gradient(135deg, #28a745, #20c997);">
+                <h4>Prediccion de Links</h4>
+                <p>Predecir conexiones ocultas entre actores.</p>
+                <p><small>Ej: Esta cuenta esta conectada a una red de contrabando de petroleo aunque no haya transaccion directa?</small></p>
+            </div>
+            <div class="concept-card" style="cursor:default; background: linear-gradient(135deg, #fd7e14, #ffc107);">
+                <h4>Clasificacion de Grafos</h4>
+                <p>Clasificar una red completa de transacciones.</p>
+                <p><small>Ej: Este cluster de cuentas es un esquema de fraude de tiempos compartidos o actividad legitima?</small></p>
+            </div>
+        </div>
+
+        <div class="checkpoint" id="cp-flujo">
+            <h4>&#9881; Checkpoint — Desbloquea la siguiente seccion</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">En el pipeline de una GNN, despues de message passing se generan los embeddings. Cual es el ULTIMO paso?</p>
+            <div class="cp-option" onclick="checkCP('flujo',this,false)">Crear la matriz de adyacencia</div>
+            <div class="cp-option" onclick="checkCP('flujo',this,false)">Ejecutar message passing otra vez</div>
+            <div class="cp-option" onclick="checkCP('flujo',this,true)">Prediccion (clasificar nodos, predecir links, etc.)</div>
+            <div class="cp-feedback" id="cpFb-flujo"></div>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: APLICACIONES AML ====================== -->
+    <div id="aplicaciones" class="section">
+        <h2>Aplicaciones GNNs en AML & Banca</h2>
+
+        <div class="danger-box">
+            <h4>Por que GNNs son ideales para AML?</h4>
+            <p>Los criminales financieros operan en <strong>redes</strong>. El lavado de dinero, el trafico y el fraude son inherentemente <strong>problemas de grafos</strong>: involucran multiples actores, cuentas, empresas y transacciones interconectadas. Los modelos tradicionales (reglas, ML tabular) analizan cada transaccion por separado y pierden el patron de red. Las GNNs ven la <strong>red completa</strong>.</p>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                1. Precursores de Fentanilo - Cadenas de Suministro Ilicitas
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <canvas id="canvasFentanyl" width="700" height="400"></canvas>
+                <div class="danger-box">
+                    <h4>El Problema</h4>
+                    <p>Organizaciones criminales compran quimicos precursores (como 4-ANPP, NPP) de proveedores en China/India, los envian a laboratorios clandestinos en Mexico, y lavan las ganancias a traves de multiples capas financieras.</p>
+                </div>
+                <div class="info-box">
+                    <h4>Modelado como Grafo</h4>
+                    <ul>
+                        <li><strong>Nodos:</strong> Empresas quimicas, cuentas bancarias, personas, direcciones de envio, laboratorios, shell companies</li>
+                        <li><strong>Aristas:</strong> Pagos internacionales, envios de quimicos, es propietario de, opera desde</li>
+                        <li><strong>Features de nodo:</strong> Pais, tipo de negocio, volumen transaccional, antiguedad, SARs previos</li>
+                        <li><strong>Features de arista:</strong> Monto, frecuencia, pais origen/destino, tipo de quimico</li>
+                    </ul>
+                </div>
+                <div class="success-box">
+                    <h4>Que detecta la GNN?</h4>
+                    <ul>
+                        <li><strong>Clasificacion de nodos:</strong> Esta empresa quimica es fachada para precursores?</li>
+                        <li><strong>Prediccion de links:</strong> Existe conexion oculta entre este proveedor y este laboratorio?</li>
+                        <li><strong>Deteccion de comunidades:</strong> Que entidades forman parte de la misma red de suministro?</li>
+                    </ul>
+                </div>
+                <div class="highlight">
+                    <h4>Tipo de grafo ideal: Heterogeneo + Knowledge Graph</h4>
+                    <p>Multiples tipos de nodos y aristas con semantica ("es proveedor de", "paga a", "envio quimico a"). Un knowledge graph permite razonamiento: si A provee quimicos a B, y B paga a C que es shell company, C es sospechoso.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                2. Contrabando de Petroleo - Redes de Comercio Ilicito
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <canvas id="canvasOil" width="700" height="400"></canvas>
+                <div class="danger-box">
+                    <h4>El Problema</h4>
+                    <p>El contrabando de petroleo involucra desvio de crudo de paises sancionados (Iran, Venezuela, Rusia), uso de barcos "fantasma" con AIS apagado, transferencias ship-to-ship en alta mar, y lavado de ganancias a traves de empresas fachada en jurisdicciones opacas.</p>
+                </div>
+                <div class="info-box">
+                    <h4>Modelado como Grafo</h4>
+                    <ul>
+                        <li><strong>Nodos:</strong> Buques petroleros, puertos, empresas trading, cuentas bancarias, paises, personas (beneficial owners)</li>
+                        <li><strong>Aristas:</strong> Rutas maritimas, pagos, propiedad de buque, transferencias ship-to-ship, carga/descarga</li>
+                        <li><strong>Features de nodo:</strong> Bandera del buque, historial de sanciones, jurisdiccion, volumenes</li>
+                        <li><strong>Features de arista:</strong> Fechas, volumen en barriles, precio vs mercado, duracion de ruta</li>
+                    </ul>
+                </div>
+                <div class="success-box">
+                    <h4>Que detecta la GNN?</h4>
+                    <ul>
+                        <li><strong>Anomalia de ruta:</strong> Este buque hizo una ruta inusual con parada no registrada</li>
+                        <li><strong>Beneficial ownership oculto:</strong> Estas 5 empresas trading son controladas por la misma red</li>
+                        <li><strong>Evasion de sanciones:</strong> Este pago indirectamente beneficia a un pais sancionado</li>
+                    </ul>
+                </div>
+                <div class="highlight">
+                    <h4>Tipo de grafo ideal: DAG + Temporal</h4>
+                    <p>El flujo de petroleo sigue una cadena dirigida (extraccion -> transporte -> refineria -> venta) y la dimension temporal es critica para detectar coincidencias sospechosas.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                3. Trafico de Personas - Patrones Financieros de Trata
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <canvas id="canvasTrafficking" width="700" height="400"></canvas>
+                <div class="danger-box">
+                    <h4>El Problema</h4>
+                    <p>Las redes de trafico de personas dejan huellas financieras: pagos de "reclutadores", alquileres de multiples propiedades, depositos en efectivo fragmentados (structuring), pagos a sitios de anuncios ilicitos, y remesas a paises de origen.</p>
+                </div>
+                <div class="info-box">
+                    <h4>Modelado como Grafo</h4>
+                    <ul>
+                        <li><strong>Nodos:</strong> Cuentas bancarias, personas, propiedades alquiladas, sitios web, ciudades, dispositivos</li>
+                        <li><strong>Aristas:</strong> Pagos de renta, depositos cash, transferencias P2P, pagos a sitios, remesas</li>
+                        <li><strong>Features de nodo:</strong> Patron de depositos, # de propiedades, ubicacion, IP de acceso</li>
+                        <li><strong>Features de arista:</strong> Monto justo bajo umbral de reporte ($9,999), hora, frecuencia</li>
+                    </ul>
+                </div>
+                <div class="success-box">
+                    <h4>Que detecta la GNN?</h4>
+                    <ul>
+                        <li><strong>Structuring:</strong> Multiples depositos de $9,500 desde diferentes personas a la misma cuenta</li>
+                        <li><strong>Redes de control:</strong> Una persona controla 15 cuentas que pagan renta de 8 departamentos</li>
+                        <li><strong>Patrones temporales:</strong> Actividad financiera que coincide con llegadas de vuelos internacionales</li>
+                    </ul>
+                </div>
+                <div class="highlight">
+                    <h4>Tipo de grafo ideal: Heterogeneo + Ciclico</h4>
+                    <p>El dinero circula ciclicamente (victima -> tratante -> lavado -> reinversion en mas trafico). La GNN detecta estos ciclos sospechosos automaticamente.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                4. Fraude de Tiempos Compartidos - Esquemas de Estafa Vacacional
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <canvas id="canvasTimeshare" width="700" height="400"></canvas>
+                <div class="danger-box">
+                    <h4>El Problema</h4>
+                    <p>Estafadores crean empresas fachada que prometen "rescatar" o "revender" tiempos compartidos. Cobran tarifas iniciales, cuotas de cierre, impuestos ficticios, etc. Las victimas (frecuentemente adultos mayores) pierden miles de dolares. El dinero se mueve rapido entre cuentas y desaparece.</p>
+                </div>
+                <div class="info-box">
+                    <h4>Modelado como Grafo</h4>
+                    <ul>
+                        <li><strong>Nodos:</strong> Victimas, empresas de "rescate", cuentas receptoras, call centers, beneficiarios finales</li>
+                        <li><strong>Aristas:</strong> Pagos de victimas, transferencias entre empresas, retiros en efectivo, pagos a nomina de call center</li>
+                        <li><strong>Features de nodo:</strong> Edad de victima, antiguedad de empresa, # de quejas, jurisdiccion</li>
+                        <li><strong>Features de arista:</strong> Monto, descripcion del pago ("closing fee", "tax payment"), velocidad de retiro</li>
+                    </ul>
+                </div>
+                <div class="success-box">
+                    <h4>Que detecta la GNN?</h4>
+                    <ul>
+                        <li><strong>Grafo bipartito sospechoso:</strong> Muchas victimas -> pocas empresas -> rapido retiro de fondos</li>
+                        <li><strong>Re-victimizacion:</strong> La misma victima aparece conectada a multiples empresas fachada (listas de "suckers")</li>
+                        <li><strong>Empresas fantasma:</strong> Empresas nuevas que reciben muchos pagos pequenos y los consolidan</li>
+                    </ul>
+                </div>
+                <div class="highlight">
+                    <h4>Tipo de grafo ideal: Bipartito + Dirigido</h4>
+                    <p>Dos conjuntos claros (victimas y estafadores). El flujo de dinero es unidireccional: siempre de victima -> estafador -> cash out. Nunca al reves.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                5. Mulas Financieras - Redes de Movimiento de Dinero Ilicito
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <canvas id="canvasMules" width="700" height="400"></canvas>
+                <div class="danger-box">
+                    <h4>El Problema</h4>
+                    <p>Las mulas financieras son personas que prestan sus cuentas bancarias para mover dinero de origen ilicito. Reciben fondos, se quedan con una comision (5-10%), y transfieren el resto. Pueden ser reclutadas por redes sociales, apps de trabajo falso, o romance scams. Forman cadenas donde el dinero pasa por 3-5 cuentas antes de llegar al criminal.</p>
+                </div>
+                <div class="info-box">
+                    <h4>Modelado como Grafo</h4>
+                    <ul>
+                        <li><strong>Nodos:</strong> Cuentas bancarias (todas del mismo tipo = grafo homogeneo)</li>
+                        <li><strong>Aristas:</strong> Transferencias electronicas</li>
+                        <li><strong>Features de nodo:</strong> Antiguedad de cuenta, edad del titular, patron de depositos, saldo promedio, # de beneficiarios, velocidad de retiro</li>
+                        <li><strong>Features de arista:</strong> Monto, hora, dia de semana, diferencia con patron historico</li>
+                    </ul>
+                </div>
+                <div class="success-box">
+                    <h4>Que detecta la GNN?</h4>
+                    <ul>
+                        <li><strong>Cadenas de mulas:</strong> A -> B -> C -> D donde cada uno retiene ~8% y pasa el resto en minutos</li>
+                        <li><strong>Fan-out/Fan-in:</strong> Una cuenta recibe de 20 fuentes y envia a 1 destino (o viceversa)</li>
+                        <li><strong>Cuentas dormidas activadas:</strong> Cuenta sin movimiento por meses que de repente recibe y envia grandes montos</li>
+                        <li><strong>Comunidades de mulas:</strong> Clusters de cuentas que solo transaccionan entre si con patron inusual</li>
+                    </ul>
+                </div>
+                <div class="highlight">
+                    <h4>Tipo de grafo ideal: Homogeneo + Dirigido</h4>
+                    <p>Todas las entidades son cuentas bancarias (homogeneo). Las transferencias tienen direccion (dirigido). La GNN identifica nodos "puente" que conectan la fuente ilicita con el destino final. <strong>Message passing es perfecto aqui:</strong> cada cuenta aprende el comportamiento de las cuentas conectadas a ella, revelando si forma parte de una cadena.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="checkpoint" id="cp-aplicaciones">
+            <h4>&#9881; Checkpoint — Desbloquea la siguiente seccion</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">Que tipo de grafo es ideal para modelar mulas financieras (todas cuentas bancarias)?</p>
+            <div class="cp-option" onclick="checkCP('aplicaciones',this,false)">Heterogeneo (multiples tipos de nodos)</div>
+            <div class="cp-option" onclick="checkCP('aplicaciones',this,false)">Bipartito (dos conjuntos separados)</div>
+            <div class="cp-option" onclick="checkCP('aplicaciones',this,true)">Homogeneo + Dirigido (un tipo de nodo, aristas con direccion)</div>
+            <div class="cp-feedback" id="cpFb-aplicaciones"></div>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: QUIZ BASICO ====================== -->
+    <div id="quiz1" class="section">
+        <h2>Quiz Basico - Fundamentos</h2>
+
+        <div class="score-display">Puntuacion: <span id="score1">0</span> / <span id="total1">12</span></div>
+        <div class="progress-bar"><div class="progress-fill" id="progress1" style="width:0%">0%</div></div>
+
+        <div class="quiz-question" data-quiz="1">
+            <h4>1. Cuales son los dos componentes basicos de un grafo?</h4>
+            <div class="option" onclick="checkQ(this,false,1,'Los componentes basicos son nodos (vertices) y aristas (edges/links).')">Filas y columnas</div>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! Los grafos se componen de nodos (elementos) y aristas (relaciones entre ellos).')">Nodos y aristas</div>
+            <div class="option" onclick="checkQ(this,false,1,'Los componentes basicos son nodos (vertices) y aristas (edges/links).')">Capas y neuronas</div>
+            <div class="option" onclick="checkQ(this,false,1,'Los componentes basicos son nodos (vertices) y aristas (edges/links).')">Pixeles y canales</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="1">
+            <h4>2. Para que sirve la matriz de adyacencia?</h4>
+            <div class="option" onclick="checkQ(this,false,1,'La matriz de adyacencia representa las conexiones entre nodos usando 1s y 0s.')">Almacenar los datos de cada nodo</div>
+            <div class="option" onclick="checkQ(this,false,1,'La matriz de adyacencia representa las conexiones entre nodos usando 1s y 0s.')">Calcular la distancia entre nodos</div>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! La matriz de adyacencia es una representacion matricial de las conexiones en el grafo.')">Representar las conexiones entre nodos</div>
+            <div class="option" onclick="checkQ(this,false,1,'La matriz de adyacencia representa las conexiones entre nodos usando 1s y 0s.')">Ordenar los nodos alfabeticamente</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="1">
+            <h4>3. Si la matriz de adyacencia es simetrica, el grafo es...</h4>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! En un grafo no dirigido, si A conecta a B, entonces B conecta a A, creando simetria.')">No dirigido</div>
+            <div class="option" onclick="checkQ(this,false,1,'Una matriz simetrica indica que las relaciones son bidireccionales = grafo no dirigido.')">Dirigido</div>
+            <div class="option" onclick="checkQ(this,false,1,'La simetria indica bidireccionalidad, no pesos en las aristas.')">Ponderado</div>
+            <div class="option" onclick="checkQ(this,false,1,'La simetria de la matriz no tiene que ver con ser bipartito.')">Bipartito</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="1">
+            <h4>4. Un grafo donde una arista puede conectar mas de 2 nodos es un...</h4>
+            <div class="option" onclick="checkQ(this,false,1,'Un DAG es un grafo dirigido sin ciclos, pero sus aristas conectan solo 2 nodos.')">DAG</div>
+            <div class="option" onclick="checkQ(this,false,1,'Un bipartito tiene 2 tipos de nodos pero aristas normales (2 nodos).')">Grafo bipartito</div>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! En un hipergrafo, las hiperaristas pueden conectar N nodos simultaneamente.')">Hipergrafo</div>
+            <div class="option" onclick="checkQ(this,false,1,'Un knowledge graph tiene semantica rica pero aristas normales.')">Knowledge graph</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="1">
+            <h4>5. Que algoritmo famoso de grafos creo Google?</h4>
+            <div class="option" onclick="checkQ(this,false,1,'DeepWalk es un algoritmo de embeddings, no de Google.')">DeepWalk</div>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! PageRank fue creado por Larry Page y Sergey Brin en 1996 y fue la base de Google.')">PageRank</div>
+            <div class="option" onclick="checkQ(this,false,1,'Node2Vec es un algoritmo de embeddings de grafos, no de Google.')">Node2Vec</div>
+            <div class="option" onclick="checkQ(this,false,1,'GraphSAGE es una arquitectura GNN de Stanford/Pinterest.')">GraphSAGE</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="1">
+            <h4>6. Que tipo de grafo modela mejor el fraude de tiempos compartidos?</h4>
+            <div class="option" onclick="checkQ(this,false,1,'Homogeneo tiene 1 tipo de nodo. Timeshare tiene 2 conjuntos claros: victimas y empresas fachada.')">Homogeneo</div>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! Victimas en un lado, empresas fachada en otro. Los pagos solo van de victimas a empresas.')">Bipartito (victimas - empresas fachada)</div>
+            <div class="option" onclick="checkQ(this,false,1,'No es un hipergrafo. Es bipartito: dos conjuntos con conexiones entre ellos.')">Hipergrafo</div>
+            <div class="option" onclick="checkQ(this,false,1,'No es un DAG. Es un grafo bipartito con flujo unidireccional de pagos.')">DAG</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="1">
+            <h4>7. Que significa "self-loop" en un grafo?</h4>
+            <div class="option" onclick="checkQ(this,false,1,'Un self-loop es una arista que conecta un nodo consigo mismo, no un ciclo completo.')">Un ciclo que pasa por todos los nodos</div>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! Un self-loop aparece como un 1 en la diagonal de la matriz de adyacencia.')">Una arista que conecta un nodo consigo mismo</div>
+            <div class="option" onclick="checkQ(this,false,1,'Un grafo sin aristas seria un grafo vacio, no tiene que ver con self-loops.')">Un grafo que no tiene aristas</div>
+            <div class="option" onclick="checkQ(this,false,1,'Self-loop es una propiedad del grafo, no un algoritmo.')">Un algoritmo de recorrido</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="1">
+            <h4>8. Que biblioteca de GNNs usa el libro?</h4>
+            <div class="option" onclick="checkQ(this,false,1,'El libro se enfoca en PyTorch Geometric (PyG).')">TensorFlow</div>
+            <div class="option" onclick="checkQ(this,false,1,'El libro se enfoca en PyTorch Geometric (PyG).')">Keras</div>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! PyTorch Geometric (PyG) es la libreria principal usada en el libro.')">PyTorch Geometric (PyG)</div>
+            <div class="option" onclick="checkQ(this,false,1,'El libro se enfoca en PyTorch Geometric (PyG).')">Scikit-learn</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="1">
+            <h4>9. Un grafo con un solo tipo de nodo y arista es...</h4>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! Homogeneo = un tipo de nodo + un tipo de arista.')">Homogeneo</div>
+            <div class="option" onclick="checkQ(this,false,1,'Heterogeneo tiene multiples tipos de nodos o aristas. Homogeneo tiene solo 1 de cada uno.')">Heterogeneo</div>
+            <div class="option" onclick="checkQ(this,false,1,'Bipartito tiene 2 conjuntos. La respuesta correcta es homogeneo.')">Bipartito</div>
+            <div class="option" onclick="checkQ(this,false,1,'Hipergrafo permite hiperaristas. La respuesta es homogeneo.')">Hipergrafo</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="1">
+            <h4>10. Que son los embeddings?</h4>
+            <div class="option" onclick="checkQ(this,false,1,'Las aristas son conexiones. Los embeddings son representaciones vectoriales.')">Las aristas de un grafo</div>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! Los embeddings son vectores que capturan la esencia de los datos del grafo de forma compacta.')">Representaciones vectoriales de baja dimension</div>
+            <div class="option" onclick="checkQ(this,false,1,'Los pesos son de aristas ponderadas. Los embeddings son representaciones aprendidas.')">Los pesos de las conexiones</div>
+            <div class="option" onclick="checkQ(this,false,1,'Los nombres son etiquetas. Los embeddings son vectores numericos aprendidos.')">Los nombres de los nodos</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="1">
+            <h4>11. Que hace especial a un DAG?</h4>
+            <div class="option" onclick="checkQ(this,false,1,'Un DAG se define por ser dirigido y sin ciclos, no por tipos de nodos.')">Tiene multiples tipos de nodos</div>
+            <div class="option" onclick="checkQ(this,false,1,'Un DAG NO permite ciclos - la A es de Acyclic (aciclico).')">Permite ciclos</div>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! DAG = Directed (dirigido) Acyclic (sin ciclos) Graph. Ideal para causalidad.')">Es dirigido y no tiene ciclos</div>
+            <div class="option" onclick="checkQ(this,false,1,'Eso describe un bipartito. Un DAG es dirigido y sin ciclos.')">Conecta exactamente dos conjuntos</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="1">
+            <h4>12. Que mecanismo central usan las GNNs?</h4>
+            <div class="option" onclick="checkQ(this,false,1,'Backpropagation se usa para entrenar, pero el mecanismo central de GNNs es message passing.')">Backpropagation</div>
+            <div class="option" onclick="checkQ(this,false,1,'Convolution es de CNNs. Las GNNs usan message passing.')">Convolution</div>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! Message passing es el corazon de las GNNs: cada nodo recibe info de sus vecinos.')">Message passing</div>
+            <div class="option" onclick="checkQ(this,false,1,'Attention se usa en GATs (Cap 4), pero el mecanismo general es message passing.')">Attention</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="btn-group"><button class="btn btn-danger" onclick="resetQuiz(1)">Reiniciar Quiz</button></div>
+        <div class="checkpoint" id="cp-quiz1" style="margin-top:20px;">
+            <h4>&#127942; Resultado del Quiz Basico</h4>
+            <p class="cp-subtitle">Necesitas al menos 70% (9 de 12 correctas) para desbloquear el Quiz Avanzado</p>
+            <div id="quiz1UnlockMsg" style="padding:14px; border-radius:8px; display:none;"></div>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: QUIZ AVANZADO ====================== -->
+    <div id="quiz2" class="section">
+        <h2>Quiz Avanzado - Comprension Profunda</h2>
+
+        <div class="score-display">Puntuacion: <span id="score2">0</span> / <span id="total2">10</span></div>
+        <div class="progress-bar"><div class="progress-fill" id="progress2" style="width:0%">0%</div></div>
+
+        <div class="quiz-question" data-quiz="2">
+            <h4>1. Por que las CNNs tradicionales NO funcionan bien con grafos?</h4>
+            <div class="option" onclick="checkQ(this,true,2,'Correcto! Las CNNs asumen grids regulares (ej: imagenes de 28x28). Los grafos tienen estructura variable.')">Estan disenadas para grids regulares, y los grafos tienen estructura irregular</div>
+            <div class="option" onclick="checkQ(this,false,2,'Las CNNs no son mas lentas per se. El problema es la estructura no-euclidiana de los grafos.')">Son demasiado lentas</div>
+            <div class="option" onclick="checkQ(this,false,2,'Las CNNs usan GPUs perfectamente. El problema es arquitectural, no de hardware.')">No pueden usar GPUs</div>
+            <div class="option" onclick="checkQ(this,false,2,'Las CNNs trabajan con cualquier tipo de imagen. El problema es la topologia irregular de grafos.')">Solo trabajan con imagenes en color</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="2">
+            <h4>2. Cual es la diferencia fundamental entre datos tabulares y datos de grafos?</h4>
+            <div class="option" onclick="checkQ(this,false,2,'El tamano no es la diferencia principal. Es la representacion de relaciones.')">Los datos tabulares son mas grandes</div>
+            <div class="option" onclick="checkQ(this,true,2,'Correcto! En grafos, las relaciones son explicitas y fundamentales. En tablas, cada fila es independiente.')">En grafos las relaciones son explicitas y fundamentales para el analisis</div>
+            <div class="option" onclick="checkQ(this,false,2,'Los grafos pueden tener features de cualquier tipo, no solo numeros.')">Los grafos solo funcionan con numeros</div>
+            <div class="option" onclick="checkQ(this,false,2,'Los datos tabulares tienen estructura clara (filas/columnas). La diferencia es en las relaciones.')">Los datos tabulares no tienen estructura</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="2">
+            <h4>3. Que diferencia a un knowledge graph de un grafo heterogeneo normal?</h4>
+            <div class="option" onclick="checkQ(this,false,2,'El tamano no es lo que los diferencia, sino la semantica y contexto.')">El tamano del grafo</div>
+            <div class="option" onclick="checkQ(this,false,2,'El numero de aristas no es la diferencia clave.')">El numero de aristas</div>
+            <div class="option" onclick="checkQ(this,true,2,'Correcto! Los knowledge graphs agregan significado explicito a cada tipo de relacion y nodo, con schemas.')">El contexto semantico y metadata que define el tipo y significado de cada relacion</div>
+            <div class="option" onclick="checkQ(this,false,2,'No tiene que ver con el lenguaje de programacion.')">El lenguaje de programacion</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="2">
+            <h4>4. Por que un hipergrafo necesita un tensor de incidencia en vez de una matriz de adyacencia?</h4>
+            <div class="option" onclick="checkQ(this,false,2,'El numero de nodos no es la razon. Es la naturaleza de las hiperaristas.')">Porque tiene mas nodos</div>
+            <div class="option" onclick="checkQ(this,true,2,'Correcto! Una arista normal conecta 2 nodos (2D). Una hiperarista conecta N nodos, requiriendo N dimensiones.')">Porque las hiperaristas conectan N nodos, requiriendo N dimensiones</div>
+            <div class="option" onclick="checkQ(this,false,2,'No tiene que ver con hardware. Es una necesidad matematica.')">Porque usa GPUs</div>
+            <div class="option" onclick="checkQ(this,false,2,'No es mas rapido, de hecho es mas complejo computacionalmente.')">Porque es mas rapido</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="2">
+            <h4>5. Cual de estos escenarios NO es un buen candidato para GNNs en AML?</h4>
+            <div class="option" onclick="checkQ(this,false,2,'Detectar mulas SI es ideal: las cuentas forman cadenas en un grafo de transacciones.')">Detectar cadenas de mulas financieras</div>
+            <div class="option" onclick="checkQ(this,false,2,'Rastrear precursores SI es ideal: multiples actores conectados en cadena de suministro.')">Rastrear cadenas de suministro de precursores de fentanilo</div>
+            <div class="option" onclick="checkQ(this,true,2,'Correcto! Verificar un documento individual no tiene estructura de grafo. Es vision por computadora (CNNs).')">Verificar si una identificacion tiene alteraciones usando solo la imagen del documento</div>
+            <div class="option" onclick="checkQ(this,false,2,'Detectar evasion de sanciones SI es ideal: flujos de petroleo y pagos forman grafos complejos.')">Identificar redes de evasion de sanciones en contrabando de petroleo</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="2">
+            <h4>6. Que significa que un grafo sea "unweighted"?</h4>
+            <div class="option" onclick="checkQ(this,true,2,'Correcto! Unweighted significa que no hay pesos: solo existe o no existe la conexion (0 o 1).')">Todas las aristas tienen la misma importancia (valores 0 o 1)</div>
+            <div class="option" onclick="checkQ(this,false,2,'Un grafo sin aristas seria un grafo vacio, no unweighted.')">No tiene aristas</div>
+            <div class="option" onclick="checkQ(this,false,2,'Los features son independientes del peso de las aristas.')">Los nodos no tienen features</div>
+            <div class="option" onclick="checkQ(this,false,2,'Dirigido/no dirigido es diferente de weighted/unweighted.')">Es un grafo dirigido</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="2">
+            <h4>7. En el contexto de GNNs, que es "graph-based learning"?</h4>
+            <div class="option" onclick="checkQ(this,false,2,'No tiene que ver con dibujar grafos. Es sobre machine learning con datos de grafos.')">Aprender a dibujar grafos</div>
+            <div class="option" onclick="checkQ(this,true,2,'Correcto! Graph-based learning usa grafos como entrada para modelos que extraen insights de datos relacionales.')">Usar grafos como entrada para construir modelos que dan insights sobre los datos</div>
+            <div class="option" onclick="checkQ(this,false,2,'No es una base de datos, es un paradigma de machine learning.')">Un tipo de base de datos</div>
+            <div class="option" onclick="checkQ(this,false,2,'No es un lenguaje de programacion, es una disciplina de ML.')">Un lenguaje de programacion</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="2">
+            <h4>8. Cual de estos NO es una forma de representar un grafo?</h4>
+            <div class="option" onclick="checkQ(this,false,2,'La matriz de adyacencia SI es una forma valida de representar grafos.')">Matriz de adyacencia</div>
+            <div class="option" onclick="checkQ(this,false,2,'La lista de aristas (edge list) SI es una forma valida.')">Lista de aristas</div>
+            <div class="option" onclick="checkQ(this,false,2,'La lista de adyacencia SI es una forma valida.')">Lista de adyacencia</div>
+            <div class="option" onclick="checkQ(this,true,2,'Correcto! Un DataFrame de pandas es una estructura tabular, no una representacion de grafos.')">Dataframe de pandas</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="2">
+            <h4>9. Por que el flujo de contrabando de petroleo se modela como DAG?</h4>
+            <div class="option" onclick="checkQ(this,true,2,'Correcto! El crudo fluye en una direccion: extraccion->transporte->refineria->venta. No regresa al pozo.')">Porque el flujo es unidireccional (extraccion->transporte->refineria->venta) sin ciclos</div>
+            <div class="option" onclick="checkQ(this,false,2,'Los DAGs no son mas rapidos. Se usan porque el flujo fisico del petroleo es unidireccional.')">Porque los DAGs son mas rapidos de computar</div>
+            <div class="option" onclick="checkQ(this,false,2,'Los DAGs pueden tener muchos nodos. No es cuestion de tamano.')">Porque involucra pocos actores</div>
+            <div class="option" onclick="checkQ(this,false,2,'Clasificar imagenes es para CNNs. El contrabando de petroleo es un problema de grafos.')">Porque clasifica imagenes de buques</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="2">
+            <h4>10. Segun el libro, que deberias hacer antes de usar GNNs?</h4>
+            <div class="option" onclick="checkQ(this,false,2,'No necesitas TensorFlow especificamente. El libro recomienda comparar metodos primero.')">Aprender TensorFlow</div>
+            <div class="option" onclick="checkQ(this,false,2,'No necesitas hardware especial. Lo importante es evaluar si GNNs son el enfoque correcto.')">Comprar una GPU</div>
+            <div class="option" onclick="checkQ(this,true,2,'Correcto! El libro enfatiza comparar cuidadosamente con otros metodos antes de comprometerse con GNNs.')">Comparar cuidadosamente con otros metodos de ML/DL</div>
+            <div class="option" onclick="checkQ(this,false,2,'No se trata de memorizar formulas, sino de entender cuando y como aplicar GNNs.')">Memorizar todas las formulas</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="btn-group"><button class="btn btn-danger" onclick="resetQuiz(2)">Reiniciar Quiz</button></div>
+        <div class="checkpoint" id="cp-quiz2" style="margin-top:20px;">
+            <h4>&#127942; Resultado del Quiz Avanzado</h4>
+            <p class="cp-subtitle">Necesitas al menos 70% (7 de 10 correctas) para desbloquear Flashcards</p>
+            <div id="quiz2UnlockMsg" style="padding:14px; border-radius:8px; display:none;"></div>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: FLASHCARDS ====================== -->
+    <div id="flashcards" class="section">
+        <h2>Flashcards - Haz clic para voltear</h2>
+        <p style="margin-bottom:20px; color:#666;">Haz clic en cada tarjeta para ver la respuesta. Ideal para memorizar conceptos clave.</p>
+
+        <div class="flashcards-grid" id="flashcardsContainer"></div>
+
+        <div class="btn-group" style="margin-top:30px;">
+            <button class="btn btn-primary" onclick="shuffleFlashcards()">Barajar Tarjetas</button>
+            <button class="btn btn-warning" onclick="resetFlashcards()">Reiniciar</button>
+        </div>
+        <div style="text-align:center; margin-top:20px;">
+            <button class="btn btn-primary" onclick="completeSection('flashcards')" id="btnCompleteFlashcards" style="font-size:1.1em; padding:16px 40px;">&#10003; He revisado todas las flashcards - Continuar</button>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: EJERCICIOS ====================== -->
+    <div id="ejercicios" class="section">
+        <h2>Ejercicios Practicos</h2>
+
+        <h3>Ejercicio 1: Identifica el Tipo de Grafo</h3>
+        <div class="graph-card">
+            <canvas id="exGraph1" width="600" height="350"></canvas>
+            <p id="exGraph1Desc" style="text-align:center; font-weight:600; margin:10px 0;"></p>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="checkExercise1('homogeneo')">Homogeneo</button>
+                <button class="btn btn-info" onclick="checkExercise1('heterogeneo')">Heterogeneo</button>
+                <button class="btn btn-warning" onclick="checkExercise1('bipartito')">Bipartito</button>
+                <button class="btn btn-danger" onclick="checkExercise1('ciclico')">Ciclico</button>
+                <button class="btn btn-success" onclick="checkExercise1('dag')">DAG</button>
+            </div>
+            <div id="ex1Feedback" class="feedback"></div>
+            <button class="btn btn-primary" onclick="newExercise1()" style="margin-top:15px;">Nuevo Grafo</button>
+        </div>
+
+        <h3>Ejercicio 2: Completa la Matriz de Adyacencia</h3>
+        <div class="graph-card">
+            <p>Dado el grafo: <strong>A-B, B-C, C-D, D-A, B-D</strong> (no dirigido)</p>
+            <table style="margin: 20px auto;">
+                <tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th></tr>
+                <tr><th>A</th><td><input type="number" min="0" max="1" id="m00" style="width:45px;padding:5px;text-align:center"></td><td><input type="number" min="0" max="1" id="m01" style="width:45px;padding:5px;text-align:center"></td><td><input type="number" min="0" max="1" id="m02" style="width:45px;padding:5px;text-align:center"></td><td><input type="number" min="0" max="1" id="m03" style="width:45px;padding:5px;text-align:center"></td></tr>
+                <tr><th>B</th><td><input type="number" min="0" max="1" id="m10" style="width:45px;padding:5px;text-align:center"></td><td><input type="number" min="0" max="1" id="m11" style="width:45px;padding:5px;text-align:center"></td><td><input type="number" min="0" max="1" id="m12" style="width:45px;padding:5px;text-align:center"></td><td><input type="number" min="0" max="1" id="m13" style="width:45px;padding:5px;text-align:center"></td></tr>
+                <tr><th>C</th><td><input type="number" min="0" max="1" id="m20" style="width:45px;padding:5px;text-align:center"></td><td><input type="number" min="0" max="1" id="m21" style="width:45px;padding:5px;text-align:center"></td><td><input type="number" min="0" max="1" id="m22" style="width:45px;padding:5px;text-align:center"></td><td><input type="number" min="0" max="1" id="m23" style="width:45px;padding:5px;text-align:center"></td></tr>
+                <tr><th>D</th><td><input type="number" min="0" max="1" id="m30" style="width:45px;padding:5px;text-align:center"></td><td><input type="number" min="0" max="1" id="m31" style="width:45px;padding:5px;text-align:center"></td><td><input type="number" min="0" max="1" id="m32" style="width:45px;padding:5px;text-align:center"></td><td><input type="number" min="0" max="1" id="m33" style="width:45px;padding:5px;text-align:center"></td></tr>
+            </table>
+            <div class="btn-group">
+                <button class="btn btn-success" onclick="checkMatrix()">Verificar</button>
+                <button class="btn btn-warning" onclick="showMatrixAnswer()">Ver Respuesta</button>
+            </div>
+            <div id="matrixFeedback" class="feedback"></div>
+        </div>
+
+        <h3>Ejercicio 3: Escenarios AML - Usarias GNNs?</h3>
+        <div class="graph-card">
+            <p>Es un buen caso de uso para GNNs en banca/AML? Haz clic en la respuesta para cada escenario.</p>
+            <div id="scenarioExercise"></div>
+        </div>
+
+        <h3>Ejercicio 4: Grado de los Nodos</h3>
+        <div class="graph-card">
+            <p>Dado el grafo con nodos A-E del libro (A-B, A-E, B-C, B-D, B-E, C-D, D-E), calcula el grado de cada nodo:</p>
+            <table style="margin:20px auto;">
+                <tr><th>Nodo</th><th>Tu respuesta</th><th>Resultado</th></tr>
+                <tr><td>A</td><td><input type="number" min="0" max="10" id="deg_a" style="width:45px;padding:5px;text-align:center"></td><td id="deg_a_r">-</td></tr>
+                <tr><td>B</td><td><input type="number" min="0" max="10" id="deg_b" style="width:45px;padding:5px;text-align:center"></td><td id="deg_b_r">-</td></tr>
+                <tr><td>C</td><td><input type="number" min="0" max="10" id="deg_c" style="width:45px;padding:5px;text-align:center"></td><td id="deg_c_r">-</td></tr>
+                <tr><td>D</td><td><input type="number" min="0" max="10" id="deg_d" style="width:45px;padding:5px;text-align:center"></td><td id="deg_d_r">-</td></tr>
+                <tr><td>E</td><td><input type="number" min="0" max="10" id="deg_e" style="width:45px;padding:5px;text-align:center"></td><td id="deg_e_r">-</td></tr>
+            </table>
+            <div class="btn-group">
+                <button class="btn btn-success" onclick="checkDegree()">Verificar</button>
+                <button class="btn btn-warning" onclick="showDegreeAnswer()">Ver Respuesta</button>
+            </div>
+            <div id="degreeFeedback" class="feedback"></div>
+            <div class="info-box" style="margin-top:15px;">
+                <p><strong>Recordatorio:</strong> El grado de un nodo = numero de aristas conectadas a ese nodo.</p>
+            </div>
+        </div>
+
+        <h3>Ejercicio 5: Verdadero o Falso</h3>
+        <div class="graph-card" id="tfExercise"></div>
+
+        <div style="text-align:center; margin-top:20px;">
+            <button class="btn btn-primary" onclick="completeSection('ejercicios')" id="btnCompleteEjercicios" style="font-size:1.1em; padding:16px 40px;">&#10003; He completado los ejercicios - Ver Resumen</button>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: RESUMEN ====================== -->
+    <div id="resumen" class="section">
+        <h2>Resumen Final del Capitulo 1</h2>
+
+        <div class="stat-cards">
+            <div class="stat-card"><div class="number" id="finalScore1">-</div><div class="label">Quiz Basico</div></div>
+            <div class="stat-card"><div class="number" id="finalScore2">-</div><div class="label">Quiz Avanzado</div></div>
+            <div class="stat-card"><div class="number">18</div><div class="label">Paginas estudiadas</div></div>
+            <div class="stat-card"><div class="number">8+</div><div class="label">Tipos de grafos</div></div>
+        </div>
+
+        <div class="highlight">
+            <h3>Los 5 Puntos Mas Importantes (Enfoque AML)</h3>
+            <ol style="line-height: 2.2; font-size: 1.1em;">
+                <li><strong>Los grafos</strong> son la representacion natural de datos financieros: cuentas=nodos, transacciones=aristas. Los criminales operan en <em>redes</em>.</li>
+                <li><strong>Las GNNs</strong> superan a reglas y ML tabular porque ven la <em>red completa</em> via message passing, no transacciones aisladas.</li>
+                <li><strong>5 escenarios AML clave:</strong> Precursores de fentanilo (heterogeneo), contrabando de petroleo (DAG), trafico de personas (ciclico), fraude timeshare (bipartito), mulas financieras (homogeneo).</li>
+                <li><strong>Cada tipo de grafo</strong> se ajusta a un delito diferente: la topologia del crimen dicta el tipo de grafo a usar.</li>
+                <li><strong>Features AML clave:</strong> montos bajo umbral, velocidad de retiro, fan-in/fan-out, SARs previos, pais/jurisdiccion, patron temporal.</li>
+            </ol>
+        </div>
+
+        <h3>Mapa Mental del Capitulo</h3>
+        <div class="graph-card">
+            <canvas id="mindMap" width="900" height="500"></canvas>
+        </div>
+
+        <div class="success-box">
+            <h3>Preparacion para el Capitulo 2: Graph Embeddings</h3>
+            <p>En el proximo capitulo aprenderas:</p>
+            <ul>
+                <li>Como crear embeddings con <strong>Node2Vec</strong></li>
+                <li>Como crear embeddings con una <strong>GNN</strong></li>
+                <li>Como <strong>visualizar y usar</strong> embeddings</li>
+                <li>La teoria: representaciones, random walks, y message passing profundo</li>
+            </ul>
+        </div>
+
+        <div class="concepts-grid">
+            <div class="concept-card" style="cursor:default">
+                <h4>Conceptos Dominados</h4>
+                <p>Grafos, Nodos, Aristas, Matriz de Adyacencia, Tipos de Grafos, GNNs, Message Passing, Embeddings, Fan-in/Fan-out, Structuring, SARs</p>
+            </div>
+            <div class="concept-card" style="cursor:default; background: linear-gradient(135deg, #28a745, #20c997);">
+                <h4>Escenarios AML Cubiertos</h4>
+                <p>Precursores fentanilo, Contrabando petroleo, Trafico personas, Fraude timeshare, Mulas financieras</p>
+            </div>
+            <div class="concept-card" style="cursor:default; background: linear-gradient(135deg, #fd7e14, #ffc107);">
+                <h4>Proximos Pasos</h4>
+                <p>Cap 2: Embeddings / Modelar dataset AML real con PyG / Construir grafo de transacciones / Entrenar GNN detector de mulas</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../js/app.js"></script>
+</body>
+</html>
