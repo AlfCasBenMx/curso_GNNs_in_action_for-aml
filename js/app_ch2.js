@@ -144,8 +144,8 @@ function completeSection(section){
 function toggleAccordion(header){
   const body = header.nextElementSibling;
   const icon = header.querySelector('.accordion-icon');
-  const isOpen = body.style.display === 'block';
-  body.style.display = isOpen ? 'none' : 'block';
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open');
   if(icon) icon.textContent = isOpen ? '\u25BC' : '\u25B2';
 }
 
