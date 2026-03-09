@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capitulo 2: Graph Embeddings - Estudio Completo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Capitulo 2: Graph Embeddings</h1>
+        <p class="subtitle">Graph Neural Networks in Action - Keita Broadwater</p>
+        <p class="book-info">Guia de Estudio Interactiva | Enfoque Banca &amp; AML | Paginas 79-148</p>
+        <p style="margin-top:10px; color: var(--dc-green); font-weight:600; font-size: 0.9em; letter-spacing: 0.5px;">NODE2VEC &nbsp;|&nbsp; GNN EMBEDDINGS &nbsp;|&nbsp; SEMI-SUPERVISED LEARNING &nbsp;|&nbsp; TRANSDUCTIVO vs INDUCTIVO &nbsp;|&nbsp; MESSAGE PASSING</p>
+    </header>
+
+    <div class="global-progress" id="globalProgress">
+        <span class="global-progress-label">Progreso del Capitulo</span>
+        <div class="global-progress-bar"><div class="global-progress-fill" id="globalFill"></div></div>
+        <span class="global-progress-pct" id="globalPct">0%</span>
+    </div>
+
+    <nav id="mainNav">
+        <button data-section="intro" onclick="navClick('intro',this)">Intro<span class="lock-icon"></span></button>
+        <button data-section="n2v" onclick="navClick('n2v',this)">Node2Vec<span class="lock-icon"></span></button>
+        <button data-section="gnn_emb" onclick="navClick('gnn_emb',this)">GNN Embeddings<span class="lock-icon"></span></button>
+        <button data-section="comparacion" onclick="navClick('comparacion',this)">N2V vs GNN<span class="lock-icon"></span></button>
+        <button data-section="semi_supervised" onclick="navClick('semi_supervised',this)">Semi-Supervised<span class="lock-icon"></span></button>
+        <button data-section="under_hood" onclick="navClick('under_hood',this)">Under the Hood<span class="lock-icon"></span></button>
+        <button data-section="aml" onclick="navClick('aml',this)">AML/Banca<span class="lock-icon"></span></button>
+        <button data-section="quiz1" onclick="navClick('quiz1',this)">Quiz Basico<span class="lock-icon"></span></button>
+        <button data-section="quiz2" onclick="navClick('quiz2',this)">Quiz Avanzado<span class="lock-icon"></span></button>
+        <button data-section="flashcards" onclick="navClick('flashcards',this)">Flashcards<span class="lock-icon"></span></button>
+        <button data-section="ejercicios" onclick="navClick('ejercicios',this)">Ejercicios<span class="lock-icon"></span></button>
+        <button data-section="resumen" onclick="navClick('resumen',this)">Resumen<span class="lock-icon"></span></button>
+    </nav>
+
+    <!-- ====================== SECCION: INTRODUCCION ====================== -->
+    <div id="intro" class="section active">
+        <h2>Introduccion al Capitulo 2</h2>
+
+        <div class="stat-cards">
+            <div class="stat-card"><div class="number">70</div><div class="label">Paginas del capitulo</div></div>
+            <div class="stat-card"><div class="number">2</div><div class="label">Metodos de embedding</div></div>
+            <div class="stat-card"><div class="number">4</div><div class="label">Modelos comparados</div></div>
+            <div class="stat-card"><div class="number">89%</div><div class="label">Mejor F1 Score logrado</div></div>
+        </div>
+
+        <h3>De que trata este capitulo?</h3>
+        <p>Este capitulo es el <strong>puente entre la teoria y la practica</strong>. Aprenderas a crear <strong>graph embeddings</strong> (representaciones numericas de grafos) usando dos metodos fundamentales: <strong>Node2Vec (N2V)</strong> y <strong>GNNs</strong>, y los compararas en un problema real de clasificacion semi-supervisada.</p>
+
+        <div class="danger-box">
+            <h4>Enfoque AML/Banca de esta guia</h4>
+            <p>Los embeddings son la <strong>piedra angular</strong> de cualquier sistema GNN para AML. Sin embeddings de calidad, tu modelo no puede distinguir entre una cuenta legitima y una mula financiera. En este capitulo adaptamos los conceptos a:</p>
+            <ol>
+                <li><strong>Embeddings transaccionales:</strong> Convertir patrones de transacciones en vectores numericos</li>
+                <li><strong>Deteccion de comunidades:</strong> Identificar clusters de cuentas sospechosas</li>
+                <li><strong>Semi-supervised learning:</strong> Detectar fraude cuando solo tienes pocas cuentas etiquetadas como sospechosas</li>
+                <li><strong>Transductivo vs Inductivo:</strong> Elegir el metodo correcto segun si tu red financiera es estatica o dinamica</li>
+            </ol>
+        </div>
+
+        <div class="highlight">
+            <h4>Al terminar este capitulo seras capaz de:</h4>
+            <ul>
+                <li>Crear embeddings con <strong>Node2Vec</strong> y entender sus parametros (p, q, walk_length)</li>
+                <li>Crear embeddings con una <strong>GNN (GCN)</strong> usando PyTorch Geometric</li>
+                <li>Visualizar embeddings con <strong>UMAP</strong> para descubrir clusters</li>
+                <li>Comparar N2V vs GNN en un problema de clasificacion semi-supervisada</li>
+                <li>Entender la diferencia entre aprendizaje <strong>transductivo</strong> e <strong>inductivo</strong></li>
+                <li>Comprender <strong>message passing</strong> como el motor de las GNNs</li>
+            </ul>
+        </div>
+
+        <h3>Caso de Estudio: Political Books Dataset</h3>
+        <div class="info-box">
+            <h4>El dataset que usaremos en todo el capitulo</h4>
+            <p>El <strong>Political Books dataset</strong> contiene libros sobre politica de EE.UU. vendidos en Amazon.com durante las elecciones presidenciales de 2004. Las aristas representan co-compras frecuentes: <em>"los compradores de este libro tambien compraron este otro"</em>.</p>
+            <table class="comparison-table" style="margin: 15px 0;">
+                <tr><th>Caracteristica</th><th>Valor</th></tr>
+                <tr><td>Nodos (libros)</td><td>105</td></tr>
+                <tr><td>Aristas (co-compras)</td><td>441</td></tr>
+                <tr><td>Tipo de grafo</td><td>No dirigido (undirected)</td></tr>
+                <tr><td>Libros izquierda ("l")</td><td>43 nodos &mdash; 41.0%</td></tr>
+                <tr><td>Libros derecha ("c")</td><td>49 nodos &mdash; 46.7%</td></tr>
+                <tr><td>Libros neutros ("n")</td><td>13 nodos &mdash; 12.4%</td></tr>
+                <tr><td>Formato del archivo</td><td>GML (Graph Modeling Language)</td></tr>
+                <tr><td>Tarea</td><td>Clasificacion semi-supervisada (predecir orientacion politica)</td></tr>
+            </table>
+        </div>
+
+        <div class="purple-box">
+            <h4>&#128218; Donde obtener el dataset y el codigo</h4>
+            <p>Todo el codigo y datos del capitulo estan disponibles en el repositorio oficial del autor:</p>
+            <ul>
+                <li><strong>Repo GitHub del libro:</strong> <a href="https://github.com/keitabroadwater/gnns_in_action" target="_blank" style="color:var(--dc-green);">github.com/keitabroadwater/gnns_in_action</a></li>
+                <li><strong>Capitulo 2 (dataset + notebook):</strong> <a href="https://github.com/keitabroadwater/gnns_in_action/tree/master/chapter_2" target="_blank" style="color:var(--dc-green);">chapter_2/</a></li>
+                <li><strong>Notebook Jupyter/Colab:</strong> <code>chp2 embeddings.ipynb</code> (en el directorio chapter_2)</li>
+                <li><strong>Dataset GML:</strong> <a href="https://github.com/keitabroadwater/gnns_in_action/raw/master/chapter_2/polbooks.gml" target="_blank" style="color:var(--dc-green);">polbooks.gml</a> (descarga directa)</li>
+            </ul>
+            <p style="margin-top:10px;"><strong>Nuestro repo de estudio:</strong> <a href="https://github.com/AlfCasBenMx/curso_GNNs_in_action_for-aml" target="_blank" style="color:var(--dc-green);">github.com/AlfCasBenMx/curso_GNNs_in_action_for-aml</a><br>
+            <small>Incluye el script <code>descargar_polbooks.py</code> que descarga y explora el dataset automaticamente.</small></p>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                &#128194; Estructura del archivo polbooks.gml
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <p>El archivo GML (Graph Modeling Language) es un formato de texto plano legible por humanos. Asi se ve por dentro:</p>
+                <div class="graph-card" style="background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 0.85em; padding: 16px; line-height: 1.5;">
+                    <span style="color:#6a9955;">Creator "Mark Newman on Wed Oct 18 16:42:04 2006"</span><br>
+                    <span style="color:#569cd6;">graph</span> [<br>
+                    &nbsp;&nbsp;<span style="color:#569cd6;">directed</span> <span style="color:#b5cea8;">0</span> &nbsp;&nbsp;&nbsp;<span style="color:#6a9955;">// Grafo NO dirigido</span><br>
+                    &nbsp;&nbsp;<span style="color:#569cd6;">node</span> [<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">id</span> <span style="color:#b5cea8;">0</span><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">label</span> <span style="color:#ce9178;">"1000 Years for Revenge"</span><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">value</span> <span style="color:#ce9178;">"n"</span> &nbsp;&nbsp;&nbsp;<span style="color:#6a9955;">// n=neutral, l=left, c=conservative</span><br>
+                    &nbsp;&nbsp;]<br>
+                    &nbsp;&nbsp;<span style="color:#569cd6;">node</span> [<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">id</span> <span style="color:#b5cea8;">30</span><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">label</span> <span style="color:#ce9178;">"The Price of Loyalty"</span><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">value</span> <span style="color:#ce9178;">"l"</span> &nbsp;&nbsp;&nbsp;<span style="color:#6a9955;">// l = left-leaning</span><br>
+                    &nbsp;&nbsp;]<br>
+                    &nbsp;&nbsp;<span style="color:#6a9955;">// ... 105 nodos en total ...</span><br>
+                    &nbsp;&nbsp;<span style="color:#569cd6;">edge</span> [<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">source</span> <span style="color:#b5cea8;">1</span> &nbsp;&nbsp;&nbsp;<span style="color:#6a9955;">// ID nodo origen</span><br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">target</span> <span style="color:#b5cea8;">0</span> &nbsp;&nbsp;&nbsp;<span style="color:#6a9955;">// ID nodo destino</span><br>
+                    &nbsp;&nbsp;]<br>
+                    &nbsp;&nbsp;<span style="color:#6a9955;">// ... 441 aristas en total ...</span><br>
+                    ]
+                </div>
+                <div class="highlight" style="margin-top:12px;">
+                    <h4>Atributos del dataset</h4>
+                    <table class="comparison-table">
+                        <tr><th>Elemento</th><th>Atributo</th><th>Tipo</th><th>Descripcion</th></tr>
+                        <tr><td>Nodo</td><td><code>id</code></td><td>int (0-104)</td><td>Identificador unico del libro</td></tr>
+                        <tr><td>Nodo</td><td><code>label</code></td><td>string</td><td>Titulo del libro</td></tr>
+                        <tr><td>Nodo</td><td><code>value</code></td><td>string</td><td>Orientacion: "l" (left), "c" (conservative), "n" (neutral)</td></tr>
+                        <tr><td>Arista</td><td><code>source</code></td><td>int</td><td>ID del nodo origen</td></tr>
+                        <tr><td>Arista</td><td><code>target</code></td><td>int</td><td>ID del nodo destino</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                &#128214; Autores y contexto historico del dataset
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <div class="info-box">
+                    <p><strong>Compilado por:</strong> Valdis Krebs (<a href="http://www.orgnet.com" target="_blank" style="color:var(--dc-blue);">orgnet.com</a>), experto en analisis de redes organizacionales.</p>
+                    <p><strong>Etiquetas politicas asignadas por:</strong> Mark Newman (University of Michigan), mediante analisis cualitativo de descripciones y resenas en Amazon.</p>
+                    <p><strong>Disponible tambien en:</strong> <a href="http://www-personal.umich.edu/~mejn/netdata/" target="_blank" style="color:var(--dc-blue);">Mark Newman's Network Data Repository (CMU/UMich)</a></p>
+                    <p><strong>Contexto:</strong> Durante las elecciones de 2004 (Bush vs Kerry), los patrones de compra de libros en Amazon revelaron una fuerte polarizacion politica. Los compradores de libros de izquierda rara vez compraban libros de derecha y viceversa. Los libros neutros actuaban como "puente" entre ambos grupos.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                &#128187; Como descargar y explorar el dataset (paso a paso)
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <p><strong>Opcion 1: Usar nuestro script automatico</strong></p>
+                <div class="graph-card" style="background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 0.9em; padding: 16px; line-height: 1.6;">
+                    <span style="color:#6a9955;"># Clona nuestro repo de estudio</span><br>
+                    git clone https://github.com/AlfCasBenMx/curso_GNNs_in_action_for-aml.git<br>
+                    <span style="color:#569cd6;">cd</span> curso_GNNs_in_action_for-aml<br><br>
+                    <span style="color:#6a9955;"># Descarga el dataset automaticamente</span><br>
+                    python descargar_polbooks.py<br><br>
+                    <span style="color:#6a9955;"># El archivo se guarda en datos/polbooks.gml</span>
+                </div>
+                <p style="margin-top:12px;"><strong>Opcion 2: Descarga manual</strong></p>
+                <div class="graph-card" style="background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 0.9em; padding: 16px; line-height: 1.6;">
+                    <span style="color:#6a9955;"># Descarga directa del repo del autor</span><br>
+                    wget https://github.com/keitabroadwater/gnns_in_action/raw/master/chapter_2/polbooks.gml
+                </div>
+                <p style="margin-top:12px;"><strong>Opcion 3: Usar el notebook oficial en Google Colab</strong></p>
+                <div class="info-box">
+                    <p>El archivo <code>chp2 embeddings.ipynb</code> en el <a href="https://github.com/keitabroadwater/gnns_in_action/tree/master/chapter_2" target="_blank" style="color:var(--dc-blue);">repo del autor</a> se puede abrir directamente en Google Colab. Incluye todo el codigo del capitulo listo para ejecutar.</p>
+                </div>
+                <p style="margin-top:12px;"><strong>Exploracion rapida con Python:</strong></p>
+                <div class="graph-card" style="background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 0.9em; padding: 16px; line-height: 1.6;">
+                    <span style="color:#569cd6;">import</span> networkx <span style="color:#569cd6;">as</span> nx<br>
+                    <span style="color:#569cd6;">from</span> collections <span style="color:#569cd6;">import</span> Counter<br><br>
+                    G = nx.read_gml(<span style="color:#ce9178;">'datos/polbooks.gml'</span>)<br><br>
+                    <span style="color:#dcdcaa;">print</span>(<span style="color:#ce9178;">f"Nodos: </span>{G.number_of_nodes()}<span style="color:#ce9178;">"</span>)  <span style="color:#6a9955;"># 105</span><br>
+                    <span style="color:#dcdcaa;">print</span>(<span style="color:#ce9178;">f"Aristas: </span>{G.number_of_edges()}<span style="color:#ce9178;">"</span>)  <span style="color:#6a9955;"># 441</span><br><br>
+                    <span style="color:#6a9955;"># Distribucion politica</span><br>
+                    vals = nx.get_node_attributes(G, <span style="color:#ce9178;">'value'</span>)<br>
+                    <span style="color:#dcdcaa;">print</span>(Counter(vals.values()))  <span style="color:#6a9955;"># Counter({'c':49, 'l':43, 'n':13})</span><br><br>
+                    <span style="color:#6a9955;"># Ver un libro especifico</span><br>
+                    <span style="color:#dcdcaa;">print</span>(G.nodes[<span style="color:#ce9178;">'0'</span>])  <span style="color:#6a9955;"># {'label':'1000 Years...', 'value':'n'}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="danger-box">
+            <h4>Librerias necesarias para reproducir el capitulo</h4>
+            <div class="graph-card" style="background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 0.9em; padding: 16px; line-height: 1.6; margin-top:10px;">
+                pip install networkx node2vec umap-learn matplotlib<br>
+                pip install torch torch-geometric  <span style="color:#6a9955;"># Para la parte de GNN</span><br>
+                pip install scikit-learn  <span style="color:#6a9955;"># Para Random Forest</span>
+            </div>
+        </div>
+
+        <h3>Flujo del Capitulo</h3>
+        <div class="flow-diagram">
+            <div class="flow-step">Seccion 2.1: Node2Vec (N2V)<br><small>Crear embeddings con random walks</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step green">Seccion 2.2: GNN Embeddings<br><small>Crear embeddings con Graph Convolutional Network</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step orange">Seccion 2.3: Comparacion<br><small>N2V vs GNN en clasificacion semi-supervisada</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step blue">Seccion 2.4: Under the Hood<br><small>Teoria: transductivo/inductivo, random walks, message passing</small></div>
+        </div>
+
+        <div class="success-box">
+            <h4>Conexion con el Capitulo 1</h4>
+            <p>En el Cap 1 aprendimos <em>que</em> son los embeddings (una lista de numeros que resume algo complejo). Ahora vamos a aprender <em>como</em> crearlos y <em>como</em> usarlos para resolver problemas reales.</p>
+        </div>
+
+        <div class="checkpoint" id="cp-intro">
+            <h4>&#9881; Checkpoint &mdash; Desbloquea la siguiente seccion</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">Cual es el objetivo principal de los graph embeddings?</p>
+            <div class="cp-option" onclick="checkCP('intro',this,false)">Dibujar grafos bonitos en pantalla</div>
+            <div class="cp-option" onclick="checkCP('intro',this,true)">Transformar datos complejos de grafos en vectores numericos de baja dimension que preservan patrones y relaciones</div>
+            <div class="cp-option" onclick="checkCP('intro',this,false)">Aumentar el numero de nodos en el grafo</div>
+            <div class="cp-feedback" id="cpFb-intro"></div>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: NODE2VEC ====================== -->
+    <div id="n2v" class="section">
+        <h2>Node2Vec (N2V) &mdash; Embeddings con Random Walks</h2>
+
+        <div class="purple-box">
+            <h4>Que es Node2Vec?</h4>
+            <p>Node2Vec es una tecnica inspirada en <strong>Word2Vec</strong> (NLP) que crea embeddings de nodos simulando <strong>caminatas aleatorias</strong> por el grafo. Los nodos que aparecen juntos frecuentemente en las caminatas tendran embeddings similares.</p>
+        </div>
+
+        <h3>El Proceso Paso a Paso</h3>
+        <div class="flow-diagram">
+            <div class="flow-step">1. Cargar datos + configurar parametros<br><small>Graph data (.gml) + dimensions, walk_length, num_walks</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step orange">2. Generar caminatas aleatorias<br><small>N2V recorre el grafo desde cada nodo, anotando los caminos</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step blue">3. Crear embeddings<br><small>Una red neuronal shallow aprende a predecir vecinos, el hidden layer = embedding</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step green">4. Visualizar con UMAP<br><small>Reducir de 64 dims a 2D para ver clusters</small></div>
+        </div>
+
+        <h3>Parametros Clave de N2V</h3>
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                dimensions &mdash; Tamano del embedding
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <p>Define <strong>cuantos numeros</strong> tendra el embedding de cada nodo. Es como decidir cuantas "caracteristicas" quieres capturar.</p>
+                <div class="info-box">
+                    <p><strong>Valor estandar:</strong> 128 (pero en el libro usan 64 para comparar con GNN)</p>
+                    <p><strong>Mas dimensiones</strong> = perfil mas detallado pero mas costoso computacionalmente</p>
+                    <p><strong>Menos dimensiones</strong> = perfil mas compacto pero puede perder informacion</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                walk_length &mdash; Longitud de cada caminata
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <p>Cuantos <strong>pasos</strong> da cada caminata aleatoria. Es como decidir que tan lejos explorar desde cada nodo.</p>
+                <div class="info-box">
+                    <p><strong>Valor estandar:</strong> 80 pasos (en el libro usan 30)</p>
+                    <p><strong>Mas pasos</strong> = explora mas vecindario, captura contexto mas amplio</p>
+                    <p><strong>Menos pasos</strong> = solo captura vecindario inmediato</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                num_walks &mdash; Numero de caminatas por nodo
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <p>Cuantas veces <strong>repetir</strong> la caminata desde cada nodo. Mas caminatas = mejor comprension del vecindario.</p>
+                <div class="info-box">
+                    <p><strong>Valor estandar:</strong> 10 (en el libro usan 200 para mas precision)</p>
+                    <p><strong>Mas caminatas</strong> = representacion mas robusta pero mas lento</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                p (return parameter) &mdash; Control de retroceso
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <p>Controla la probabilidad de que la caminata <strong>regrese</strong> al nodo anterior.</p>
+                <div class="success-box">
+                    <p><strong>p alto</strong> = menos probable que retroceda (explora nuevos caminos)</p>
+                    <p><strong>p bajo</strong> = mas probable que retroceda (se queda cerca del inicio)</p>
+                    <p><strong>p = 1</strong> = equilibrado (valor por defecto)</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                q (in-out parameter) &mdash; BFS vs DFS
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <p>Controla si la caminata explora <strong>cerca (BFS)</strong> o <strong>lejos (DFS)</strong>.</p>
+                <div class="highlight">
+                    <p><strong>q &gt; 1</strong> = BFS (breadth-first) &mdash; explora vecinos cercanos, captura estructura local</p>
+                    <p><strong>q &lt; 1</strong> = DFS (depth-first) &mdash; explora nodos lejanos, captura estructura global</p>
+                    <p><strong>q = 1</strong> = equilibrado (DeepWalk clasico)</p>
+                </div>
+                <div class="graph-card">
+                    <canvas id="canvasBFSDFS" width="700" height="350"></canvas>
+                    <p style="text-align:center; font-size:0.9em; color: var(--dc-gray-500);">BFS (flechas oscuras): explora cerca &nbsp;|&nbsp; DFS (flechas claras): explora lejos</p>
+                </div>
+            </div>
+        </div>
+
+        <h3>Codigo Clave</h3>
+        <div class="graph-card" style="background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 0.9em; padding: 20px; line-height: 1.6;">
+            <span style="color:#569cd6;">import</span> NetworkX <span style="color:#569cd6;">as</span> nx<br>
+            <span style="color:#569cd6;">from</span> Node2Vec <span style="color:#569cd6;">import</span> Node2Vec<br><br>
+            <span style="color:#6a9955;"># 1. Cargar grafo</span><br>
+            books_graph = nx.read_gml(<span style="color:#ce9178;">'polbooks.gml'</span>)<br><br>
+            <span style="color:#6a9955;"># 2. Inicializar N2V</span><br>
+            node2vec = Node2Vec(books_graph,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;dimensions=<span style="color:#b5cea8;">64</span>,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;walk_length=<span style="color:#b5cea8;">30</span>,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;num_walks=<span style="color:#b5cea8;">200</span>,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;workers=<span style="color:#b5cea8;">4</span>)<br><br>
+            <span style="color:#6a9955;"># 3. Entrenar</span><br>
+            model = node2vec.fit(window=<span style="color:#b5cea8;">10</span>, min_count=<span style="color:#b5cea8;">1</span>, batch_words=<span style="color:#b5cea8;">4</span>)<br><br>
+            <span style="color:#6a9955;"># 4. Extraer embeddings</span><br>
+            embeddings = {<span style="color:#569cd6;">str</span>(node): model.wv[<span style="color:#569cd6;">str</span>(node)]<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">for</span> node <span style="color:#569cd6;">in</span> books_graph.nodes()}
+        </div>
+
+        <h3>Visualizacion con UMAP</h3>
+        <div class="info-box">
+            <h4>Por que UMAP y no visualizar directamente en 2D?</h4>
+            <p>Puedes crear embeddings directamente en 2D (dimensions=2), pero UMAP produce <strong>mejor separacion de clusters</strong> porque:</p>
+            <ul>
+                <li>Preserva estructura <strong>local Y global</strong></li>
+                <li>Supera a t-SNE en mantener distancias globales</li>
+                <li>Permite crear embeddings ricos (64D) y luego reducirlos para visualizacion</li>
+            </ul>
+        </div>
+
+        <div class="graph-card">
+            <h4 style="text-align:center">Simulacion: N2V Random Walk</h4>
+            <canvas id="canvasN2VWalk" width="700" height="400"></canvas>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="animateRandomWalk()">&#9654; Animar Random Walk</button>
+                <button class="btn btn-warning" onclick="drawN2VGraph()">Reiniciar</button>
+            </div>
+        </div>
+
+        <div class="danger-box">
+            <h4>Limitacion importante de N2V</h4>
+            <p>N2V es <strong>transductivo</strong>: solo funciona con los nodos que vio durante el entrenamiento. Si llega un nodo nuevo al grafo, hay que <strong>reentrenar todo el modelo</strong>. Esto es critico en AML donde llegan cuentas nuevas todos los dias.</p>
+        </div>
+
+        <div class="checkpoint" id="cp-n2v">
+            <h4>&#9881; Checkpoint &mdash; Desbloquea la siguiente seccion</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">Que controla el parametro q en Node2Vec?</p>
+            <div class="cp-option" onclick="checkCP('n2v',this,false)">El numero de dimensiones del embedding</div>
+            <div class="cp-option" onclick="checkCP('n2v',this,false)">La cantidad de caminatas por nodo</div>
+            <div class="cp-option" onclick="checkCP('n2v',this,true)">Si la caminata explora cerca (BFS) o lejos (DFS)</div>
+            <div class="cp-feedback" id="cpFb-n2v"></div>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: GNN EMBEDDINGS ====================== -->
+    <div id="gnn_emb" class="section">
+        <h2>GNN Embeddings &mdash; Embeddings con Redes Neuronales de Grafos</h2>
+
+        <div class="purple-box">
+            <h4>La diferencia fundamental</h4>
+            <p>Mientras N2V crea embeddings como paso <strong>separado</strong> (primero caminas, luego entrenas), las GNNs integran la creacion de embeddings <strong>directamente en el proceso de aprendizaje</strong>. Los embeddings se refinan mientras la red aprende la tarea.</p>
+        </div>
+
+        <h3>Arquitectura: SimpleGNN</h3>
+        <div class="flow-diagram">
+            <div class="flow-step">INPUT: Node Features (x) + Edge Index<br><small>Features iniciales de cada nodo + estructura del grafo</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step orange">GCNConv Layer 1 (Message Passing)<br><small>Cada nodo agrega informacion de sus vecinos</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step blue">ReLU + Dropout<br><small>Activacion no-lineal + regularizacion</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step green">GCNConv Layer 2 (Message Passing)<br><small>Segunda ronda de agregacion de vecinos</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step">OUTPUT: Node Embeddings (64D)<br><small>Cada nodo tiene un vector de 64 numeros</small></div>
+        </div>
+
+        <h3>Codigo de la Arquitectura</h3>
+        <div class="graph-card" style="background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 0.9em; padding: 20px; line-height: 1.6;">
+            <span style="color:#569cd6;">class</span> <span style="color:#4ec9b0;">SimpleGNN</span>(torch.nn.Module):<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">def</span> <span style="color:#dcdcaa;">__init__</span>(self, num_features, hidden_channels):<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;super().__init__()<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;self.conv1 = <span style="color:#4ec9b0;">GCNConv</span>(num_features, hidden_channels)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;self.conv2 = <span style="color:#4ec9b0;">GCNConv</span>(hidden_channels, hidden_channels)<br><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">def</span> <span style="color:#dcdcaa;">forward</span>(self, x, edge_index):<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x = self.conv1(x, edge_index) &nbsp;<span style="color:#6a9955;"># Message passing 1</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x = torch.relu(x) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6a9955;"># Activacion</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x = torch.dropout(x, p=0.5) &nbsp;&nbsp;<span style="color:#6a9955;"># Regularizacion</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x = self.conv2(x, edge_index) &nbsp;<span style="color:#6a9955;"># Message passing 2</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">return</span> x
+        </div>
+
+        <h3>Preparacion de Datos</h3>
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                Conversion: NetworkX &#8594; PyTorch Geometric
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <p>PyG necesita los datos en formato tensor. La conversion es simple:</p>
+                <div class="info-box">
+                    <p><code>data = from_NetworkX(books_graph)</code></p>
+                    <p>Esto traduce la lista de aristas y atributos de nodos/aristas a tensores de PyTorch.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                Inicializacion de Features: Xavier Initialization
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <p>Cuando <strong>no tienes features predefinidas</strong> para los nodos (como en el dataset de libros politicos), se inicializan aleatoriamente.</p>
+                <div class="success-box">
+                    <h4>Xavier Initialization</h4>
+                    <p>En vez de numeros aleatorios simples, Xavier usa una distribucion que mantiene la <strong>variabilidad consistente</strong> entre capas. Esto evita dos problemas:</p>
+                    <ul>
+                        <li><strong>Vanishing gradients:</strong> Los gradientes se hacen tan pequenos que la red deja de aprender</li>
+                        <li><strong>Exploding gradients:</strong> Los gradientes se hacen tan grandes que la red se vuelve inestable</li>
+                    </ul>
+                </div>
+                <p>Alternativa: usar los embeddings de N2V como features iniciales (y obtener mejor rendimiento!).</p>
+            </div>
+        </div>
+
+        <h3>Generacion de Embeddings</h3>
+        <div class="graph-card" style="background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 0.9em; padding: 20px; line-height: 1.6;">
+            <span style="color:#6a9955;"># Inicializar modelo</span><br>
+            model = SimpleGNN(num_features=<span style="color:#b5cea8;">64</span>, hidden_channels=<span style="color:#b5cea8;">64</span>)<br><br>
+            <span style="color:#6a9955;"># Modo evaluacion (sin dropout, sin gradientes)</span><br>
+            model.eval()<br>
+            <span style="color:#569cd6;">with</span> torch.no_grad():<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;gnn_embeddings = model(data.x, data.edge_index)<br><br>
+            <span style="color:#6a9955;"># Convertir a numpy para analisis</span><br>
+            gnn_embeddings_np = gnn_embeddings.detach().cpu().numpy()
+        </div>
+
+        <div class="highlight">
+            <h4>Dato importante</h4>
+            <p>Incluso <strong>sin entrenar</strong> (solo un forward pass), la GNN ya produce embeddings utiles porque el message passing captura la estructura topologica del grafo. Con entrenamiento, los embeddings se optimizan para la tarea especifica.</p>
+        </div>
+
+        <div class="graph-card">
+            <h4 style="text-align:center">Simulacion: Message Passing en GNN</h4>
+            <canvas id="canvasGNNMP" width="700" height="400"></canvas>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="animateGNNMessagePassing()">&#9654; Animar Message Passing</button>
+                <button class="btn btn-warning" onclick="drawGNNGraph()">Reiniciar</button>
+            </div>
+        </div>
+
+        <div class="checkpoint" id="cp-gnn_emb">
+            <h4>&#9881; Checkpoint &mdash; Desbloquea la siguiente seccion</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">Que hace la Xavier Initialization cuando no tenemos features predefinidas para los nodos?</p>
+            <div class="cp-option" onclick="checkCP('gnn_emb',this,false)">Copia los features de nodos vecinos</div>
+            <div class="cp-option" onclick="checkCP('gnn_emb',this,true)">Inicializa features aleatorios con variabilidad consistente entre capas para evitar vanishing/exploding gradients</div>
+            <div class="cp-option" onclick="checkCP('gnn_emb',this,false)">Pone todos los features en cero</div>
+            <div class="cp-feedback" id="cpFb-gnn_emb"></div>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: COMPARACION ====================== -->
+    <div id="comparacion" class="section">
+        <h2>N2V vs GNN &mdash; Comparacion de Embeddings</h2>
+
+        <h3>Diferencias Fundamentales</h3>
+        <div style="overflow-x: auto;">
+            <table class="comparison-table">
+                <tr><th>Aspecto</th><th>Node2Vec (N2V)</th><th>GNN Embeddings</th></tr>
+                <tr><td><strong>Tipo de aprendizaje</strong></td><td>Transductivo</td><td>Inductivo</td></tr>
+                <tr><td><strong>Usa features de nodos?</strong></td><td>No, solo topologia</td><td>Si, topologia + features</td></tr>
+                <tr><td><strong>Nodos nuevos?</strong></td><td>Requiere reentrenar</td><td>Generaliza sin reentrenar</td></tr>
+                <tr><td><strong>Cuando se crea el embedding?</strong></td><td>Paso separado (antes de la tarea)</td><td>Durante la tarea (end-to-end)</td></tr>
+                <tr><td><strong>Grafos dinamicos?</strong></td><td>No adaptable</td><td>Adaptable</td></tr>
+                <tr><td><strong>Complejidad</strong></td><td>Mas simple, rapido</td><td>Mas complejo, poderoso</td></tr>
+                <tr><td><strong>Mejor para</strong></td><td>Grafos estaticos, exploracion</td><td>Grafos grandes/dinamicos, produccion</td></tr>
+            </table>
+        </div>
+
+        <h3>Resultados en el Political Books Dataset</h3>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                Adaptabilidad a Nuevos Grafos
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <div class="success-box">
+                    <p><strong>GNN:</strong> Aprende una <em>funcion</em> que mapea features a embeddings. Esta funcion se puede aplicar a nodos nuevos sin reentrenar.</p>
+                    <p><strong>N2V:</strong> Debe reentrenarse para cada nuevo grafo o conjunto de nodos.</p>
+                </div>
+                <div class="info-box">
+                    <p><strong>Ejemplo AML:</strong> Si tu banco incorpora 1,000 cuentas nuevas cada dia, con GNN puedes generar sus embeddings instantaneamente. Con N2V, tendrias que reentrenar el modelo cada dia.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                Integracion de Features
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <div class="success-box">
+                    <p><strong>GNN:</strong> Usa features de nodos (edad cuenta, patron depositos, pais) <em>ademas de</em> la estructura del grafo.</p>
+                    <p><strong>N2V:</strong> Solo usa la topologia (quien conecta con quien). Ignora features adicionales.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                Optimizacion Especifica por Tarea
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <div class="success-box">
+                    <p><strong>GNN (end-to-end):</strong> Los embeddings se optimizan <em>durante</em> el entrenamiento para la tarea especifica (detectar fraude, clasificar cuentas). El embedding se ajusta a lo que necesitas.</p>
+                    <p><strong>N2V:</strong> Crea embeddings "genericos" que luego alimentan a otro modelo separado.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="danger-box">
+            <h4>Cuando N2V es mejor que GNN?</h4>
+            <ul>
+                <li>Grafo <strong>estatico y bien definido</strong> que no cambia</li>
+                <li>Datos <strong>escasos o ruidosos</strong> (N2V funciona sin features de nodos)</li>
+                <li>Tarea <strong>exploratoria</strong> donde quieres ver la estructura rapidamente</li>
+                <li>Cuando necesitas algo <strong>rapido y simple</strong> como baseline</li>
+            </ul>
+        </div>
+
+        <div class="checkpoint" id="cp-comparacion">
+            <h4>&#9881; Checkpoint &mdash; Desbloquea la siguiente seccion</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">Que tipo de aprendizaje permite a las GNNs generalizar a nodos nuevos sin reentrenar?</p>
+            <div class="cp-option" onclick="checkCP('comparacion',this,false)">Transductivo</div>
+            <div class="cp-option" onclick="checkCP('comparacion',this,true)">Inductivo</div>
+            <div class="cp-option" onclick="checkCP('comparacion',this,false)">Supervisado</div>
+            <div class="cp-feedback" id="cpFb-comparacion"></div>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: SEMI-SUPERVISED ====================== -->
+    <div id="semi_supervised" class="section">
+        <h2>Aprendizaje Semi-Supervisado</h2>
+
+        <div class="info-box">
+            <h4>Que es semi-supervised learning?</h4>
+            <p>Entrenar un modelo con <strong>pocos datos etiquetados + muchos datos sin etiquetar</strong>. En el capitulo: solo el <strong>20% de los libros</strong> tienen etiqueta politica visible, y el modelo debe predecir el <strong>80% restante</strong>.</p>
+        </div>
+
+        <div class="highlight">
+            <h4>Por que es crucial para AML?</h4>
+            <p>En la vida real, solo tienes unas <strong>pocas cuentas confirmadas como sospechosas</strong> (por investigaciones anteriores, SARs). Pero tienes <strong>millones de cuentas sin etiquetar</strong>. El aprendizaje semi-supervisado es perfecto para este escenario.</p>
+        </div>
+
+        <h3>Comparacion de Modelos (4 configuraciones)</h3>
+        <div style="overflow-x: auto;">
+            <table class="comparison-table">
+                <tr><th>Modelo</th><th>Input</th><th>Accuracy</th><th>F1 Score</th></tr>
+                <tr><td>Random Forest</td><td>Embeddings GNN</td><td>83.33%</td><td>82.01%</td></tr>
+                <tr><td>Random Forest</td><td>Embeddings N2V</td><td>84.52%</td><td>80.72%</td></tr>
+                <tr><td>GNN 2 capas</td><td>Features aleatorios</td><td>82.27%</td><td>82.14%</td></tr>
+                <tr><td>GNN 2 capas</td><td>N2V como features</td><td>87.79%</td><td>88.10%</td></tr>
+                <tr style="background: var(--dc-green-light);"><td><strong>GNN 4 capas</strong></td><td><strong>Features aleatorios</strong></td><td><strong>86.58%</strong></td><td><strong>86.90%</strong></td></tr>
+                <tr style="background: var(--dc-green-light);"><td><strong>GNN 4 capas</strong></td><td><strong>N2V como features</strong></td><td><strong>88.99%</strong></td><td><strong>89.29%</strong></td></tr>
+            </table>
+        </div>
+
+        <div class="graph-card">
+            <h4 style="text-align:center">Comparacion Visual de Rendimiento</h4>
+            <canvas id="canvasResults" width="700" height="350"></canvas>
+        </div>
+
+        <h3>Insights Clave</h3>
+        <div class="concepts-grid">
+            <div class="concept-card" style="cursor:default">
+                <h4>N2V + GNN = Mejor Combo</h4>
+                <p>Usar embeddings de N2V como features iniciales de la GNN da el <strong>mejor resultado</strong> (89.29% F1). Ambos metodos se complementan.</p>
+            </div>
+            <div class="concept-card" style="cursor:default; background: linear-gradient(135deg, #28a745, #20c997);">
+                <h4>GNN > Random Forest</h4>
+                <p>En general, los modelos GNN end-to-end <strong>superan al Random Forest</strong>, especialmente en F1 score (balance entre precision y recall).</p>
+            </div>
+            <div class="concept-card" style="cursor:default; background: linear-gradient(135deg, #fd7e14, #ffc107);">
+                <h4>Mas Capas = Mejor</h4>
+                <p>El modelo de 4 capas supera al de 2 capas. Mas capas = mas hops de message passing = captura relaciones mas lejanas.</p>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                El Training Loop (paso a paso)
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <div class="flow-diagram">
+                    <div class="flow-step">1. optimizer.zero_grad()<br><small>Resetear gradientes</small></div>
+                    <div class="flow-arrow">&#8595;</div>
+                    <div class="flow-step orange">2. model(data.x, data.edge_index)<br><small>Forward pass: crear embeddings + predicciones</small></div>
+                    <div class="flow-arrow">&#8595;</div>
+                    <div class="flow-step blue">3. out[train_mask]<br><small>Aplicar mascara: solo usar nodos etiquetados</small></div>
+                    <div class="flow-arrow">&#8595;</div>
+                    <div class="flow-step pink">4. loss_fn(predictions, labels)<br><small>Calcular error entre prediccion y realidad</small></div>
+                    <div class="flow-arrow">&#8595;</div>
+                    <div class="flow-step green">5. loss.backward() + optimizer.step()<br><small>Propagar error y actualizar pesos</small></div>
+                </div>
+                <p style="text-align:center; margin-top:10px;"><strong>Repetir 3,000 epochs</strong></p>
+            </div>
+        </div>
+
+        <div class="checkpoint" id="cp-semi_supervised">
+            <h4>&#9881; Checkpoint &mdash; Desbloquea la siguiente seccion</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">Segun los resultados del capitulo, que combinacion obtuvo el mejor F1 score?</p>
+            <div class="cp-option" onclick="checkCP('semi_supervised',this,false)">Random Forest con embeddings N2V (80.72%)</div>
+            <div class="cp-option" onclick="checkCP('semi_supervised',this,false)">GNN 2 capas con features aleatorios (82.14%)</div>
+            <div class="cp-option" onclick="checkCP('semi_supervised',this,true)">GNN 4 capas con N2V como features (89.29%)</div>
+            <div class="cp-feedback" id="cpFb-semi_supervised"></div>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: UNDER THE HOOD ====================== -->
+    <div id="under_hood" class="section">
+        <h2>Under the Hood &mdash; Teoria Profunda</h2>
+
+        <h3>Representaciones y Embeddings</h3>
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                Representaciones basicas vs Embeddings
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <table class="comparison-table">
+                    <tr><th>Representacion</th><th>Descripcion</th><th>Ejemplos</th></tr>
+                    <tr><td><strong>Basica</strong></td><td>Buenas para algoritmos analiticos y recorridos de red. Info: vecinos de nodos/aristas</td><td>Lista de adyacencia, Edge list, Matriz de adyacencia</td></tr>
+                    <tr><td><strong>Transductiva (shallow)</strong></td><td>No sirven para datos no entrenados. Dificiles de escalar</td><td>DeepWalk, N2V, TransE, RESCAL</td></tr>
+                    <tr><td><strong>Inductiva</strong></td><td>Se generalizan a grafos nuevos y estructuralmente diferentes. Vectores en espacio continuo</td><td>GNNs, Transformers</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <h3>Transductivo vs Inductivo</h3>
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                Aprendizaje Transductivo (Shallow)
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <div class="danger-box">
+                    <h4>Caracteristicas</h4>
+                    <ul>
+                        <li>Optimiza embeddings <strong>individualmente</strong> para cada nodo</li>
+                        <li>Necesita <strong>todo el grafo</strong> disponible durante entrenamiento</li>
+                        <li><strong>No generaliza</strong> a nodos o grafos nuevos</li>
+                        <li>Agregar nodos nuevos requiere <strong>reentrenar todo</strong></li>
+                        <li>Costoso computacionalmente para grafos grandes</li>
+                    </ul>
+                    <p><strong>Ejemplos:</strong> DeepWalk, N2V, matrix factorization</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                Aprendizaje Inductivo
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <div class="success-box">
+                    <h4>Caracteristicas</h4>
+                    <ul>
+                        <li>Aprende una <strong>funcion</strong> para generar embeddings</li>
+                        <li>Puede generar embeddings para <strong>nodos nunca vistos</strong></li>
+                        <li>Usa <strong>features de nodos + estructura</strong></li>
+                        <li>Mas <strong>flexible y escalable</strong> para grafos dinamicos</li>
+                    </ul>
+                    <p><strong>Ejemplos:</strong> GraphSAGE, GCNs, GATs</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                Ejemplos Practicos: Cuando usar cada uno?
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <div class="concepts-grid">
+                    <div class="concept-card" style="cursor:default; background: var(--dc-red);">
+                        <h4>Transductivo: Deteccion de comunidades en red social</h4>
+                        <p>Usa todo el grafo para identificar comunidades. El inductivo no aprovecharia toda la estructura porque solo procesa subconjuntos.</p>
+                    </div>
+                    <div class="concept-card" style="cursor:default; background: #059669;">
+                        <h4>Inductivo: Deteccion de spam en email</h4>
+                        <p>Llegan emails nuevos constantemente. El modelo debe clasificar sin reentrenar. Transductivo seria impractico.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h3>N2V: Random Walks en Profundidad</h3>
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                DeepWalk vs Node2Vec
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <div class="info-box">
+                    <p><strong>DeepWalk (2014):</strong> El pionero. Caminatas 100% aleatorias (sin sesgo). Todos los vecinos tienen la misma probabilidad.</p>
+                    <p><strong>Node2Vec (2016):</strong> Mejora DeepWalk con parametros p y q para controlar si exploras cerca (BFS) o lejos (DFS).</p>
+                    <p><strong>Para obtener DeepWalk con N2V:</strong> p=1, q=1 (sin sesgo).</p>
+                </div>
+                <p>Despues de las caminatas, una <strong>red neuronal shallow</strong> (1 hidden layer) aprende a predecir el siguiente nodo. El hidden layer se convierte en el embedding del nodo.</p>
+            </div>
+        </div>
+
+        <h3>Message Passing como Deep Learning</h3>
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                Anatomia de una capa de Message Passing
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <div class="flow-diagram">
+                    <div class="flow-step">AGGREGATE<br><small>Recoger mensajes de vecinos a 1 hop</small></div>
+                    <div class="flow-arrow">&#8595;</div>
+                    <div class="flow-step orange">TRANSFORM<br><small>Aplicar transformacion no-lineal (neural network)</small></div>
+                    <div class="flow-arrow">&#8595;</div>
+                    <div class="flow-step green">UPDATE<br><small>Actualizar el embedding del nodo</small></div>
+                </div>
+                <div class="highlight">
+                    <h4>Numero de capas = Numero de hops</h4>
+                    <p>Cada capa de message passing recoge info de vecinos a 1 hop. Con 3 capas, cada nodo "ve" hasta 3 hops de distancia. El alcance crece <strong>exponencialmente</strong> (principio de "6 grados de separacion").</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                GNN vs Feed-Forward Neural Network
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <table class="comparison-table">
+                    <tr><th>Aspecto</th><th>MLP (Feed-Forward)</th><th>GNN</th></tr>
+                    <tr><td>Input</td><td>Vector de features (una fila)</td><td>Grafo completo (nodos + aristas)</td></tr>
+                    <tr><td>Capas</td><td>Linear + Activation</td><td>Message Passing + Activation</td></tr>
+                    <tr><td>Info de vecinos</td><td>No</td><td>Si (agregacion de vecinos)</td></tr>
+                    <tr><td>Hidden layers son</td><td>Representaciones internas</td><td>Embeddings del grafo</td></tr>
+                    <tr><td>Output</td><td>Prediccion</td><td>Embeddings + Prediccion</td></tr>
+                </table>
+                <div class="purple-box">
+                    <h4>El truco elegante de las GNNs</h4>
+                    <p>En cada capa de message passing, se aplican <strong>muchas redes neuronales pequenas</strong> a nivel de cada nodo. Cada nodo tiene su propia transformacion local. Es como tener miles de mini-redes aprendiendo simultaneamente sobre datos locales.</p>
+                </div>
+            </div>
+        </div>
+
+        <h3>Terminologia Clave</h3>
+        <div class="concepts-grid">
+            <div class="concept-card" style="cursor:default">
+                <h4>Shallow Methods</h4>
+                <p>Metodos sin deep learning. Usan lookup tables en vez de modelos generalizados. Ej: N2V, DeepWalk, matrix factorization.</p>
+            </div>
+            <div class="concept-card" style="cursor:default; background: linear-gradient(135deg, #28a745, #20c997);">
+                <h4>Encoder</h4>
+                <p>Cualquier metodo que produce un embedding (representacion de baja dimension). Las GNNs son una clase de encoders, similar a Transformers.</p>
+            </div>
+            <div class="concept-card" style="cursor:default; background: linear-gradient(135deg, #fd7e14, #ffc107);">
+                <h4>End-to-End</h4>
+                <p>Proceso completo en un solo modelo: datos crudos &#8594; embeddings &#8594; prediccion. Sin pasos separados. Las GNNs son end-to-end.</p>
+            </div>
+        </div>
+
+        <div class="checkpoint" id="cp-under_hood">
+            <h4>&#9881; Checkpoint &mdash; Desbloquea la siguiente seccion</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">En una GNN de 3 capas de message passing, hasta cuantos hops de distancia puede "ver" cada nodo?</p>
+            <div class="cp-option" onclick="checkCP('under_hood',this,false)">1 hop</div>
+            <div class="cp-option" onclick="checkCP('under_hood',this,true)">3 hops (una capa = un hop)</div>
+            <div class="cp-option" onclick="checkCP('under_hood',this,false)">Todos los nodos del grafo</div>
+            <div class="cp-feedback" id="cpFb-under_hood"></div>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: AML/BANCA ====================== -->
+    <div id="aml" class="section">
+        <h2>Embeddings en AML &amp; Banca</h2>
+
+        <div class="danger-box">
+            <h4>Por que los embeddings son cruciales para AML?</h4>
+            <p>Los sistemas AML tradicionales usan <strong>reglas fijas</strong> (ej: "alerta si transaccion > $10,000"). Los embeddings permiten capturar <strong>patrones complejos de comportamiento</strong> que las reglas no pueden detectar: cadenas de mulas, comunidades sospechosas, cuentas puente ocultas.</p>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                Embeddings Transaccionales para Mulas Financieras
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <div class="info-box">
+                    <h4>El escenario</h4>
+                    <p>Tienes una red de 50,000 cuentas bancarias con millones de transacciones. Solo 200 cuentas han sido confirmadas como mulas. Como detectas las demas?</p>
+                </div>
+                <div class="success-box">
+                    <h4>Solucion con Embeddings</h4>
+                    <ol>
+                        <li><strong>Crear el grafo:</strong> Cuentas = nodos, Transacciones = aristas</li>
+                        <li><strong>Features de nodo:</strong> Antiguedad, saldo promedio, # beneficiarios, velocidad de retiro</li>
+                        <li><strong>Features de arista:</strong> Monto, hora, frecuencia, patron temporal</li>
+                        <li><strong>Generar embeddings</strong> con GNN (inductivo, para cuentas nuevas)</li>
+                        <li><strong>Semi-supervised:</strong> Usar las 200 mulas conocidas como etiquetas para clasificar las 49,800 restantes</li>
+                    </ol>
+                </div>
+                <div class="highlight">
+                    <p><strong>Resultado esperado:</strong> Las cuentas mula tendran embeddings <em>similares</em> entre si y <em>diferentes</em> de las cuentas legitimas. Un clasificador puede separar ambos grupos.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                N2V vs GNN para AML: Cual elegir?
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <table class="comparison-table">
+                    <tr><th>Escenario AML</th><th>Mejor Metodo</th><th>Razon</th></tr>
+                    <tr><td>Investigacion puntual de una red sospechosa</td><td><strong>N2V</strong></td><td>Red estatica, exploracion rapida</td></tr>
+                    <tr><td>Monitoreo continuo de transacciones</td><td><strong>GNN</strong></td><td>Cuentas nuevas diariamente, necesita generalizar</td></tr>
+                    <tr><td>Analisis historico de un caso cerrado</td><td><strong>N2V</strong></td><td>Grafo fijo, datos completos</td></tr>
+                    <tr><td>Sistema de alertas en tiempo real</td><td><strong>GNN</strong></td><td>Debe procesar datos nuevos sin reentrenar</td></tr>
+                    <tr><td>Primer analisis exploratorio</td><td><strong>N2V</strong></td><td>Rapido, sin features requeridos</td></tr>
+                    <tr><td>Modelo en produccion</td><td><strong>GNN</strong></td><td>Escalable, adaptable, end-to-end</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                Analogia: N2V como Fotografia, GNN como Video
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <div class="purple-box">
+                    <h4>N2V = Fotografia</h4>
+                    <p>Captura un <strong>instante congelado</strong> de tu red financiera. Perfecto para analizar "como se veia la red el dia X". Pero si la red cambia, necesitas tomar otra foto.</p>
+                    <h4 style="margin-top:15px;">GNN = Camara de Video</h4>
+                    <p>Se <strong>adapta en tiempo real</strong>. Puede procesar la red financiera a medida que evoluciona: nuevas cuentas, nuevas transacciones, nuevos patrones. No necesitas "tomar otra foto".</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="graph-card">
+            <h4 style="text-align:center">Simulacion: Embeddings AML</h4>
+            <canvas id="canvasAML" width="700" height="400"></canvas>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="drawAMLGraph()">Redibujar</button>
+                <button class="btn btn-success" onclick="animateAMLEmbeddings()">&#9654; Animar Embeddings</button>
+            </div>
+        </div>
+
+        <div class="checkpoint" id="cp-aml">
+            <h4>&#9881; Checkpoint &mdash; Desbloquea la siguiente seccion</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">Para un sistema AML en produccion que debe procesar cuentas nuevas diariamente, que metodo es mas adecuado?</p>
+            <div class="cp-option" onclick="checkCP('aml',this,false)">N2V (transductivo)</div>
+            <div class="cp-option" onclick="checkCP('aml',this,true)">GNN (inductivo, generaliza a nodos nuevos sin reentrenar)</div>
+            <div class="cp-option" onclick="checkCP('aml',this,false)">Random Forest sin embeddings</div>
+            <div class="cp-feedback" id="cpFb-aml"></div>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: QUIZ BASICO ====================== -->
+    <div id="quiz1" class="section">
+        <h2>Quiz Basico &mdash; Fundamentos de Embeddings</h2>
+
+        <div class="score-display">Puntuacion: <span id="score1">0</span> / <span id="total1">12</span></div>
+        <div class="progress-bar"><div class="progress-fill" id="progress1" style="width:0%">0%</div></div>
+
+        <div class="quiz-question" data-quiz="1">
+            <h4>1. Que es un graph embedding?</h4>
+            <div class="option" onclick="checkQ(this,false,1,'Un embedding es una representacion vectorial, no un tipo de grafo.')">Un tipo especial de grafo</div>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! Los embeddings transforman datos complejos de grafos en vectores de baja dimension.')">Una representacion vectorial de baja dimension que captura la estructura y relaciones del grafo</div>
+            <div class="option" onclick="checkQ(this,false,1,'Un embedding no es una base de datos, es una representacion numerica.')">Una base de datos de grafos</div>
+            <div class="option" onclick="checkQ(this,false,1,'Un embedding es un vector, no un algoritmo de busqueda.')">Un algoritmo de busqueda en grafos</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="1">
+            <h4>2. Que dataset usa el capitulo 2 como caso de estudio?</h4>
+            <div class="option" onclick="checkQ(this,false,1,'Cora es un dataset comun pero no se usa en este capitulo.')">Cora (papers academicos)</div>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! El Political Books dataset contiene 105 libros con 441 co-compras de Amazon.')">Political Books (libros politicos co-comprados en Amazon)</div>
+            <div class="option" onclick="checkQ(this,false,1,'MNIST es un dataset de imagenes, no de grafos.')">MNIST (digitos escritos a mano)</div>
+            <div class="option" onclick="checkQ(this,false,1,'MovieLens es de peliculas. El capitulo usa Political Books.')">MovieLens (recomendacion de peliculas)</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="1">
+            <h4>3. Que tecnica inspiro a Node2Vec?</h4>
+            <div class="option" onclick="checkQ(this,false,1,'PageRank es un algoritmo de grafos pero no inspiro a N2V.')">PageRank</div>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! N2V esta inspirado en Word2Vec de NLP: igual que palabras en contexto, nodos en caminatas.')">Word2Vec (de NLP)</div>
+            <div class="option" onclick="checkQ(this,false,1,'CNNs son para imagenes. N2V se inspiro en Word2Vec.')">Convolutional Neural Networks</div>
+            <div class="option" onclick="checkQ(this,false,1,'BERT es de NLP pero N2V precede a BERT. La inspiracion es Word2Vec.')">BERT</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="1">
+            <h4>4. Que controla el parametro p en Node2Vec?</h4>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! p controla si la caminata retrocede al nodo anterior.')">La probabilidad de retroceder al nodo anterior</div>
+            <div class="option" onclick="checkQ(this,false,1,'El numero de dimensiones se controla con el parametro dimensions.')">El numero de dimensiones del embedding</div>
+            <div class="option" onclick="checkQ(this,false,1,'La velocidad de entrenamiento se controla con learning rate.')">La velocidad de entrenamiento</div>
+            <div class="option" onclick="checkQ(this,false,1,'La cantidad de capas es de GNNs, no de N2V.')">La cantidad de capas de la red</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="1">
+            <h4>5. Que tecnica se usa para visualizar embeddings de 64D en 2D?</h4>
+            <div class="option" onclick="checkQ(this,false,1,'PCA es una opcion pero el capitulo usa UMAP por su mejor preservacion de estructura.')">PCA</div>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! UMAP preserva tanto estructura local como global, superando a t-SNE.')">UMAP</div>
+            <div class="option" onclick="checkQ(this,false,1,'t-SNE es una alternativa pero UMAP es preferido en el capitulo.')">t-SNE</div>
+            <div class="option" onclick="checkQ(this,false,1,'Random Projection no se usa en el capitulo.')">Random Projection</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="1">
+            <h4>6. Que tipo de aprendizaje es Node2Vec?</h4>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! N2V es transductivo: solo funciona con los nodos que vio durante entrenamiento.')">Transductivo</div>
+            <div class="option" onclick="checkQ(this,false,1,'Inductivo permite generalizar a nodos nuevos. N2V no puede hacer eso.')">Inductivo</div>
+            <div class="option" onclick="checkQ(this,false,1,'Supervisado necesita etiquetas. N2V aprende de la estructura sin etiquetas.')">Supervisado</div>
+            <div class="option" onclick="checkQ(this,false,1,'No supervisado es cercano pero el termino correcto es transductivo.')">No supervisado</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="1">
+            <h4>7. Cuantos nodos tiene el Political Books dataset?</h4>
+            <div class="option" onclick="checkQ(this,false,1,'50 es incorrecto. El dataset tiene 105 nodos.')">50</div>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! 105 libros politicos con 441 aristas de co-compra.')">105</div>
+            <div class="option" onclick="checkQ(this,false,1,'500 es incorrecto. Son 105 nodos.')">500</div>
+            <div class="option" onclick="checkQ(this,false,1,'1000 es demasiado. Son 105 nodos.')">1,000</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="1">
+            <h4>8. Que biblioteca de GNNs usa el capitulo?</h4>
+            <div class="option" onclick="checkQ(this,false,1,'TensorFlow no se usa. El capitulo usa PyTorch Geometric.')">TensorFlow</div>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! PyTorch Geometric (PyG) es la libreria principal.')">PyTorch Geometric (PyG)</div>
+            <div class="option" onclick="checkQ(this,false,1,'DGL es una alternativa pero el libro usa PyG.')">Deep Graph Library (DGL)</div>
+            <div class="option" onclick="checkQ(this,false,1,'Scikit-learn es para ML tabular. Para GNNs se usa PyG.')">Scikit-learn</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="1">
+            <h4>9. Que significa "end-to-end" en el contexto de GNNs?</h4>
+            <div class="option" onclick="checkQ(this,false,1,'End-to-end no se refiere a la cantidad de nodos procesados.')">Que procesa todos los nodos del grafo</div>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! End-to-end: datos crudos del grafo entran, y embeddings + prediccion salen, todo en un solo modelo.')">Que el modelo genera embeddings y hace predicciones en un solo proceso integrado</div>
+            <div class="option" onclick="checkQ(this,false,1,'No se refiere al formato de datos.')">Que convierte datos de texto a numeros</div>
+            <div class="option" onclick="checkQ(this,false,1,'End-to-end no es sobre el formato de entrada/salida.')">Que la entrada y salida son del mismo tipo</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="1">
+            <h4>10. Que formato de archivo usa el Political Books dataset?</h4>
+            <div class="option" onclick="checkQ(this,false,1,'CSV es tabular. El dataset de grafos usa formato GML.')">CSV</div>
+            <div class="option" onclick="checkQ(this,false,1,'JSON es posible pero no es el formato usado.')">JSON</div>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! GML (Graph Modeling Language) es un formato de texto plano para grafos.')">GML (Graph Modeling Language)</div>
+            <div class="option" onclick="checkQ(this,false,1,'Parquet es para datos tabulares. El grafo usa GML.')">Parquet</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="1">
+            <h4>11. Que hace model.eval() antes de generar embeddings con la GNN?</h4>
+            <div class="option" onclick="checkQ(this,false,1,'model.eval() no entrena, lo contrario: prepara para inferencia.')">Entrena el modelo</div>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! model.eval() desactiva dropout y batch normalization para outputs consistentes.')">Desactiva dropout y batch normalization para obtener outputs deterministas</div>
+            <div class="option" onclick="checkQ(this,false,1,'model.eval() no borra datos, cambia el modo del modelo.')">Borra los datos de entrenamiento</div>
+            <div class="option" onclick="checkQ(this,false,1,'model.eval() no agrega capas, desactiva comportamientos de entrenamiento.')">Agrega capas al modelo</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="1">
+            <h4>12. Que tipo de capa usa SimpleGNN para message passing?</h4>
+            <div class="option" onclick="checkQ(this,false,1,'Linear es de MLPs. SimpleGNN usa GCNConv.')">Linear</div>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! GCNConv (Graph Convolutional) es la capa de message passing usada.')">GCNConv (Graph Convolutional)</div>
+            <div class="option" onclick="checkQ(this,false,1,'Conv2d es de CNNs para imagenes. Las GNNs usan GCNConv.')">Conv2d</div>
+            <div class="option" onclick="checkQ(this,false,1,'LSTM es de RNNs. Las GNNs usan GCNConv.')">LSTM</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="btn-group"><button class="btn btn-danger" onclick="resetQuiz(1)">Reiniciar Quiz</button></div>
+        <div class="checkpoint" id="cp-quiz1" style="margin-top:20px;">
+            <h4>&#127942; Resultado del Quiz Basico</h4>
+            <p class="cp-subtitle">Necesitas al menos 70% (9 de 12 correctas) para desbloquear el Quiz Avanzado</p>
+            <div id="quiz1UnlockMsg" style="padding:14px; border-radius:8px; display:none;"></div>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: QUIZ AVANZADO ====================== -->
+    <div id="quiz2" class="section">
+        <h2>Quiz Avanzado &mdash; Comprension Profunda</h2>
+
+        <div class="score-display">Puntuacion: <span id="score2">0</span> / <span id="total2">10</span></div>
+        <div class="progress-bar"><div class="progress-fill" id="progress2" style="width:0%">0%</div></div>
+
+        <div class="quiz-question" data-quiz="2">
+            <h4>1. Por que la GNN de 4 capas con N2V features supera a todas las demas configuraciones?</h4>
+            <div class="option" onclick="checkQ(this,true,2,'Correcto! Combina features ricos (N2V) + mas hops de message passing (4 capas) + topologia del grafo.')">Porque combina features ricos de N2V + mas hops de message passing + topologia del grafo</div>
+            <div class="option" onclick="checkQ(this,false,2,'No es solo cuestion de velocidad. Es la combinacion de features + profundidad.')">Porque es mas rapida de entrenar</div>
+            <div class="option" onclick="checkQ(this,false,2,'Mas datos no es la razon. Es la calidad de las representaciones.')">Porque usa mas datos de entrenamiento</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="2">
+            <h4>2. Cual es la diferencia entre un "encoder" y un "shallow method"?</h4>
+            <div class="option" onclick="checkQ(this,false,2,'Ambos producen embeddings. La diferencia es en como lo hacen.')">Los encoders producen embeddings, los shallow methods no</div>
+            <div class="option" onclick="checkQ(this,true,2,'Correcto! Los shallow methods usan lookup tables, los encoders (como GNNs) aprenden funciones generalizables.')">Los shallow methods usan lookup tables; los encoders aprenden funciones que generalizan</div>
+            <div class="option" onclick="checkQ(this,false,2,'La velocidad no es la diferencia fundamental.')">Los encoders son mas rapidos</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="2">
+            <h4>3. Por que Random Forest con N2V embeddings tiene mayor accuracy pero menor F1 que GNN?</h4>
+            <div class="option" onclick="checkQ(this,false,2,'El tamano del dataset es el mismo para ambos.')">Porque Random Forest tiene mas datos</div>
+            <div class="option" onclick="checkQ(this,true,2,'Correcto! Accuracy puede ser enganosa con datos desbalanceados. F1 mide mejor el balance precision/recall.')">Porque accuracy no captura el balance entre precision y recall en clases desbalanceadas como si lo hace F1</div>
+            <div class="option" onclick="checkQ(this,false,2,'Random Forest no es mas simple que N2V. La diferencia es en las metricas.')">Porque Random Forest es mas simple</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="2">
+            <h4>4. Que es la "proximidad" entre nodos en un grafo?</h4>
+            <div class="option" onclick="checkQ(this,false,2,'La distancia euclidiana es para espacio continuo. En grafos se mide por hops.')">La distancia euclidiana entre sus posiciones</div>
+            <div class="option" onclick="checkQ(this,true,2,'Correcto! La proximidad se mide por hops o probabilidad de encontrar un nodo partiendo de otro en random walks.')">La probabilidad de encontrar un nodo desde otro al hacer random walks, medida en hops</div>
+            <div class="option" onclick="checkQ(this,false,2,'El peso de aristas es importante pero no define la proximidad general.')">El peso de la arista que los conecta</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="2">
+            <h4>5. Por que las GNN embeddings son utiles incluso sin entrenar (solo forward pass)?</h4>
+            <div class="option" onclick="checkQ(this,false,2,'Sin entrenamiento, los pesos no son optimos. Lo valioso es la estructura.')">Porque los pesos aleatorios son optimos</div>
+            <div class="option" onclick="checkQ(this,true,2,'Correcto! El message passing captura la topologia del grafo incluso con pesos aleatorios.')">Porque el message passing captura la estructura topologica del grafo, independientemente de los pesos</div>
+            <div class="option" onclick="checkQ(this,false,2,'La Xavier initialization ayuda pero no es la razon principal.')">Porque la Xavier initialization es perfecta</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="2">
+            <h4>6. Que ventaja tiene UMAP sobre t-SNE para visualizar embeddings?</h4>
+            <div class="option" onclick="checkQ(this,false,2,'UMAP no es necesariamente mas rapido en todos los casos.')">UMAP es siempre mas rapido</div>
+            <div class="option" onclick="checkQ(this,true,2,'Correcto! UMAP preserva estructura local Y global. t-SNE tiende a preservar solo la local.')">UMAP preserva tanto la estructura local como la global del dato</div>
+            <div class="option" onclick="checkQ(this,false,2,'Ambos pueden visualizar en 2D o 3D.')">UMAP produce visualizaciones en 3D y t-SNE solo en 2D</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="2">
+            <h4>7. En semi-supervised learning, que porcentaje de datos estaba etiquetado en el capitulo?</h4>
+            <div class="option" onclick="checkQ(this,false,2,'5% seria muy poco. En el capitulo usan 20%.')">5%</div>
+            <div class="option" onclick="checkQ(this,true,2,'Correcto! Solo el 20% de los libros tenia etiqueta politica visible. El modelo predijo el 80% restante.')">20%</div>
+            <div class="option" onclick="checkQ(this,false,2,'50% seria semi-supervisado pero el capitulo usa 20%.')">50%</div>
+            <div class="option" onclick="checkQ(this,false,2,'80% seria casi supervisado. El capitulo usa solo 20%.')">80%</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="2">
+            <h4>8. Que significan p=1, q=1 en Node2Vec?</h4>
+            <div class="option" onclick="checkQ(this,false,2,'p=1, q=1 no maximiza la exploracion, la equilibra.')">Maximiza la exploracion lejana (DFS)</div>
+            <div class="option" onclick="checkQ(this,false,2,'p=1, q=1 no se queda cerca, equilibra ambas direcciones.')">Se queda siempre en el vecindario local (BFS)</div>
+            <div class="option" onclick="checkQ(this,true,2,'Correcto! p=1, q=1 elimina el sesgo, creando caminatas 100% aleatorias como DeepWalk.')">Caminata sin sesgo (equivalente a DeepWalk)</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="2">
+            <h4>9. Por que se usa log_softmax al final de la GNN de clasificacion?</h4>
+            <div class="option" onclick="checkQ(this,false,2,'log_softmax no reduce dimensiones, normaliza probabilidades.')">Para reducir la dimensionalidad del embedding</div>
+            <div class="option" onclick="checkQ(this,true,2,'Correcto! log_softmax convierte el output en probabilidades normalizadas para clasificacion multi-clase.')">Para convertir embeddings en probabilidades logaritmicas normalizadas para clasificacion multi-clase</div>
+            <div class="option" onclick="checkQ(this,false,2,'log_softmax no acelera el entrenamiento, facilita la clasificacion.')">Para acelerar el entrenamiento</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="2">
+            <h4>10. Cual es la intuicion detras de que "mas capas GNN = mejor rendimiento" en este caso?</h4>
+            <div class="option" onclick="checkQ(this,false,2,'Mas capas no siempre son mas rapidas, a veces lo contrario.')">Mas capas hacen el modelo mas rapido</div>
+            <div class="option" onclick="checkQ(this,true,2,'Correcto! Cada capa = 1 hop. Mas capas permiten capturar relaciones mas lejanas en el grafo.')">Cada capa agrega un hop de message passing, capturando relaciones de nodos mas lejanos</div>
+            <div class="option" onclick="checkQ(this,false,2,'No tiene que ver con memoria sino con profundidad de vecindario.')">Mas capas usan mas memoria GPU</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="btn-group"><button class="btn btn-danger" onclick="resetQuiz(2)">Reiniciar Quiz</button></div>
+        <div class="checkpoint" id="cp-quiz2" style="margin-top:20px;">
+            <h4>&#127942; Resultado del Quiz Avanzado</h4>
+            <p class="cp-subtitle">Necesitas al menos 70% (7 de 10 correctas) para desbloquear Flashcards</p>
+            <div id="quiz2UnlockMsg" style="padding:14px; border-radius:8px; display:none;"></div>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: FLASHCARDS ====================== -->
+    <div id="flashcards" class="section">
+        <h2>Flashcards &mdash; Haz clic para voltear</h2>
+        <p style="margin-bottom:20px; color:#666;">Haz clic en cada tarjeta para ver la respuesta. Ideal para memorizar conceptos clave.</p>
+
+        <div class="flashcards-grid" id="flashcardsContainer"></div>
+
+        <div class="btn-group" style="margin-top:30px;">
+            <button class="btn btn-primary" onclick="shuffleFlashcards()">Barajar Tarjetas</button>
+            <button class="btn btn-warning" onclick="resetFlashcards()">Reiniciar</button>
+        </div>
+        <div style="text-align:center; margin-top:20px;">
+            <button class="btn btn-primary" onclick="completeSection('flashcards')" id="btnCompleteFlashcards" style="font-size:1.1em; padding:16px 40px;">&#10003; He revisado todas las flashcards - Continuar</button>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: EJERCICIOS ====================== -->
+    <div id="ejercicios" class="section">
+        <h2>Ejercicios Practicos</h2>
+
+        <div class="info-box">
+            <h4>&#128218; Recursos para los ejercicios</h4>
+            <p>Todos estos ejercicios se pueden realizar con el dataset y codigo disponibles en:</p>
+            <ul>
+                <li><strong>Repo oficial del libro:</strong> <a href="https://github.com/keitabroadwater/gnns_in_action/tree/master/chapter_2" target="_blank" style="color:var(--dc-blue);">chapter_2/</a> &mdash; Notebook <code>chp2 embeddings.ipynb</code> + <code>polbooks.gml</code></li>
+                <li><strong>Nuestro repo de estudio:</strong> <a href="https://github.com/AlfCasBenMx/curso_GNNs_in_action_for-aml" target="_blank" style="color:var(--dc-blue);">curso_GNNs_in_action_for-aml</a> &mdash; Script <code>descargar_polbooks.py</code> + documentacion en <code>datos/README_datasets.md</code></li>
+            </ul>
+        </div>
+
+        <h3>Ejercicio 1: Transductivo o Inductivo?</h3>
+        <div class="graph-card" id="transIndExercise"></div>
+
+        <h3>Ejercicio 2: Explorar el Dataset con Codigo</h3>
+        <div class="graph-card">
+            <p><strong>Instrucciones:</strong> Descarga <code>polbooks.gml</code> y ejecuta el siguiente codigo para responder las preguntas.</p>
+            <div class="graph-card" style="background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 0.85em; padding: 16px; line-height: 1.6; margin: 12px 0;">
+                <span style="color:#569cd6;">import</span> networkx <span style="color:#569cd6;">as</span> nx<br>
+                <span style="color:#569cd6;">from</span> collections <span style="color:#569cd6;">import</span> Counter<br><br>
+                <span style="color:#6a9955;"># 1. Cargar el grafo</span><br>
+                G = nx.read_gml(<span style="color:#ce9178;">'datos/polbooks.gml'</span>)<br><br>
+                <span style="color:#6a9955;"># 2. Estadisticas basicas</span><br>
+                <span style="color:#dcdcaa;">print</span>(<span style="color:#ce9178;">f"Nodos: </span>{G.number_of_nodes()}<span style="color:#ce9178;">"</span>)<br>
+                <span style="color:#dcdcaa;">print</span>(<span style="color:#ce9178;">f"Aristas: </span>{G.number_of_edges()}<span style="color:#ce9178;">"</span>)<br><br>
+                <span style="color:#6a9955;"># 3. Cual es el libro con mas conexiones?</span><br>
+                grados = <span style="color:#569cd6;">sorted</span>(G.degree(), key=<span style="color:#569cd6;">lambda</span> x: x[1], reverse=<span style="color:#b5cea8;">True</span>)<br>
+                <span style="color:#dcdcaa;">print</span>(<span style="color:#ce9178;">f"Libro mas conectado: </span>{grados[0]}<span style="color:#ce9178;">"</span>)<br><br>
+                <span style="color:#6a9955;"># 4. Distribucion de orientaciones</span><br>
+                vals = nx.get_node_attributes(G, <span style="color:#ce9178;">'value'</span>)<br>
+                <span style="color:#dcdcaa;">print</span>(Counter(vals.values()))<br><br>
+                <span style="color:#6a9955;"># 5. Hay libros "puente" entre izquierda y derecha?</span><br>
+                <span style="color:#569cd6;">for</span> node <span style="color:#569cd6;">in</span> G.nodes():<br>
+                &nbsp;&nbsp;<span style="color:#569cd6;">if</span> G.nodes[node][<span style="color:#ce9178;">'value'</span>] == <span style="color:#ce9178;">'n'</span>:<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;vecinos = [G.nodes[v][<span style="color:#ce9178;">'value'</span>] <span style="color:#569cd6;">for</span> v <span style="color:#569cd6;">in</span> G.neighbors(node)]<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#dcdcaa;">print</span>(<span style="color:#ce9178;">f"</span>{G.nodes[node][<span style="color:#ce9178;">'label'</span>]}<span style="color:#ce9178;">: </span>{Counter(vecinos)}<span style="color:#ce9178;">"</span>)
+            </div>
+            <div id="codeExercise"></div>
+        </div>
+
+        <h3>Ejercicio 3: Crear Embeddings N2V (Hands-On)</h3>
+        <div class="graph-card">
+            <p><strong>Objetivo:</strong> Reproducir el Listing 2.1 del libro con el dataset <code>polbooks.gml</code>.</p>
+            <div class="graph-card" style="background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 0.85em; padding: 16px; line-height: 1.6; margin: 12px 0;">
+                <span style="color:#6a9955;"># pip install node2vec networkx umap-learn matplotlib</span><br><br>
+                <span style="color:#569cd6;">import</span> networkx <span style="color:#569cd6;">as</span> nx<br>
+                <span style="color:#569cd6;">from</span> node2vec <span style="color:#569cd6;">import</span> Node2Vec<br>
+                <span style="color:#569cd6;">import</span> umap<br>
+                <span style="color:#569cd6;">import</span> matplotlib.pyplot <span style="color:#569cd6;">as</span> plt<br>
+                <span style="color:#569cd6;">import</span> numpy <span style="color:#569cd6;">as</span> np<br><br>
+                <span style="color:#6a9955;"># 1. Cargar grafo</span><br>
+                G = nx.read_gml(<span style="color:#ce9178;">'datos/polbooks.gml'</span>)<br><br>
+                <span style="color:#6a9955;"># 2. Crear modelo N2V</span><br>
+                n2v = Node2Vec(G, dimensions=<span style="color:#b5cea8;">64</span>, walk_length=<span style="color:#b5cea8;">30</span>,<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;num_walks=<span style="color:#b5cea8;">200</span>, workers=<span style="color:#b5cea8;">4</span>)<br>
+                model = n2v.fit(window=<span style="color:#b5cea8;">10</span>, min_count=<span style="color:#b5cea8;">1</span>)<br><br>
+                <span style="color:#6a9955;"># 3. Extraer embeddings</span><br>
+                emb = {node: model.wv[node] <span style="color:#569cd6;">for</span> node <span style="color:#569cd6;">in</span> G.nodes()}<br>
+                X = np.array([emb[n] <span style="color:#569cd6;">for</span> n <span style="color:#569cd6;">in</span> G.nodes()])<br><br>
+                <span style="color:#6a9955;"># 4. Reducir a 2D con UMAP</span><br>
+                reducer = umap.UMAP(n_components=<span style="color:#b5cea8;">2</span>, random_state=<span style="color:#b5cea8;">42</span>)<br>
+                X_2d = reducer.fit_transform(X)<br><br>
+                <span style="color:#6a9955;"># 5. Visualizar con colores por orientacion</span><br>
+                colors = {<span style="color:#ce9178;">'l'</span>:<span style="color:#ce9178;">'blue'</span>, <span style="color:#ce9178;">'c'</span>:<span style="color:#ce9178;">'red'</span>, <span style="color:#ce9178;">'n'</span>:<span style="color:#ce9178;">'gray'</span>}<br>
+                c = [colors[G.nodes[n][<span style="color:#ce9178;">'value'</span>]] <span style="color:#569cd6;">for</span> n <span style="color:#569cd6;">in</span> G.nodes()]<br>
+                plt.scatter(X_2d[:,0], X_2d[:,1], c=c, alpha=<span style="color:#b5cea8;">0.7</span>)<br>
+                plt.title(<span style="color:#ce9178;">'N2V Embeddings - UMAP 2D'</span>)<br>
+                plt.show()
+            </div>
+            <div class="success-box">
+                <h4>Preguntas para reflexionar:</h4>
+                <ol>
+                    <li>Se separan claramente los 3 grupos (izquierda/derecha/neutral)?</li>
+                    <li>Que pasa si cambias <code>dimensions</code> a 2 directamente (sin UMAP)?</li>
+                    <li>Que efecto tiene cambiar <code>walk_length</code> de 30 a 5? Y a 100?</li>
+                    <li>Experimenta con <code>p=0.5, q=2</code> vs <code>p=2, q=0.5</code> &mdash; como cambia la visualizacion?</li>
+                </ol>
+            </div>
+        </div>
+
+        <h3>Ejercicio 4: Parametros de N2V</h3>
+        <div class="graph-card">
+            <p>Relaciona cada parametro con su funcion:</p>
+            <div id="paramExercise"></div>
+        </div>
+
+        <h3>Ejercicio 5: Elige el Metodo para AML</h3>
+        <div class="graph-card" id="amlExercise"></div>
+
+        <h3>Ejercicio 6: Verdadero o Falso</h3>
+        <div class="graph-card" id="tfExercise"></div>
+
+        <h3>Ejercicio 7: Construir la SimpleGNN (Avanzado)</h3>
+        <div class="graph-card">
+            <p><strong>Objetivo:</strong> Reproducir el Listing 2.4 del libro &mdash; crear una GNN que genere embeddings.</p>
+            <div class="graph-card" style="background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 0.85em; padding: 16px; line-height: 1.6; margin: 12px 0;">
+                <span style="color:#6a9955;"># pip install torch torch-geometric</span><br><br>
+                <span style="color:#569cd6;">import</span> torch<br>
+                <span style="color:#569cd6;">from</span> torch_geometric.nn <span style="color:#569cd6;">import</span> GCNConv<br>
+                <span style="color:#569cd6;">from</span> torch_geometric.utils <span style="color:#569cd6;">import</span> from_networkx<br>
+                <span style="color:#569cd6;">import</span> networkx <span style="color:#569cd6;">as</span> nx<br><br>
+                <span style="color:#6a9955;"># 1. Cargar y convertir</span><br>
+                G = nx.read_gml(<span style="color:#ce9178;">'datos/polbooks.gml'</span>)<br>
+                data = from_networkx(G)<br><br>
+                <span style="color:#6a9955;"># 2. Inicializar features (Xavier)</span><br>
+                data.x = torch.empty((<span style="color:#b5cea8;">105</span>, <span style="color:#b5cea8;">64</span>))<br>
+                torch.nn.init.xavier_uniform_(data.x)<br><br>
+                <span style="color:#6a9955;"># 3. Definir SimpleGNN</span><br>
+                <span style="color:#569cd6;">class</span> <span style="color:#4ec9b0;">SimpleGNN</span>(torch.nn.Module):<br>
+                &nbsp;&nbsp;<span style="color:#569cd6;">def</span> <span style="color:#dcdcaa;">__init__</span>(self, in_ch, hid_ch):<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;super().__init__()<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;self.conv1 = GCNConv(in_ch, hid_ch)<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;self.conv2 = GCNConv(hid_ch, hid_ch)<br>
+                &nbsp;&nbsp;<span style="color:#569cd6;">def</span> <span style="color:#dcdcaa;">forward</span>(self, x, edge_index):<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;x = self.conv1(x, edge_index)<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;x = torch.relu(x)<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;x = self.conv2(x, edge_index)<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">return</span> x<br><br>
+                <span style="color:#6a9955;"># 4. Generar embeddings (sin entrenar)</span><br>
+                model = SimpleGNN(<span style="color:#b5cea8;">64</span>, <span style="color:#b5cea8;">64</span>)<br>
+                model.eval()<br>
+                <span style="color:#569cd6;">with</span> torch.no_grad():<br>
+                &nbsp;&nbsp;emb = model(data.x, data.edge_index)<br>
+                <span style="color:#dcdcaa;">print</span>(emb.shape)  <span style="color:#6a9955;"># torch.Size([105, 64])</span>
+            </div>
+            <div class="highlight">
+                <h4>Retos adicionales:</h4>
+                <ol>
+                    <li>Agrega una tercera capa GCNConv. Mejora la separacion de clusters?</li>
+                    <li>Usa los embeddings de N2V del Ejercicio 3 como <code>data.x</code> en vez de Xavier. Compara.</li>
+                    <li>Visualiza los embeddings GNN con UMAP y compara con la visualizacion N2V.</li>
+                    <li>Implementa el training loop (Listing 2.9) para clasificacion semi-supervisada.</li>
+                </ol>
+            </div>
+            <div class="purple-box" style="margin-top:12px;">
+                <h4>&#128279; Referencia completa</h4>
+                <p>El codigo completo del capitulo esta en el notebook oficial:<br>
+                <a href="https://github.com/keitabroadwater/gnns_in_action/tree/master/chapter_2" target="_blank" style="color:var(--dc-green);">github.com/keitabroadwater/gnns_in_action/tree/master/chapter_2</a><br>
+                Archivo: <code>chp2 embeddings.ipynb</code></p>
+            </div>
+        </div>
+
+        <div style="text-align:center; margin-top:20px;">
+            <button class="btn btn-primary" onclick="completeSection('ejercicios')" id="btnCompleteEjercicios" style="font-size:1.1em; padding:16px 40px;">&#10003; He completado los ejercicios - Ver Resumen</button>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: RESUMEN ====================== -->
+    <div id="resumen" class="section">
+        <h2>Resumen Final del Capitulo 2</h2>
+
+        <div class="stat-cards">
+            <div class="stat-card"><div class="number" id="finalScore1">-</div><div class="label">Quiz Basico</div></div>
+            <div class="stat-card"><div class="number" id="finalScore2">-</div><div class="label">Quiz Avanzado</div></div>
+            <div class="stat-card"><div class="number">70</div><div class="label">Paginas estudiadas</div></div>
+            <div class="stat-card"><div class="number">89%</div><div class="label">Mejor F1 Score</div></div>
+        </div>
+
+        <div class="highlight">
+            <h3>Los 7 Puntos Mas Importantes</h3>
+            <ol style="line-height: 2.2; font-size: 1.05em;">
+                <li><strong>Embeddings</strong> transforman grafos complejos en vectores numericos de baja dimension, preservando estructura y relaciones.</li>
+                <li><strong>Node2Vec (N2V)</strong> crea embeddings via random walks. Es transductivo: no generaliza a nodos nuevos.</li>
+                <li><strong>GNN embeddings</strong> son inductivos: generalizan a datos nuevos integrando features + topologia.</li>
+                <li><strong>Semi-supervised learning</strong> es ideal para AML: pocas cuentas etiquetadas, muchas sin etiquetar.</li>
+                <li><strong>N2V + GNN combinados</strong> dan el mejor rendimiento (89.29% F1) al usar N2V embeddings como features iniciales de la GNN.</li>
+                <li><strong>Message passing</strong> es el motor de las GNNs: cada capa agrega info de vecinos a 1 hop. Mas capas = mas alcance.</li>
+                <li>Para <strong>AML en produccion</strong>, usar GNN (inductivo) para manejar cuentas nuevas. N2V para investigaciones puntuales.</li>
+            </ol>
+        </div>
+
+        <h3>Mapa del Capitulo</h3>
+        <div class="graph-card">
+            <canvas id="mindMap" width="900" height="500"></canvas>
+        </div>
+
+        <div class="success-box">
+            <h3>Preparacion para el Capitulo 3: GCN y GraphSAGE</h3>
+            <p>En el proximo capitulo aprenderas:</p>
+            <ul>
+                <li>Como funcionan las <strong>Graph Convolutional Networks (GCN)</strong> en detalle</li>
+                <li>La arquitectura <strong>GraphSAGE</strong> y su funcion de agregacion</li>
+                <li>Diferencias entre convolucion <strong>spectral vs spatial</strong></li>
+                <li>Aplicacion practica: <strong>deteccion de resenas falsas</strong> y <strong>prediccion de categorias de productos</strong></li>
+            </ul>
+        </div>
+
+        <div class="concepts-grid">
+            <div class="concept-card" style="cursor:default">
+                <h4>Conceptos Dominados</h4>
+                <p>Node2Vec, GNN Embeddings, Random Walks, BFS/DFS, UMAP, Xavier Init, GCNConv, Semi-supervised, Transductivo, Inductivo, End-to-end, Message Passing, Encoders</p>
+            </div>
+            <div class="concept-card" style="cursor:default; background: linear-gradient(135deg, #28a745, #20c997);">
+                <h4>Aplicaciones AML</h4>
+                <p>Embeddings transaccionales, Deteccion de mulas, Monitoreo continuo con GNN, Investigacion puntual con N2V</p>
+            </div>
+            <div class="concept-card" style="cursor:default; background: linear-gradient(135deg, #fd7e14, #ffc107);">
+                <h4>Proximos Pasos</h4>
+                <p>Cap 3: GCN/GraphSAGE / Fake review detection / Product bundling / Convoluciones en grafos</p>
+            </div>
+        </div>
+
+        <div class="purple-box">
+            <h4>&#128279; Repositorios y Recursos</h4>
+            <ul style="line-height:2;">
+                <li><strong>Repo oficial del libro:</strong> <a href="https://github.com/keitabroadwater/gnns_in_action" target="_blank" style="color:var(--dc-green);">github.com/keitabroadwater/gnns_in_action</a></li>
+                <li><strong>Capitulo 2 (dataset + notebook):</strong> <a href="https://github.com/keitabroadwater/gnns_in_action/tree/master/chapter_2" target="_blank" style="color:var(--dc-green);">chapter_2/</a></li>
+                <li><strong>Nuestro repo de estudio AML:</strong> <a href="https://github.com/AlfCasBenMx/curso_GNNs_in_action_for-aml" target="_blank" style="color:var(--dc-green);">github.com/AlfCasBenMx/curso_GNNs_in_action_for-aml</a></li>
+                <li><strong>Dataset (descarga directa):</strong> <a href="https://github.com/keitabroadwater/gnns_in_action/raw/master/chapter_2/polbooks.gml" target="_blank" style="color:var(--dc-green);">polbooks.gml</a></li>
+                <li><strong>Newman's Network Data:</strong> <a href="http://www-personal.umich.edu/~mejn/netdata/" target="_blank" style="color:var(--dc-green);">umich.edu/~mejn/netdata/</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script src="../js/app_ch2.js"></script>
+</body>
+</html>
