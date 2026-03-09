@@ -243,33 +243,143 @@
         <h2>Node2Vec (N2V) &mdash; Embeddings con Random Walks</h2>
 
         <div class="purple-box">
-            <h4>Que es Node2Vec?</h4>
-            <p>Node2Vec es una tecnica inspirada en <strong>Word2Vec</strong> (NLP) que crea embeddings de nodos simulando <strong>caminatas aleatorias</strong> por el grafo. Los nodos que aparecen juntos frecuentemente en las caminatas tendran embeddings similares.</p>
+            <h4>&#129504; Que es Node2Vec? (la idea, sin formulas)</h4>
+            <p>Imagina que quieres describir a cada persona de una empresa <strong>sin preguntarle nada directamente</strong>. Solo puedes <em>caminar por los pasillos</em> y anotar con quien te topas. Si caminas 1,000 veces empezando desde la oficina de Ana y siempre terminas viendo a Carlos, Luisa y Pedro, entonces sabes que Ana esta "cerca" de ellos &mdash; probablemente trabajan juntos.</p>
+            <p style="margin-top:10px;"><strong>Node2Vec hace exactamente eso con un grafo:</strong> manda "caminantes" a pasear por las aristas, anota que nodos aparecen juntos, y convierte esas observaciones en una lista de numeros (el embedding) para cada nodo.</p>
         </div>
 
-        <h3>El Proceso Paso a Paso</h3>
+        <h3>&#128694; La analogia del turista</h3>
+        <div class="info-box">
+            <p>Piensa en Node2Vec como un <strong>turista que explora una ciudad sin mapa</strong>:</p>
+            <table class="comparison-table" style="margin:15px 0;">
+                <tr><th>Lo que hace el turista</th><th>Lo que hace Node2Vec</th></tr>
+                <tr>
+                    <td>Sale de un punto (su hotel)</td>
+                    <td>Inicia una caminata desde un nodo del grafo</td>
+                </tr>
+                <tr>
+                    <td>En cada esquina elige una calle al azar</td>
+                    <td>En cada nodo elige una arista al azar para moverse</td>
+                </tr>
+                <tr>
+                    <td>Camina un rato y apunta los lugares que visito</td>
+                    <td>Recorre N pasos y registra los nodos que visito</td>
+                </tr>
+                <tr>
+                    <td>Repite el paseo muchas veces desde cada hotel</td>
+                    <td>Repite la caminata muchas veces desde cada nodo</td>
+                </tr>
+                <tr>
+                    <td>Los lugares que siempre aparecen juntos estan "cerca"</td>
+                    <td>Los nodos que co-aparecen frecuentemente tendran embeddings similares</td>
+                </tr>
+            </table>
+        </div>
+
+        <h3>&#128161; De donde sale la idea? Word2Vec &#8594; Node2Vec</h3>
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                La conexion con Word2Vec (NLP) &mdash; clic para expandir
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <p>En NLP, <strong>Word2Vec</strong> descubrio algo genial: si tomas un libro y anotas que palabras aparecen <em>cerca</em> de cada palabra, puedes crear numeros que capturan significado. Por ejemplo:</p>
+                <div class="highlight">
+                    <p>"El <strong>gato</strong> se sento en la alfombra"<br>
+                    "El <strong>perro</strong> se sento en el sofa"</p>
+                    <p>Como "gato" y "perro" aparecen en contextos parecidos (antes de "se sento"), sus vectores quedan <strong>cercanos</strong> en el espacio de embeddings.</p>
+                </div>
+                <p style="margin-top:12px;">Node2Vec hizo la <strong>misma trampa</strong> pero con grafos: en vez de "frases" usa "caminatas aleatorias". Cada caminata es como una "oracion" donde los "nodos" son las "palabras":</p>
+                <div class="graph-card" style="background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 0.9em; padding: 16px; line-height: 1.8;">
+                    <span style="color:#6a9955;">// Word2Vec (texto):</span><br>
+                    Frase 1: &nbsp; <span style="color:#ce9178;">"el"</span> <span style="color:#ce9178;">"gato"</span> <span style="color:#ce9178;">"duerme"</span> <span style="color:#ce9178;">"en"</span> <span style="color:#ce9178;">"la"</span> <span style="color:#ce9178;">"cama"</span><br>
+                    Frase 2: &nbsp; <span style="color:#ce9178;">"el"</span> <span style="color:#ce9178;">"perro"</span> <span style="color:#ce9178;">"duerme"</span> <span style="color:#ce9178;">"en"</span> <span style="color:#ce9178;">"el"</span> <span style="color:#ce9178;">"sofa"</span><br><br>
+                    <span style="color:#6a9955;">// Node2Vec (grafo):</span><br>
+                    Walk 1: &nbsp; <span style="color:#4ec9b0;">Libro_A</span> &#8594; <span style="color:#4ec9b0;">Libro_B</span> &#8594; <span style="color:#4ec9b0;">Libro_D</span> &#8594; <span style="color:#4ec9b0;">Libro_A</span> &#8594; <span style="color:#4ec9b0;">Libro_C</span><br>
+                    Walk 2: &nbsp; <span style="color:#4ec9b0;">Libro_A</span> &#8594; <span style="color:#4ec9b0;">Libro_C</span> &#8594; <span style="color:#4ec9b0;">Libro_B</span> &#8594; <span style="color:#4ec9b0;">Libro_D</span> &#8594; <span style="color:#4ec9b0;">Libro_E</span>
+                </div>
+                <p style="margin-top:12px;">Luego le das esas "oraciones de nodos" al <strong>mismo algoritmo</strong> que Word2Vec, y &iexcl;listo! &mdash; tienes embeddings para cada nodo del grafo.</p>
+            </div>
+        </div>
+
+        <h3>&#127855; Analogia AML: Detectar lavado con "paseos" por la red</h3>
+        <div class="danger-box">
+            <h4>Imagina una red de transacciones bancarias</h4>
+            <p>Cada <strong>cuenta</strong> es un nodo. Cada <strong>transferencia</strong> es una arista. Ahora mandas un "caminante" a pasear:</p>
+            <ul style="line-height:2;">
+                <li>&#128694; Sale de la <strong>Cuenta A</strong> (sospechosa)</li>
+                <li>&#8594; Sigue una transferencia hasta <strong>Cuenta B</strong> (shell company)</li>
+                <li>&#8594; Sigue otra hasta <strong>Cuenta C</strong> (otra shell)</li>
+                <li>&#8594; Llega a <strong>Cuenta D</strong> (banco offshore)</li>
+                <li>&#8594; Regresa a <strong>Cuenta B</strong>...</li>
+            </ul>
+            <p>Despues de miles de paseos, las cuentas que <strong>siempre aparecen juntas</strong> en los mismos circuitos tendran embeddings parecidos. Un modelo de ML puede detectar que ese "cluster" se parece a patrones conocidos de lavado &mdash; <strong>sin que nadie le haya ensenado las reglas explicitamente</strong>.</p>
+        </div>
+
+        <h3>&#129300; Pero espera... como se convierten los paseos en numeros?</h3>
+        <div class="info-box">
+            <h4>El truco de la red neuronal "shallow"</h4>
+            <p>Despues de generar miles de caminatas, Node2Vec entrena una red neuronal <strong>muy simple</strong> (una sola capa oculta) con esta tarea:</p>
+            <div class="highlight" style="text-align:center; font-size:1.1em; padding:15px;">
+                <strong>"Dado un nodo, predice que nodos aparecen cerca de el en las caminatas"</strong>
+            </div>
+            <p style="margin-top:12px;">La red aprende a hacer eso cada vez mejor. Y aqui viene la magia: <strong>los pesos de la capa oculta SON los embeddings</strong>. No nos importa la prediccion final &mdash; nos importa lo que la red <em>aprendio internamente</em> para poder predecir.</p>
+            <table class="comparison-table" style="margin:15px 0;">
+                <tr><th>Componente</th><th>Que hace</th><th>Analogia</th></tr>
+                <tr>
+                    <td>Capa de entrada</td>
+                    <td>Recibe un nodo (one-hot encoded)</td>
+                    <td>Le dices "este es el Libro A"</td>
+                </tr>
+                <tr>
+                    <td><strong>Capa oculta &#127775;</strong></td>
+                    <td>Aprende una representacion comprimida</td>
+                    <td>El "resumen" del libro en N numeros &mdash; <strong>ESTE es el embedding</strong></td>
+                </tr>
+                <tr>
+                    <td>Capa de salida</td>
+                    <td>Predice vecinos probables</td>
+                    <td>"Este libro se compra junto con B, C y D"</td>
+                </tr>
+            </table>
+        </div>
+
+        <h3>&#128221; El Proceso Completo Paso a Paso</h3>
         <div class="flow-diagram">
-            <div class="flow-step">1. Cargar datos + configurar parametros<br><small>Graph data (.gml) + dimensions, walk_length, num_walks</small></div>
+            <div class="flow-step">1. Cargar el grafo<br><small>Leer polbooks.gml con NetworkX (105 nodos, 441 aristas)</small></div>
             <div class="flow-arrow">&#8595;</div>
-            <div class="flow-step orange">2. Generar caminatas aleatorias<br><small>N2V recorre el grafo desde cada nodo, anotando los caminos</small></div>
+            <div class="flow-step orange">2. Generar caminatas aleatorias<br><small>El "turista" pasea por el grafo, anotando secuencias de nodos</small></div>
             <div class="flow-arrow">&#8595;</div>
-            <div class="flow-step blue">3. Crear embeddings<br><small>Una red neuronal shallow aprende a predecir vecinos, el hidden layer = embedding</small></div>
+            <div class="flow-step blue">3. Entrenar la red neuronal shallow<br><small>Le das las caminatas como "frases" y aprende a predecir vecinos</small></div>
             <div class="flow-arrow">&#8595;</div>
-            <div class="flow-step green">4. Visualizar con UMAP<br><small>Reducir de 64 dims a 2D para ver clusters</small></div>
+            <div class="flow-step" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); color:white;">4. Extraer los embeddings<br><small>Los pesos de la capa oculta = el embedding de cada nodo (ej. 64 numeros)</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step green">5. Visualizar con UMAP<br><small>Reducir de 64D a 2D para ver clusters &mdash; los libros similares quedan juntos!</small></div>
         </div>
 
-        <h3>Parametros Clave de N2V</h3>
+        <div class="success-box">
+            <h4>&#127919; Resumen antes de los parametros</h4>
+            <p>Node2Vec <strong>no sabe nada de politica</strong>. Solo sabe que ciertos libros se compran juntos (las aristas). Pero al pasear miles de veces por la red de co-compras y entrenar una red neuronal, <strong>descubre solo</strong> que hay 3 grupos (izquierda, derecha, neutral) &mdash; porque los libros de cada grupo estan mas conectados entre si.</p>
+            <p style="margin-top:8px;">Ahora si, veamos los parametros que controlan <em>como</em> camina el turista...</p>
+        </div>
+
+        <h3>&#9881; Parametros Clave de N2V</h3>
+        <p>Ahora que entiendes <em>que</em> hace Node2Vec, veamos los botones y perillas que controlan <em>como</em> lo hace. Cada parametro es como una instruccion que le das al "turista":</p>
         <div class="accordion-item">
             <div class="accordion-header" onclick="toggleAccordion(this)">
                 dimensions &mdash; Tamano del embedding
                 <span class="accordion-icon">&#9660;</span>
             </div>
             <div class="accordion-body">
-                <p>Define <strong>cuantos numeros</strong> tendra el embedding de cada nodo. Es como decidir cuantas "caracteristicas" quieres capturar.</p>
+                <p>Define <strong>cuantos numeros</strong> tendra el embedding de cada nodo.</p>
+                <div class="highlight">
+                    <p>&#128694; <strong>Analogia del turista:</strong> Es como decidir cuantas preguntas le haces al turista sobre cada lugar. Si le haces 2 preguntas ("te gusto?" y "era caro?") tienes un perfil basico. Si le haces 64 preguntas, tienes un perfil <em>muy detallado</em> de cada lugar.</p>
+                </div>
                 <div class="info-box">
                     <p><strong>Valor estandar:</strong> 128 (pero en el libro usan 64 para comparar con GNN)</p>
                     <p><strong>Mas dimensiones</strong> = perfil mas detallado pero mas costoso computacionalmente</p>
                     <p><strong>Menos dimensiones</strong> = perfil mas compacto pero puede perder informacion</p>
+                    <p><strong>En AML:</strong> Para redes transaccionales complejas, 64-128 suele ser un buen rango</p>
                 </div>
             </div>
         </div>
@@ -280,11 +390,15 @@
                 <span class="accordion-icon">&#9660;</span>
             </div>
             <div class="accordion-body">
-                <p>Cuantos <strong>pasos</strong> da cada caminata aleatoria. Es como decidir que tan lejos explorar desde cada nodo.</p>
+                <p>Cuantos <strong>pasos</strong> da cada caminata aleatoria.</p>
+                <div class="highlight">
+                    <p>&#128694; <strong>Analogia del turista:</strong> Es cuantas cuadras camina el turista antes de parar. Si camina <strong>5 cuadras</strong>, solo conoce el barrio inmediato. Si camina <strong>80 cuadras</strong>, cruza toda la ciudad y descubre conexiones lejanas.</p>
+                </div>
                 <div class="info-box">
                     <p><strong>Valor estandar:</strong> 80 pasos (en el libro usan 30)</p>
                     <p><strong>Mas pasos</strong> = explora mas vecindario, captura contexto mas amplio</p>
                     <p><strong>Menos pasos</strong> = solo captura vecindario inmediato</p>
+                    <p><strong>En AML:</strong> Caminatas largas pueden revelar cadenas de lavado que pasan por 5-10 intermediarios</p>
                 </div>
             </div>
         </div>
@@ -295,10 +409,14 @@
                 <span class="accordion-icon">&#9660;</span>
             </div>
             <div class="accordion-body">
-                <p>Cuantas veces <strong>repetir</strong> la caminata desde cada nodo. Mas caminatas = mejor comprension del vecindario.</p>
+                <p>Cuantas veces <strong>repetir</strong> la caminata desde cada nodo.</p>
+                <div class="highlight">
+                    <p>&#128694; <strong>Analogia del turista:</strong> Si el turista sale de su hotel <strong>una sola vez</strong>, tal vez tuvo mala suerte y tomo una ruta rara. Si sale <strong>200 veces</strong>, los lugares que aparecen repetidamente son los que <em>de verdad</em> estan conectados con el hotel. Es como hacer una encuesta: mas respuestas = resultado mas confiable.</p>
+                </div>
                 <div class="info-box">
                     <p><strong>Valor estandar:</strong> 10 (en el libro usan 200 para mas precision)</p>
                     <p><strong>Mas caminatas</strong> = representacion mas robusta pero mas lento</p>
+                    <p><strong>Menos caminatas</strong> = mas rapido pero mas ruidoso</p>
                 </div>
             </div>
         </div>
@@ -310,6 +428,9 @@
             </div>
             <div class="accordion-body">
                 <p>Controla la probabilidad de que la caminata <strong>regrese</strong> al nodo anterior.</p>
+                <div class="highlight">
+                    <p>&#128694; <strong>Analogia del turista:</strong> Imagina que el turista llega a una plaza. &iquest;Puede darse la vuelta y regresar por donde vino? Con <strong>p alto</strong>, le dices "prohibido regresar, sigue adelante" (explora cosas nuevas). Con <strong>p bajo</strong>, le dices "puedes regresar, quédate por aqui" (profundiza en la misma zona).</p>
+                </div>
                 <div class="success-box">
                     <p><strong>p alto</strong> = menos probable que retroceda (explora nuevos caminos)</p>
                     <p><strong>p bajo</strong> = mas probable que retroceda (se queda cerca del inicio)</p>
@@ -325,7 +446,11 @@
             </div>
             <div class="accordion-body">
                 <p>Controla si la caminata explora <strong>cerca (BFS)</strong> o <strong>lejos (DFS)</strong>.</p>
-                <div class="highlight">
+                <div class="highlight" style="margin-bottom:12px;">
+                    <p>&#128694; <strong>Analogia del turista:</strong> Con <strong>q alto</strong>, el turista es como un <em>vecino curioso</em>: recorre todas las calles de su colonia antes de salir (BFS &mdash; conoce bien la zona). Con <strong>q bajo</strong>, es un <em>aventurero</em>: se va lo mas lejos posible, cruzando barrios enteros (DFS &mdash; descubre la estructura global).</p>
+                    <p style="margin-top:8px;"><strong>En AML:</strong> q alto detecta comunidades locales (ej. una familia que mueve dinero entre sus cuentas). q bajo detecta cadenas largas (ej. dinero que viaja por 8 paises antes de llegar a su destino).</p>
+                </div>
+                <div class="info-box">
                     <p><strong>q &gt; 1</strong> = BFS (breadth-first) &mdash; explora vecinos cercanos, captura estructura local</p>
                     <p><strong>q &lt; 1</strong> = DFS (depth-first) &mdash; explora nodos lejanos, captura estructura global</p>
                     <p><strong>q = 1</strong> = equilibrado (DeepWalk clasico)</p>
