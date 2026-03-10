@@ -345,6 +345,17 @@
         </div>
 
         <h3>&#128221; El Proceso Completo Paso a Paso</h3>
+
+        <div class="graph-card">
+            <h4 style="text-align:center; margin-bottom:5px;">&#127916; Animacion: Como N2V crea un embedding</h4>
+            <p style="text-align:center; font-size:0.85em; color: var(--dc-gray-500); margin-bottom:10px;">Observa las 4 fases: grafo original &#8594; caminatas &#8594; red neuronal &#8594; embedding final</p>
+            <canvas id="canvasN2VPipeline" width="750" height="480"></canvas>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="animateN2VPipeline()">&#9654; Iniciar Animacion</button>
+                <button class="btn btn-warning" onclick="drawN2VPipelineBase()">Reiniciar</button>
+            </div>
+        </div>
+
         <div class="flow-diagram">
             <div class="flow-step">1. Cargar el grafo<br><small>Leer polbooks.gml con NetworkX (105 nodos, 441 aristas)</small></div>
             <div class="flow-arrow">&#8595;</div>
@@ -524,6 +535,39 @@
         <div class="purple-box">
             <h4>La diferencia fundamental</h4>
             <p>Mientras N2V crea embeddings como paso <strong>separado</strong> (primero caminas, luego entrenas), las GNNs integran la creacion de embeddings <strong>directamente en el proceso de aprendizaje</strong>. Los embeddings se refinan mientras la red aprende la tarea.</p>
+        </div>
+
+        <h3>&#129504; Analogia: El Chisme de Vecindario</h3>
+        <div class="info-box">
+            <p>Imagina que vives en un vecindario y quieres saber <strong>que tipo de persona es cada vecino</strong>, pero solo puedes hablar con tus vecinos directos:</p>
+            <table class="comparison-table" style="margin:15px 0;">
+                <tr><th>Lo que pasa en el vecindario</th><th>Lo que hace la GNN</th></tr>
+                <tr>
+                    <td><strong>Ronda 1:</strong> Le preguntas a tus vecinos directos como son</td>
+                    <td><strong>Capa 1:</strong> Cada nodo recibe los features de sus vecinos a 1 hop</td>
+                </tr>
+                <tr>
+                    <td><strong>Ronda 2:</strong> Tus vecinos te cuentan lo que <em>sus</em> vecinos les dijeron</td>
+                    <td><strong>Capa 2:</strong> Ahora cada nodo tiene info de vecinos a 2 hops</td>
+                </tr>
+                <tr>
+                    <td>Combinas todo lo que oiste en un <em>resumen</em> de tu zona</td>
+                    <td>Agrega (suma/promedia) los mensajes y los transforma = <strong>embedding</strong></td>
+                </tr>
+            </table>
+            <div class="highlight">
+                <p>&#128161; <strong>La clave:</strong> Despues de 2 rondas de "chisme", cada nodo tiene un resumen que incluye info de su vecindario a 2 saltos de distancia &mdash; <strong>sin haber caminado por el grafo</strong>. La estructura llega a ti por difusion.</p>
+            </div>
+        </div>
+
+        <h3>&#127916; Animacion: Como la GNN crea un embedding</h3>
+        <div class="graph-card">
+            <p style="text-align:center; font-size:0.85em; color: var(--dc-gray-500); margin-bottom:10px;">Observa como el nodo central recibe y agrega mensajes de sus vecinos en cada capa</p>
+            <canvas id="canvasGNNPipeline" width="750" height="480"></canvas>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="animateGNNPipeline()">&#9654; Iniciar Animacion</button>
+                <button class="btn btn-warning" onclick="drawGNNPipelineBase()">Reiniciar</button>
+            </div>
         </div>
 
         <h3>Arquitectura: SimpleGNN</h3>

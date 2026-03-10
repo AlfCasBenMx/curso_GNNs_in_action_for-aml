@@ -84,10 +84,10 @@ function showSection(id){
   }
   // Init canvases when their section becomes visible
   if(id === 'n2v'){
-    setTimeout(() => { drawBFSDFS(); drawN2VGraph(); }, 200);
+    setTimeout(() => { drawBFSDFS(); drawN2VGraph(); drawN2VPipelineBase(); }, 200);
   }
   if(id === 'gnn_emb'){
-    setTimeout(() => { drawGNNGraph(); }, 200);
+    setTimeout(() => { drawGNNGraph(); drawGNNPipelineBase(); }, 200);
   }
   if(id === 'semi_supervised'){
     setTimeout(() => { drawResultsChart(); }, 200);
@@ -596,6 +596,739 @@ function animateGNNMessagePassing(){
   }
 
   setTimeout(sendMessage, 300);
+}
+
+/* ================================================================
+   N2V PIPELINE ANIMATION — Full embedding creation demo
+   ================================================================ */
+function drawN2VPipelineBase(){
+  const c = document.getElementById('canvasN2VPipeline');
+  if(!c) return;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // --- Phase labels at top ---
+  const phases = [
+    { x: 95,  label: '1. Grafo', color: '#4ea8de' },
+    { x: 280, label: '2. Random Walks', color: '#ffc107' },
+    { x: 470, label: '3. Red Neuronal', color: '#7c3aed' },
+    { x: 660, label: '4. Embeddings', color: '#03EF62' },
+  ];
+  phases.forEach(p => {
+    ctx.fillStyle = p.color;
+    ctx.font = 'bold 13px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText(p.label, p.x, 22);
+    // Separator lines
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4,4]);
+    ctx.beginPath();
+    ctx.moveTo(p.x + 90, 30);
+    ctx.lineTo(p.x + 90, H - 10);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  });
+
+  // --- Phase 1: Small graph ---
+  const gNodes = [
+    { x: 95, y: 130, label: 'A', col: '#ff6b6b' },
+    { x: 50, y: 210, label: 'B', col: '#ff6b6b' },
+    { x: 140, y: 210, label: 'C', col: '#4ea8de' },
+    { x: 30, y: 300, label: 'D', col: '#4ea8de' },
+    { x: 95, y: 340, label: 'E', col: '#4ea8de' },
+    { x: 160, y: 300, label: 'F', col: '#03EF62' },
+  ];
+  const gEdges = [[0,1],[0,2],[1,2],[1,3],[1,4],[2,5],[3,4],[4,5]];
+
+  ctx.strokeStyle = '#475569';
+  ctx.lineWidth = 1.5;
+  gEdges.forEach(([a,b]) => {
+    ctx.beginPath();
+    ctx.moveTo(gNodes[a].x, gNodes[a].y);
+    ctx.lineTo(gNodes[b].x, gNodes[b].y);
+    ctx.stroke();
+  });
+  gNodes.forEach(n => {
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, 18, 0, Math.PI*2);
+    ctx.fillStyle = n.col;
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 13px Inter';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(n.label, n.x, n.y);
+  });
+
+  // --- Phase 2 placeholder: walks area ---
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(190, 80, 175, 340);
+  ctx.strokeStyle = '#475569';
+  ctx.strokeRect(190, 80, 175, 340);
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '12px Inter';
+  ctx.textAlign = 'center';
+  ctx.fillText('Genera caminatas', 278, 250);
+  ctx.fillText('aleatorias aqui...', 278, 268);
+
+  // --- Phase 3 placeholder: neural net ---
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(375, 80, 185, 340);
+  ctx.strokeStyle = '#475569';
+  ctx.strokeRect(375, 80, 185, 340);
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('Skip-gram aprende', 468, 250);
+  ctx.fillText('a predecir vecinos...', 468, 268);
+
+  // --- Phase 4 placeholder: embeddings ---
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(570, 80, 175, 340);
+  ctx.strokeStyle = '#475569';
+  ctx.strokeRect(570, 80, 175, 340);
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('Embeddings finales', 658, 250);
+  ctx.fillText('apareceran aqui...', 658, 268);
+
+  // Bottom instruction
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '12px Inter';
+  ctx.textAlign = 'center';
+  ctx.fillText('Pulsa "Iniciar Animacion" para ver el proceso completo', W/2, H - 15);
+}
+
+function animateN2VPipeline(){
+  const c = document.getElementById('canvasN2VPipeline');
+  if(!c) return;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+
+  // Redraw base
+  drawN2VPipelineBase();
+
+  const gNodes = [
+    { x: 95, y: 130, label: 'A', col: '#ff6b6b' },
+    { x: 50, y: 210, label: 'B', col: '#ff6b6b' },
+    { x: 140, y: 210, label: 'C', col: '#4ea8de' },
+    { x: 30, y: 300, label: 'D', col: '#4ea8de' },
+    { x: 95, y: 340, label: 'E', col: '#4ea8de' },
+    { x: 160, y: 300, label: 'F', col: '#03EF62' },
+  ];
+  const adj = {0:[1,2], 1:[0,2,3,4], 2:[0,1,5], 3:[1,4], 4:[1,3,5], 5:[2,4]};
+  const labels = ['A','B','C','D','E','F'];
+
+  // Generate 4 random walks from node A
+  const walks = [];
+  for(let w = 0; w < 4; w++){
+    const walk = [0];
+    let cur = 0;
+    for(let s = 0; s < 4; s++){
+      const nb = adj[cur];
+      cur = nb[Math.floor(Math.random() * nb.length)];
+      walk.push(cur);
+    }
+    walks.push(walk);
+  }
+
+  let phase = 0;
+
+  // PHASE 2: Show walks one by one
+  function showWalks(){
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(191, 81, 173, 338);
+
+    ctx.fillStyle = '#ffc107';
+    ctx.font = 'bold 12px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText('Random Walks desde A:', 278, 100);
+
+    let wIdx = 0;
+    function showNextWalk(){
+      if(wIdx >= walks.length){ setTimeout(showNeuralNet, 800); return; }
+      const walk = walks[wIdx];
+      const walkStr = walk.map(i => labels[i]).join(' \u2192 ');
+      const y = 130 + wIdx * 55;
+
+      // Walk number
+      ctx.fillStyle = '#ffc107';
+      ctx.font = 'bold 11px Inter';
+      ctx.textAlign = 'left';
+      ctx.fillText('Walk ' + (wIdx+1) + ':', 200, y);
+
+      // Walk path
+      ctx.font = '13px monospace';
+      ctx.fillStyle = '#e2e8f0';
+      ctx.fillText(walkStr, 200, y + 18);
+
+      // Animate on graph: highlight walk edges
+      let step = 0;
+      function highlightStep(){
+        if(step >= walk.length - 1){ wIdx++; setTimeout(showNextWalk, 500); return; }
+        const a = walk[step], b = walk[step+1];
+        ctx.strokeStyle = '#ffc107';
+        ctx.lineWidth = 3;
+        ctx.globalAlpha = 0.7;
+        ctx.beginPath();
+        ctx.moveTo(gNodes[a].x, gNodes[a].y);
+        ctx.lineTo(gNodes[b].x, gNodes[b].y);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        step++;
+        setTimeout(highlightStep, 250);
+      }
+      highlightStep();
+    }
+    showNextWalk();
+  }
+
+  // PHASE 3: Neural network visualization
+  function showNeuralNet(){
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(376, 81, 183, 338);
+
+    ctx.fillStyle = '#7c3aed';
+    ctx.font = 'bold 12px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText('Skip-gram (Word2Vec)', 468, 100);
+
+    // Draw 3-layer neural net
+    const layers = [
+      { x: 410, neurons: 6, color: '#4ea8de', label: 'Input\n(one-hot)' },
+      { x: 468, neurons: 3, color: '#7c3aed', label: 'Hidden\n\u2B50 EMBEDDING' },
+      { x: 526, neurons: 6, color: '#f97316', label: 'Output\n(vecinos)' },
+    ];
+    const neuronY = (i, total) => 145 + i * (220 / (total - 1 || 1));
+
+    // Draw connections
+    for(let l = 0; l < layers.length - 1; l++){
+      for(let i = 0; i < layers[l].neurons; i++){
+        for(let j = 0; j < layers[l+1].neurons; j++){
+          ctx.strokeStyle = '#334155';
+          ctx.lineWidth = 0.5;
+          ctx.beginPath();
+          ctx.moveTo(layers[l].x, neuronY(i, layers[l].neurons));
+          ctx.lineTo(layers[l+1].x, neuronY(j, layers[l+1].neurons));
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Animate connections lighting up
+    let connStep = 0;
+    function lightConnections(){
+      if(connStep >= layers[0].neurons){
+        showLabels();
+        return;
+      }
+      const i = connStep;
+      for(let j = 0; j < layers[1].neurons; j++){
+        ctx.strokeStyle = layers[1].color;
+        ctx.globalAlpha = 0.6;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(layers[0].x, neuronY(i, layers[0].neurons));
+        ctx.lineTo(layers[1].x, neuronY(j, layers[1].neurons));
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      connStep++;
+      setTimeout(lightConnections, 150);
+    }
+
+    function showLabels(){
+      // Draw neurons
+      layers.forEach(layer => {
+        for(let i = 0; i < layer.neurons; i++){
+          ctx.beginPath();
+          ctx.arc(layer.x, neuronY(i, layer.neurons), 8, 0, Math.PI*2);
+          ctx.fillStyle = layer.color;
+          ctx.fill();
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+      });
+
+      // Labels
+      ctx.font = 'bold 10px Inter';
+      ctx.textAlign = 'center';
+      layers.forEach(layer => {
+        const lns = layer.label.split('\n');
+        ctx.fillStyle = layer.color;
+        lns.forEach((ln, li) => {
+          ctx.fillText(ln, layer.x, 380 + li * 13);
+        });
+      });
+
+      // Highlight hidden layer
+      ctx.strokeStyle = '#ffc107';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4,3]);
+      ctx.strokeRect(layers[1].x - 16, neuronY(0, layers[1].neurons) - 14, 32, neuronY(layers[1].neurons-1, layers[1].neurons) - neuronY(0, layers[1].neurons) + 28);
+      ctx.setLineDash([]);
+
+      setTimeout(showEmbeddings, 800);
+    }
+
+    lightConnections();
+  }
+
+  // PHASE 4: Final embeddings
+  function showEmbeddings(){
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(571, 81, 173, 338);
+
+    ctx.fillStyle = '#03EF62';
+    ctx.font = 'bold 12px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText('Embeddings (3D)', 658, 100);
+
+    const embData = [
+      { label: 'A', col: '#ff6b6b', vals: [ 0.82, -0.31,  0.45] },
+      { label: 'B', col: '#ff6b6b', vals: [ 0.79, -0.28,  0.51] },
+      { label: 'C', col: '#4ea8de', vals: [-0.15,  0.73,  0.22] },
+      { label: 'D', col: '#4ea8de', vals: [-0.22,  0.69,  0.18] },
+      { label: 'E', col: '#4ea8de', vals: [-0.18,  0.65,  0.30] },
+      { label: 'F', col: '#03EF62', vals: [ 0.10,  0.25, -0.80] },
+    ];
+
+    let eIdx = 0;
+    function showNextEmb(){
+      if(eIdx >= embData.length){
+        // Show scatter at bottom
+        setTimeout(showMiniScatter, 400);
+        return;
+      }
+      const e = embData[eIdx];
+      const y = 125 + eIdx * 36;
+
+      ctx.fillStyle = e.col;
+      ctx.font = 'bold 13px Inter';
+      ctx.textAlign = 'left';
+      ctx.fillText(e.label + ':', 582, y);
+
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '12px monospace';
+      ctx.fillText('[' + e.vals.map(v => v.toFixed(2)).join(', ') + ']', 604, y);
+
+      eIdx++;
+      setTimeout(showNextEmb, 300);
+    }
+
+    function showMiniScatter(){
+      ctx.fillStyle = '#03EF62';
+      ctx.font = 'bold 11px Inter';
+      ctx.textAlign = 'center';
+      ctx.fillText('Espacio 2D (simplificado):', 658, 350);
+
+      // Mini scatter plot
+      const ox = 610, oy = 380, scale = 60;
+      // Axes
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(ox, oy+50); ctx.lineTo(ox, oy-30); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(ox-10, oy+30); ctx.lineTo(ox+90, oy+30); ctx.stroke();
+
+      embData.forEach(e => {
+        const px = ox + 20 + (e.vals[0] + 0.5) * scale;
+        const py = oy + 20 - (e.vals[1] + 0.5) * scale;
+        ctx.beginPath();
+        ctx.arc(px, py, 6, 0, Math.PI*2);
+        ctx.fillStyle = e.col;
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 8px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillText(e.label, px, py + 3);
+      });
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '10px Inter';
+      ctx.textAlign = 'center';
+      ctx.fillText('Nodos similares = cercanos!', 658, oy + 60);
+    }
+
+    showNextEmb();
+  }
+
+  // Start animation sequence
+  setTimeout(showWalks, 400);
+}
+
+/* ================================================================
+   GNN PIPELINE ANIMATION — Message passing embedding demo
+   ================================================================ */
+function drawGNNPipelineBase(){
+  const c = document.getElementById('canvasGNNPipeline');
+  if(!c) return;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // Phase labels
+  const phases = [
+    { x: 95,  label: '1. Grafo + Features', color: '#4ea8de' },
+    { x: 300, label: '2. Capa 1: Mensajes', color: '#ffc107' },
+    { x: 510, label: '3. Capa 2: Mas Mensajes', color: '#7c3aed' },
+    { x: 690, label: '4. Embedding', color: '#03EF62' },
+  ];
+  phases.forEach((p, i) => {
+    ctx.fillStyle = p.color;
+    ctx.font = 'bold 12px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText(p.label, p.x, 22);
+    if(i < phases.length - 1){
+      ctx.strokeStyle = '#334155';
+      ctx.setLineDash([4,4]);
+      ctx.beginPath();
+      ctx.moveTo(p.x + 100, 30);
+      ctx.lineTo(p.x + 100, H - 10);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  });
+
+  // Phase 1: graph with feature vectors
+  const gNodes = [
+    { x: 95, y: 200, label: 'v',  col: '#03EF62', feat: '[0.2, 0.8]' },
+    { x: 40, y: 120, label: 'u1', col: '#4ea8de', feat: '[0.5, 0.1]' },
+    { x: 150, y: 120, label: 'u2', col: '#4ea8de', feat: '[0.3, 0.9]' },
+    { x: 40, y: 300, label: 'u3', col: '#ff6b6b', feat: '[0.7, 0.4]' },
+    { x: 150, y: 300, label: 'u4', col: '#ff6b6b', feat: '[0.1, 0.6]' },
+  ];
+  const gEdges = [[0,1],[0,2],[0,3],[0,4],[1,2],[3,4]];
+
+  ctx.strokeStyle = '#475569';
+  ctx.lineWidth = 1.5;
+  gEdges.forEach(([a,b]) => {
+    ctx.beginPath();
+    ctx.moveTo(gNodes[a].x, gNodes[a].y);
+    ctx.lineTo(gNodes[b].x, gNodes[b].y);
+    ctx.stroke();
+  });
+  gNodes.forEach(n => {
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, 18, 0, Math.PI*2);
+    ctx.fillStyle = n.col;
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 12px Inter';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(n.label, n.x, n.y);
+    // Feature
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '9px monospace';
+    ctx.fillText(n.feat, n.x, n.y + 28);
+  });
+
+  // Placeholder boxes for phases 2-4
+  [[200, '2. Mensajes viajaran', 'de vecinos a v...'], [400, '3. Segunda ronda de', 'chisme...'], [610, 'Embedding final', 'aparecera aqui...']].forEach(([xStart, t1, t2]) => {
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText(t1, xStart + 80, 210);
+    ctx.fillText(t2, xStart + 80, 228);
+  });
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '12px Inter';
+  ctx.textAlign = 'center';
+  ctx.fillText('Pulsa "Iniciar Animacion" para ver message passing en accion', W/2, H - 15);
+}
+
+function animateGNNPipeline(){
+  const c = document.getElementById('canvasGNNPipeline');
+  if(!c) return;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+
+  drawGNNPipelineBase();
+
+  // ---- PHASE 2: Layer 1 message passing ----
+  function phase2(){
+    // Clear phase 2 area
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(196, 40, 198, H - 55);
+
+    const centerX = 300, centerY = 200;
+    // Draw central node v
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 22, 0, Math.PI*2);
+    ctx.fillStyle = '#03EF62';
+    ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#000'; ctx.font = 'bold 14px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('v', centerX, centerY);
+
+    // Neighbors sending messages
+    const senders = [
+      { label: 'u1', col: '#4ea8de', angle: -2.3, msg: '[0.5, 0.1]' },
+      { label: 'u2', col: '#4ea8de', angle: -0.8, msg: '[0.3, 0.9]' },
+      { label: 'u3', col: '#ff6b6b', angle: 2.3,  msg: '[0.7, 0.4]' },
+      { label: 'u4', col: '#ff6b6b', angle: 0.8,  msg: '[0.1, 0.6]' },
+    ];
+    const radius = 85;
+
+    // Draw neighbor positions
+    senders.forEach(s => {
+      const sx = centerX + Math.cos(s.angle) * radius;
+      const sy = centerY + Math.sin(s.angle) * radius;
+      s.sx = sx; s.sy = sy;
+      ctx.beginPath();
+      ctx.arc(sx, sy, 16, 0, Math.PI*2);
+      ctx.fillStyle = s.col;
+      ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.fillStyle = '#000'; ctx.font = 'bold 11px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(s.label, sx, sy);
+    });
+
+    // Animate messages flying to center
+    let msgIdx = 0;
+    function sendMsg(){
+      if(msgIdx >= senders.length){
+        setTimeout(showAggregation, 500);
+        return;
+      }
+      const s = senders[msgIdx];
+      let progress = 0;
+      function fly(){
+        if(progress >= 1){ msgIdx++; setTimeout(sendMsg, 200); return; }
+        const mx = s.sx + (centerX - s.sx) * progress;
+        const my = s.sy + (centerY - s.sy) * progress;
+
+        // Message dot
+        ctx.beginPath();
+        ctx.arc(mx, my, 5, 0, Math.PI*2);
+        ctx.fillStyle = s.col;
+        ctx.globalAlpha = 0.9;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // Trail
+        ctx.strokeStyle = s.col;
+        ctx.globalAlpha = 0.3;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(s.sx, s.sy);
+        ctx.lineTo(mx, my);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+
+        progress += 0.06;
+        requestAnimationFrame(fly);
+      }
+      fly();
+    }
+
+    function showAggregation(){
+      // Show aggregation formula
+      ctx.fillStyle = '#ffc107';
+      ctx.font = 'bold 11px Inter';
+      ctx.textAlign = 'center';
+      ctx.fillText('AGREGA (promedia):', centerX, 330);
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '11px monospace';
+      ctx.fillText('h_v = \u03C3(W \u00B7 AVG(msgs) + b)', centerX, 350);
+
+      // Updated v
+      ctx.fillStyle = '#ffc107';
+      ctx.font = 'bold 11px Inter';
+      ctx.fillText("v' = [0.4, 0.5]", centerX, 375);
+
+      // Glow on center node
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 28, 0, Math.PI*2);
+      ctx.strokeStyle = '#ffc107';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([4,3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      setTimeout(phase3, 1000);
+    }
+
+    setTimeout(sendMsg, 400);
+  }
+
+  // ---- PHASE 3: Layer 2 — 2-hop info ----
+  function phase3(){
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(396, 40, 198, H - 55);
+
+    const centerX = 510, centerY = 200;
+
+    // Now v already has aggregated info. Show 2-hop concept
+    ctx.fillStyle = '#7c3aed';
+    ctx.font = 'bold 12px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText('Capa 2: "chisme" a 2 hops', centerX, 60);
+
+    // Draw a "tree" showing info propagation
+    // Level 0: v
+    ctx.beginPath();
+    ctx.arc(centerX, 140, 20, 0, Math.PI*2);
+    ctx.fillStyle = '#03EF62'; ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#000'; ctx.font = 'bold 12px Inter'; ctx.textBaseline = 'middle';
+    ctx.fillText('v', centerX, 140);
+
+    // Level 1: neighbors (already updated from layer 1)
+    const l1 = [
+      { x: centerX - 60, y: 220, label: "u1'", col: '#4ea8de' },
+      { x: centerX - 20, y: 220, label: "u2'", col: '#4ea8de' },
+      { x: centerX + 20, y: 220, label: "u3'", col: '#ff6b6b' },
+      { x: centerX + 60, y: 220, label: "u4'", col: '#ff6b6b' },
+    ];
+    l1.forEach(n => {
+      ctx.strokeStyle = '#475569'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(centerX, 160); ctx.lineTo(n.x, n.y - 14); ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, 14, 0, Math.PI*2);
+      ctx.fillStyle = n.col; ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.fillStyle = '#000'; ctx.font = 'bold 9px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(n.label, n.x, n.y);
+    });
+
+    // Level 2: 2-hop neighbors (info that already flowed into u's)
+    ctx.fillStyle = '#7c3aed';
+    ctx.font = '10px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText("u1' ya tiene info de", centerX, 265);
+    ctx.fillText("SUS vecinos (2-hop de v)", centerX, 280);
+
+    // Animate messages from l1 to center
+    let step = 0;
+    function sendLayer2(){
+      if(step >= l1.length){
+        setTimeout(showLayer2Result, 500);
+        return;
+      }
+      const n = l1[step];
+      let progress = 0;
+      function fly2(){
+        if(progress >= 1){ step++; setTimeout(sendLayer2, 150); return; }
+        const mx = n.x + (centerX - n.x) * progress;
+        const my = n.y + (140 - n.y) * progress;
+        ctx.beginPath();
+        ctx.arc(mx, my, 4, 0, Math.PI*2);
+        ctx.fillStyle = '#7c3aed';
+        ctx.globalAlpha = 0.8;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        progress += 0.08;
+        requestAnimationFrame(fly2);
+      }
+      fly2();
+    }
+
+    function showLayer2Result(){
+      // Glow center
+      ctx.beginPath();
+      ctx.arc(centerX, 140, 26, 0, Math.PI*2);
+      ctx.strokeStyle = '#7c3aed'; ctx.lineWidth = 3;
+      ctx.setLineDash([4,3]); ctx.stroke(); ctx.setLineDash([]);
+
+      ctx.fillStyle = '#7c3aed';
+      ctx.font = 'bold 12px Inter';
+      ctx.textAlign = 'center';
+      ctx.fillText("v'' = [0.35, 0.62]", centerX, 320);
+
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '11px Inter';
+      ctx.fillText('v ahora "conoce" a', centerX, 350);
+      ctx.fillText('vecinos a 2 saltos', centerX, 366);
+      ctx.fillText('sin haber caminado!', centerX, 382);
+
+      setTimeout(phase4, 1000);
+    }
+
+    setTimeout(sendLayer2, 400);
+  }
+
+  // ---- PHASE 4: Final embedding ----
+  function phase4(){
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(610, 40, 140, H - 55);
+
+    const cx = 680;
+
+    ctx.fillStyle = '#03EF62';
+    ctx.font = 'bold 12px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText('Embedding de v', cx, 65);
+
+    // Show final vector
+    const finalVals = [0.35, 0.62, -0.18, 0.44];
+    let vIdx = 0;
+    function showVal(){
+      if(vIdx >= finalVals.length){
+        showComparison();
+        return;
+      }
+      const y = 100 + vIdx * 35;
+
+      // Dim box
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(cx - 55, y - 12, 110, 28);
+      ctx.strokeStyle = '#03EF62';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(cx - 55, y - 12, 110, 28);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '10px Inter';
+      ctx.textAlign = 'left';
+      ctx.fillText('dim ' + (vIdx+1) + ':', cx - 48, y + 4);
+
+      ctx.fillStyle = '#03EF62';
+      ctx.font = 'bold 14px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(finalVals[vIdx].toFixed(2), cx + 48, y + 5);
+
+      // Bar visualization
+      const barW = Math.abs(finalVals[vIdx]) * 60;
+      ctx.fillStyle = finalVals[vIdx] >= 0 ? '#03EF62' : '#ff6b6b';
+      ctx.globalAlpha = 0.3;
+      ctx.fillRect(cx - 5, y - 6, barW * (finalVals[vIdx] >= 0 ? 1 : -1), 16);
+      ctx.globalAlpha = 1;
+
+      vIdx++;
+      setTimeout(showVal, 350);
+    }
+
+    function showComparison(){
+      const y = 280;
+      ctx.fillStyle = '#ffc107';
+      ctx.font = 'bold 11px Inter';
+      ctx.textAlign = 'center';
+      ctx.fillText('vs N2V:', cx, y);
+
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '10px Inter';
+      ctx.fillText('N2V: camina + Word2Vec', cx, y + 20);
+      ctx.fillText('GNN: chisme + agrega', cx, y + 36);
+
+      ctx.fillStyle = '#03EF62';
+      ctx.font = 'bold 10px Inter';
+      ctx.fillText('GNN = end-to-end', cx, y + 60);
+      ctx.fillText('(embedding se optimiza', cx, y + 75);
+      ctx.fillText('para la tarea!)', cx, y + 90);
+    }
+
+    setTimeout(showVal, 300);
+  }
+
+  // Start
+  setTimeout(phase2, 600);
 }
 
 /* ---------- Results Bar Chart ---------- */
