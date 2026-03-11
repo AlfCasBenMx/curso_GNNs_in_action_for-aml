@@ -348,8 +348,8 @@
 
         <div class="graph-card">
             <h4 style="text-align:center; margin-bottom:5px;">&#127916; Animacion: Como N2V crea un embedding</h4>
-            <p style="text-align:center; font-size:0.85em; color: var(--dc-gray-500); margin-bottom:10px;">Observa las 4 fases: grafo original &#8594; caminatas &#8594; red neuronal &#8594; embedding final</p>
-            <canvas id="canvasN2VPipeline" width="750" height="480"></canvas>
+            <p style="text-align:center; font-size:0.85em; color: var(--dc-gray-500); margin-bottom:10px;">Observa las 4 fases: grafo original &#8594; el turista pasea &#8594; la red aprende &#8594; numeros finales</p>
+            <canvas id="canvasN2VPipeline" width="750" height="550"></canvas>
             <div class="btn-group">
                 <button class="btn btn-primary" onclick="animateN2VPipeline()">&#9654; Iniciar Animacion</button>
                 <button class="btn btn-warning" onclick="drawN2VPipelineBase()">Reiniciar</button>
@@ -501,15 +501,6 @@
                 <li>Supera a t-SNE en mantener distancias globales</li>
                 <li>Permite crear embeddings ricos (64D) y luego reducirlos para visualizacion</li>
             </ul>
-        </div>
-
-        <div class="graph-card">
-            <h4 style="text-align:center">Simulacion: N2V Random Walk</h4>
-            <canvas id="canvasN2VWalk" width="700" height="400"></canvas>
-            <div class="btn-group">
-                <button class="btn btn-primary" onclick="animateRandomWalk()">&#9654; Animar Random Walk</button>
-                <button class="btn btn-warning" onclick="drawN2VGraph()">Reiniciar</button>
-            </div>
         </div>
 
         <div class="danger-box">

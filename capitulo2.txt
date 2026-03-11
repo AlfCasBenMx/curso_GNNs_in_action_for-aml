@@ -1,0 +1,1966 @@
+
+================================================================================
+--- PAGINA 79 ---
+================================================================================
+
+2 Graph embeddings
+This chapter covers
+Exploring gr aph embeddings and their importance
+Creating node embeddings using non-GNN and GNN
+methods
+Comparing node embeddings on a semi-supervised
+problem
+Taking a deeper div e into embedding methods
+Graph embeddings are essential tools in gr aph-based
+machine learning. They tr ansform the intricate structure of
+graphs—be it the entire gr aph, individual nodes, or edges—
+into a more manageable, lower -dimensional space. W e do
+this to compress a complex dataset into a form that ’s easier
+to work with, without losing its inherent patterns and
+relationships, the information to which we’ll apply a gr aph
+neural network (GNN) or other machine learning method.
+Graphs, as we’v e learned, encapsulate relationships and
+interactions within networks, whether they’re social
+networks, biological networks, or an y system where entities
+are interconnected. Embeddings capture these real-life
+relationships in a compact form, facilitating tasks such as
+visualization, clustering, or predictiv e modeling.
+There are numerous str ategies to deriv e these embeddings,
+each with its unique approach and application: from classical
+graph algorithms that use the network’ s topology , to linear
+algebr a techniques that decompose matrices representing
+the gr aph, and more adv anced methods such as GNNs [1].
+
+================================================================================
+--- PAGINA 80 ---
+================================================================================
+
+GNNs stand out because they can integr ate the embedding
+process directly into the learning algorithm itself .
+In traditional machine learning workflows, embeddings are
+gener ated as a separ ate step , serving as a dimensionalit y-
+reduction technique in tasks such as regression or
+classification. Howev er, GNNs merge embedding gener ation
+with the model’ s learning process. As the network processes
+inputs through its la yers, the embeddings are refined and
+updated, making the learning phase and the embedding
+phase insepar able. This means that GNNs learn the most
+informativ e representation of the gr aph data during tr aining
+time.
+Using gr aph embeddings can significantly enhance y our data
+science and machine learning projects, especially when
+dealing with complex network ed data. By capturing the
+essence of the gr aph in a lower -dimensional space,
+embeddings mak e it feasible to apply a v ariety of other
+machine learning techniques to gr aph data, opening up a
+world of possibilities for analysis and model building.
+In this chapter , we begin with an introduction to gr aph
+embeddings and a case study on a gr aph of political book
+purchases. W e start with Node2V ec (N2V) to establish a
+baseline with a non-GNN approach, guiding y ou through its
+practical application. In section 2.2, we shift to GNNs,
+offering a hands-on introduction to GNN-based embeddings,
+including setup , preprocessing, and visualization. Section 2.3
+provides a compar ative analysis of N2V and GNN
+embeddings, highlighting their applications. The chapter
+then rounds off with a discussion of the theoretical aspects
+of these embedding methods, with a special focus on the
+principles behind N2V and the message-passing mechanism
+in GNNs. The process we tak e in this chapter is illustr ated in
+figure 2.1.
+
+================================================================================
+--- PAGINA 82 ---
+================================================================================
+
+Figure 2.1 Summary  of process and objectives in chapter 2
+Note   Code from this chapter can be found in notebook
+form at the GitHub repository ( https://mng.bz/qxnE ).
+Colab links and data from this chapter can be accessed
+in the same location.
+2.1 Creating embeddings with
+Node2Vec
+Understanding the relationships within a network is a core
+task in man y fields, from social network analysis to biology
+and recommendation systems. In this section, we’ll explore
+how to create node embeddings using Node2Vec (N2V) , a
+technique inspired b y Word2V ec from natur al language
+processing (NLP) [2]. N2V captures the context of nodes
+within a gr aph b y simulating r andom w alks, allowing us to
+understand the neighborhood relationships between nodes in
+a low -dimensional space. This approach is effectiv e for
+identif ying patterns, clustering similar nodes, and preparing
+data for machine learning tasks.
+To mak e this process accessible, we’ll use the Node2Vec
+Python libr ary, which is beginner -friendly , although it ma y be
+slower on larger gr aphs. N2V helps create embeddings that
+capture the structur al relationships between nodes, which
+we can then visualiz e to unco ver insights about the gr aph’s
+structure. Our workflow in volves sev eral steps:
+1. Load data and set N2V parameters.  We start by loading our
+graph data and initializing N2V with specific parameters to
+control the random walks, such as walk length and the number
+of walks per node.
+2. Create embeddings.  N2V gener ates node embeddings by
+performing random walks on the graph, effectively summarizing
+
+================================================================================
+--- PAGINA 83 ---
+================================================================================
+
+each node’ s local neighborhood into a v ector f ormat.
+3. Transform embeddings.  The resulting embeddings are saved and
+then tr ansformed into a f ormat sui table f or visual ization.
+4. Visual ize embeddings in two dimensions.  We use UMAP , a
+dimensional ity reduction technique, to project these embeddings
+into two dimensions, making  it easier to visual ize and interpr et
+the results.
+Our data is the P olitical Books dataset, which comprises
+books (nodes) connected b y frequent co-purchases on
+Amaz on.com during the 2004 US election period (edges)
+[3]. Using this dataset pro vides a compelling example of
+how N2V can rev eal underlying patterns in co-purchasing
+behavior, potentially reflecting broader ideological groupings
+among book buy ers [4]. T able 2.1 pro vides k ey information
+about the P olitical Books gr aph.
+Table 2.1 Overview of the Political Books dataset
+Books in the political genre co-purchased on
+Amazon.com
+Number of nodes (books) 105
+Left-leaning nodes 41.0%
+Right-leaning nodes 46.7%
+Neutral nodes 12.4%
+Number of edges Edges represent the prevalence of a co-
+purchase between two books.441
+The P olitical Books dataset contains the following:
+Nodes  —Represent books about US pol itics sold b y Amaz on.com .
+Edges  —Indicate frequent co-pur chasing by the same buyers, as
+suggested by Amaz on’s “customers who bought this book also
+bought these other books” f eature.
+
+================================================================================
+--- PAGINA 84 ---
+================================================================================
+
+In figure 2.2, books are shaded based on their political
+alignment —dark er shade for liber al, lighter shade for
+conserv ative, and striped for neutr al. The categories were
+assigned b y Mark Newman through a qualitativ e analysis of
+book descriptions and reviews posted on Amaz on.
+
+================================================================================
+--- PAGINA 86 ---
+================================================================================
+
+Figure 2.2 Graph visualization of the Political Books dataset.
+Right-leaning books (nodes) are in a lighter shade and are
+clustered in the top half of the figure, left-leaning are darker
+shaded circles and clustered in the lower half of the figure, and
+neutral political stance are dark squares and appear in the
+middle. When two nodes are connected, it indicates that they
+have been purchased together frequently on Amazon.com.
+This dataset, compiled b y Valdis Krebs and a vailable through
+the GNN in Action repository ( https://mng.bz/qxnE ) or the
+Carnegie Mellon Univ ersity website ( https://mng.bz/mG8M ),
+contains 105 books (nodes) and 441 edges (co-purchases).
+If you want to learn more about the background of this
+dataset, Krebs has written an article with this information
+[4].
+Using N2V , we aim to explore the structure of this collection
+of books, unco vering insights based on political leanings and
+the potential associations between different book categories.
+By visualizing the embeddings created b y N2V , we can gain a
+better understanding of how books are grouped and which
+ones might share a common audience, pro viding v aluable
+insights into consumer beha vior during a politically charged
+period.
+From the visualization, note that the data is already
+clustered in a logical w ay. This is thanks to the Kamada-
+Kawai algorithm  graph algorithm, which exploits the
+topological data only without the metadata and is useful for
+visualizing the gr aph. This gr aph visualization technique
+positions nodes in a w ay that reflects their connections,
+aiming for an arr angement where closely connected nodes
+are near each other but less connected nodes are farther
+apart. It achiev es this b y treating the nodes lik e points
+connected b y springs, iter atively adjusting their positions
+until the “tension” in the springs is minimiz ed. This results in
+a layout that natur ally rev eals clusters and relationships
+within the gr aph based purely on its structure.
+
+================================================================================
+--- PAGINA 87 ---
+================================================================================
+
+For the P olitical Books dataset, the K amada-K awai algorithm
+helps us visualiz e books (nodes) based on how often they
+are co-purchased on Amaz on, without using an y external
+information such as political alignment or book titles. This
+gives us an initial view of how books are grouped together
+by buying beha vior. In the next steps, we’ll use methods
+such as N2V to create embeddings that capture more
+detailed patterns and further distinguish different book
+groups.
+2.1.1 Loading data, setting parameters,
+and creating embeddings
+We use the Node2Vec  and NetworkX  libraries for our first hands-
+on encounter with gr aph embeddings. After installing these
+packages using pip , we load our dataset ’s graph data, which
+is stored in .gml format (Gr aph Modeling Language, GML),
+using the NetworkX  library and gener ate the embeddings with
+the Node2Vec  library.
+GML is a simple, human-readable plain text file format used
+to represent gr aph structures. It stores information about
+nodes, edges, and their attributes in a structured w ay,
+making it easy to read and write gr aph data. F or instance, a
+.gml file might contain a list of nodes (e.g. , books in our
+dataset) and edges (connections representing co-purchases)
+along with additional properties such as labels or weights.
+This format is widely used for ex changing gr aph data
+between different softw are and tools. By loading the .gml file
+with NetworkX , we can easily manipulate and analyz e the
+graph in Python.
+In the Node2Vec  library’s Node2Vec  function, we can use the
+following par ameters to specif y the calculations done and
+the properties of the output embedding:
+
+================================================================================
+--- PAGINA 88 ---
+================================================================================
+
+Size of the embedding (dimensions ) —Think of this as how
+detailed each node’ s profile is, as in how many different traits
+you’re noting down. The standar d detail level is 128 traits, but
+you can tweak this based on how complex you want each node’ s
+profile to be.
+Length of each walk (Walk Length ) —This is about how far each
+random walk through your graph goes, with 80 steps being the
+usual journey . If you want to see more of the neighborhood
+around a node, incr ease this number .
+Number of walks per node (Num Walks ) —This tells us how many
+times we’ll take a walk startin g from each node. Starting with 10
+walks gives a good overview , but if you want a fuller pictur e of a
+node’ s surr oundings, consider going on mor e walks.
+Backtracking control (Return Parameter , p) —This setting helps
+decide if our walk should circle back to where it’s been. Setting it
+at 1 keeps things balanced, but adjusting it can make your walks
+more or less explor atory.
+Explor ation Depth (In-Out Parameter , q) —This one’s about
+choosing between taking in the broader neighborhood  scene
+(e.g., a breadth-first search with q greater than 1) or diving deep
+into specific paths (e.g., a depth-first search with q less than 1),
+with 1 being a mix of both.
+Adjust these settings based on what y ou’re looking to
+understand about y our nodes and their connections. W ant
+more depth? T weak the explor ation depth. Looking for
+broader context? Adjust the w alk length and the number of
+walks. In addition, k eep in mind that the siz e of y our
+embeddings should match the lev el of detail y ou need. In
+gener al, it’s a good idea to try different combinations of
+these par ameters to see the effect on the embeddings.
+For this ex ercise, we’ll use the first four par ameters. Deeper
+details on these par ameters are found in section 2.4.
+
+================================================================================
+--- PAGINA 89 ---
+================================================================================
+
+The code in listing 2.1 begins b y loading the gr aph into a
+variable called books_ graph , using the read_gml  method from
+the NetworkX  library. Next, a N2V model is initializ ed with the
+loaded gr aph. This model is set up with specific par ameters:
+it will create 64-dimensional embeddings for each node, use
+walks of 30 steps long, perform 200 w alks starting from
+each node to gather context, and run these oper ations in
+parallel across four work ers to speed up the process.
+The N2V model is then tr ained with additional par ameters
+defined in the fit method. This in volves setting a context
+window siz e of 10 nodes around each target node to learn
+the embeddings, considering all nodes at least once
+(min_count=1 ), and processing four words (nodes, in this
+context) each time during tr aining.
+Once tr ained, we access the node embeddings using the
+model’s wv method (reflecting its NLP heritage, wv stands for
+word v ectors). F or our downstream tasks, we map each
+node to its embedding using a dictionary comprehension.
+Listing 2.1 Generating N2V embeddings
+import NetworkX as nx
+from Node2Vec import Node2Vec
+books_graph = nx.read_gml('PATH_TO_GML_FILE')   #1
+node2vec = Node2Vec(books_graph, dimensions=64,
+ walk_length=30, num_walks=200, workers=4)   #2
+model = node2vec.fit(window=10, min_count=1,\
+batch_words=4)   #3
+embeddings = {str(node): model.wv[str(node)]\
+ for node in gml_graph.nodes()}   #4
+#1 Loads the graph data from a GML file into a NetworkX graph object
+#2 Initializes the N2V model with specified parameters for the input
+graph
+#3 Trains the N2V model
+#4 Extracts and stores the node embeddings generated by the N2V
+model in a dictionary
+
+================================================================================
+--- PAGINA 90 ---
+================================================================================
+
+2.1.2 Demystifying embeddings
+Let’s explore what these embeddings are and wh y they are
+valuable. An embedding  is a dense numerical v ector that
+represents the identit y of a node, edge, or gr aph in a w ay
+that captures essential information about its structure and
+relationships. In our context, an embedding created b y N2V
+captures a node’ s position and neighborhood within the
+graph using topological information. This means it
+summariz es how the node is connected to others, effectiv ely
+capturing its role and importance in the network. Later ,
+when we use GNNs to create embeddings, they will also
+encapsulate the node’ s features, pro viding an ev en richer
+representation that includes both structure and attributes.
+We get deeper into theoretical aspects of embeddings in
+section 2.4.
+These embeddings are powerful because they tr ansform
+complex, high-dimensional gr aph data into a fix ed-siz e
+vector format that can be easily used in v arious analyses
+and machine learning tasks. F or example, they allow us to
+perform explor atory data analysis b y revealing patterns,
+clusters, and relationships within the gr aph. Bey ond this,
+embeddings can be directly used as features in machine
+learning models, where each dimension of the v ector
+represents a distinct feature. This is particularly useful in
+applications where understanding the structure and
+connections between data points, such as in social networks
+or recommendation systems, can significantly impro ve
+model performance.
+To illustr ate, consider the node representing the book Losing
+Bin Laden  in our P olitical Books dataset. Using the command
+model.wv['Losing  Bin Laden'] , we retriev e its dense v ector
+embedding. This v ector, shown in figure 2.3, captures
+various aspects of the book’ s role within the network of co-
+
+================================================================================
+--- PAGINA 91 ---
+================================================================================
+
+purchased books, pro viding a compact, informativ e
+representation that can be used for further analysis or as
+input to other models.
+Figure 2.3 Extracting the embedding for the node associated with
+the political book Losing Bin Laden. The output is a dense vector
+represented as a Python list.
+These embeddings can be used for explor atory data analysis
+to see the patterns and relationships in a gr aph. Howev er,
+their usage extends further . One common application is to
+use these v ectors as features in a machine learning problem
+that uses tabular data. In that case, each element in our
+embedding arr ay will become a distinct feature column in
+the tabular data. This can add a rich representation of each
+node to complement other attributes in model tr aining. In
+the next section, we’ll look at how to visualiz e these
+
+================================================================================
+--- PAGINA 92 ---
+================================================================================
+
+embeddings to gain deeper insights into the patterns and
+relationships they represent.
+2.1.3 Transforming and visualizing the
+embeddings
+Visualization methods such as Uniform Manifold
+Appro ximation and Projection (UMAP) are powerful tools for
+reducing high-dimensional datasets into lower -dimensional
+space [5]. UMAP is particularly effectiv e for identif ying
+inherent clusters and visualizing complex structures that are
+difficult to perceiv e in high-dimensional data. Compared to
+other methods, such as t -SNE, UMAP ex cels in preserving
+both local and global structures, making it ideal for rev ealing
+patterns and relationships across different scales in the data.
+While N2V gener ates embeddings b y capturing the network
+structure of our data, UMAP tak es these high-dimensional
+embeddings and maps them onto a lower -dimensional space
+(typically two or three dimensions). This mapping aims to
+keep similar nodes close together while also preserving
+broader structur al relationships, pro viding a more
+comprehensiv e visualization of the gr aph’s topology . After
+obtaining our N2V embeddings and con verting them into a
+numerical arr ay, we initializ e the UMAP model with two
+components to project our data onto a 2D plane. By
+carefully selecting par ameters such as the number of
+neighbors and minimum distance, UMAP can balance
+between rev ealing fine-gr ained local relationships and
+maintaining global distances between clusters.
+By using UMAP , we gain a more accur ate and interpretable
+visualization of our gr aph embeddings as shown in the
+following listing, allowing us to explore and analyz e patterns,
+clusters, and structures more effectiv ely than with tr aditional
+methods such as t -SNE.
+
+================================================================================
+--- PAGINA 93 ---
+================================================================================
+
+Listing 2.2 Visualizing the embeddings using UMAP
+node_embeddings = [embeddings[str(node)] \
+for node in gml_graph.nodes()]   #1
+node_embeddings_array = np.array(node_embeddings)  
+umap_model = umap.UMAP(n_neighbors=15, min_dist=0.1, n_components=2, \
+random_state=42)
+umap_features = umap_model.fit_transform\
+(node_embeddings_array)  #2
+plt.scatter(umap_features[:, 0], \
+umap_features[:, 1], color=node_colors, alpha=0.7)  #3
+#1 Transforms the embeddings into a list of vectors for UMAP
+#2 Initializes and fits UMAP
+#3 Plots the nodes with UMAP embeddings and color by their value
+The resultant figure 2.4 encapsulates the political book
+graph’s embeddings as distilled b y N2V and subsequently
+visualiz ed through UMAP . The nodes appear in different
+shades according to their political alignment. The
+visualization unfolds a discernible structure, with potential
+clusters that correspond to the v arious political leanings.
+
+================================================================================
+--- PAGINA 94 ---
+================================================================================
+
+Figure 2.4 Embeddings of the Political Books dataset graph
+generated by N2V and visualized using UMAP. Shape and shading
+variations distinguish the three political classes.
+
+================================================================================
+--- PAGINA 95 ---
+================================================================================
+
+You might wonder wh y we don’ t just reduce the dimensions
+of the N2V embeddings from 64 to 2 and visualiz e them
+directly , bypassing UMAP altogether? In listing 2.3, we show
+this approach, applying a 2D N2V tr ansformation directly to
+our books_graph  object. (F or more technical detail and theory
+of these methods, see section 2.4.)
+The dimensions  parameter is set to 2, aiming for a direct 2D
+representation suitable for immediate visualization without
+further dimensionalit y reduction. The other par ameters are
+kept the same.
+Once the model is fitted with the specified window and word
+batch settings, we extr act the 2D embeddings and store
+them in a dictionary k eyed by the string representation of
+each node. This enables a direct mapping from the node to
+its embedding v ector.
+The extr acted 2D points are compiled into a NumPy arr ay
+and plotted. W e use the standard Matplotlib  library to create
+a scatterplot of these points using the prepared color
+scheme to represent the political leaning of each node
+visually .
+
+================================================================================
+--- PAGINA 96 ---
+================================================================================
+
+Listing 2.3 Visualizing 2D N2 V embeddings without t-SNE
+node2vec = Node2Vec(gml_graph, dimensions=2, \
+walk_length=30, num_walks=200, workers=4)   #1
+model = node2vec.fit(window=10, min_count=1,\
+ batch_words=4)   #2
+embeddings_2d = {str(node): model.wv[str(node)] \
+for node in gml_graph.nodes()}   #3
+points = np.array([embeddings_2d[node] \
+for node in gml_graph.nodes()])   #4
+plt.scatter(points[:, 0], points[:, 1], \
+color=node_colors, alpha=0.7)   #5
+#1 Initializes N2V with 2D embeddings for visualization
+#2 Trains N2V model with specified window and walks settings
+#3 Maps nodes to their 2D embeddings
+#4 Forms an array of 2D points for each node’s embedding
+#5 Plots the 2D embeddings with specified node colors
+The outcome shows how the books are separ ated b y political
+leanings, similar to the UMAP result, but where the books
+are more bunched together (see figure 2.5). The two
+embeddings are then shown in figure 2.6.
+
+================================================================================
+--- PAGINA 97 ---
+================================================================================
+
+Figure 2.5 Embeddings of the Political Books dataset graph
+generated and visualized by N2V for two dimensions. Shape and
+shading variations distinguish the three political classes. Here,
+
+================================================================================
+--- PAGINA 98 ---
+================================================================================
+
+we see a similar c lustering by political leaning as earlier in figure
+2.4 but more bunched together.
+
+================================================================================
+--- PAGINA 100 ---
+================================================================================
+
+Figure 2.6 Comparison of embeddings generated by N2V and t-
+SNE and a direct visualization of 2D Node2Vec
+It’s clear that both methods know to separ ate the books into
+groups based on political leanings. N2V is less expressiv e in
+how it separ ates the books, bunching them together across
+the two dimensions. Mean while, UMAP is better for
+spreading out the books in two dimensions. The relev ant
+benefit or information contained within these dimensions
+depends on the task at hand.
+2.1.4 Beyond visualiz ation: Applications
+and considerations of N2V embeddings
+While visualizing N2V embeddings offers intuitiv e insights
+into the dataset ’s structure, their usage extends far bey ond
+graphical representation. N2V is an embedding method
+designed specifically for gr aphs; it captures both the local
+and global structur al properties of nodes b y simulating
+random w alks through the gr aph. This process allows N2V to
+create dense, numerical v ectors that summariz e the position
+and context of each node within the o verall network.
+These embeddings can then serv e as feature-rich inputs for
+a variety of machine learning tasks, such as classification,
+recommendation, or clustering. F or example, in our P olitical
+Books dataset, embeddings could help predict a book’ s
+political leaning based on its co-purchase patterns or could
+recommend books to users with similar political interests.
+They might ev en be used to forecast future sales based on
+the content of a book.
+Howev er, it’s important to understand the nature of N2V’ s
+learning approach, which is transductive . Transductiv e
+learning is designed to work only with the specific dataset it
+was trained on and can’ t gener alize to new , unseen nodes
+
+================================================================================
+--- PAGINA 101 ---
+================================================================================
+
+without retr aining the model. This char acteristic mak es N2V
+highly effectiv e for static datasets where all nodes and edges
+are known up front but less suitable for dynamic settings
+where new data points or connections frequently appear .
+Essentially , N2V focuses on extr acting detailed patterns and
+relationships from the existing gr aph rather than dev eloping
+a model that can easily adapt to new data.
+While this tr ansductiv e nature has its limitations, it also
+offers significant adv antages. Because N2V uses the full
+structure of the gr aph during tr aining, it can capture
+intricate relationships and dependencies that might be
+missed b y more gener alized methods. This mak es N2V
+particularly powerful for tasks where the complete, fix ed
+structure of the data is known and stable. Howev er, to apply
+N2V effectiv ely, it’s crucial to ensure that the gr aph data is
+represented in a w ay that captures all relev ant features. In
+some cases, additional edges or nodes ma y need to be
+added to the gr aph to fully represent the underlying
+relationships.
+For those interested in a deeper understanding of
+transductiv e models and how N2V’ s approach compares to
+other methods, further details are pro vided in section 2.4.2.
+That section will explore the tr adeoffs between tr ansductiv e
+and inductiv e learning in greater depth [6, 7], helping y ou
+understand when each approach is most appropriate.
+While N2V is effectiv e for gener ating embeddings that
+capture the structure of a fix ed graph, real- world data often
+demands a more flexible and gener alizable approach. This
+need brings us to our first GNN architecture for creating
+node embeddings. Unlik e N2V , which is a tr ansductiv e
+method limited to the specific nodes and edges in the
+training data, GNNs can learn in an inductive  manner . This
+means GNNs are capable of gener alizing to new , unseen
+
+================================================================================
+--- PAGINA 102 ---
+================================================================================
+
+nodes or edges without requiring retr aining on the entire
+graph.
+GNNs achiev e this b y not only understanding the network’ s
+complex structure but also b y incorpor ating node features
+and relationships into the learning process. This approach
+allows GNNs to adapt dynamically to changes in the gr aph,
+making them well-suited for applications where the data is
+continually ev olving. The shift from N2V to GNNs represents
+a key transition from focusing on deep analysis within a
+static dataset to a broader applicabilit y across div erse,
+evolving networks. This adaptabilit y sets the stage for a
+wider r ange of gr aph-based machine learning applications
+that require flexibilit y and scalabilit y. In the next section,
+we’ll explore how GNNs go bey ond the capabilities of N2V
+and other tr ansductiv e methods, allowing for more v ersatile
+and powerful models that can handle the dynamic nature of
+real-world data.
+2.2 Creating embeddings with a
+GNN
+While N2V pro vides a powerful method for gener ating
+embeddings b y capturing the local and global structure of a
+graph, it ’s fundamentally a tr ansductiv e approach, meaning
+it can’ t easily gener alize to unseen nodes or edges without
+retraining. Although there ha ve been extensions to N2V that
+enable it to work in inductiv e settings, GNNs are inherently
+designed for inductiv e learning. This means they can learn
+gener al patterns from the gr aph data that allow them to
+make predictions or to gener ate embeddings for new nodes
+or edges without needing to retr ain the entire model. This
+gives GNNs a significant edge in scenarios where flexibilit y
+and adaptabilit y are crucial.
+
+================================================================================
+--- PAGINA 103 ---
+================================================================================
+
+GNNs not only incorpor ate the structur al information of the
+graph, lik e N2V , but they also use node features to create
+richer representations. This dual capacit y allows GNNs to
+learn both the complex relationships within the gr aph and
+the specific char acteristics of individual nodes, enabling
+them to ex cel in tasks where both t ypes of information are
+important.
+That said, while GNNs ha ve demonstr ated impressiv e
+performance across man y applications, they don’ t
+universally outperform methods such as N2V in all cases. F or
+instance, N2V and other r andom w alk-based methods can
+sometimes perform better in scenarios where labeled data is
+scarce or noisy , thanks to their abilit y to work with just the
+graph structure without needing additional node features.
+2.2.1 Constructing the embeddings
+Unlike N2V , GNNs learn gr aph representations and perform
+tasks such as node classification or link prediction
+simultaneously during tr aining. Information from the entire
+graph is processed through successiv e GNN la yers, each
+refining the node embeddings without requiring a separ ate
+step for their creation.
+To demonstr ate how a GNN extr acts features from gr aph
+data, we’ll perform a str aightforw ard pass-through using an
+untrained model to gener ate preliminary embeddings. Ev en
+without the optimization t ypically in volved in tr aining, this
+approach will show how GNNs use message passing
+(explored further in section 2.4.4) to update embeddings,
+capturing both the gr aph’s structure and its node features.
+When optimization is added, these embeddings become
+tailored to specific tasks such as node classification or link
+prediction.
+
+================================================================================
+--- PAGINA 104 ---
+================================================================================
+
+DEFINING OUR GNN ARCHITECTURE
+We initiate our process b y defining a simple GCN
+architecture, as shown in listing 2.4. Our SimpleGNN  class
+inherits from torch.nn.Module  and is composed of two GCNConv
+layers, which are the building blocks of our GNN. This
+architecture is shown in figure 2.7, consisting of the first
+layer, a message passing la yer (self.conv1 ), an activ ation
+(torch.relu ), a dropout la yer (torch.dropout ), and a second
+message passing la yer.
+Listing 2.4 Our SimpleGNN class
+class SimpleGNN_embeddings(torch.nn.Module):
+    def __init__(self, num_features, hidden_channels):   #1
+        super(SimpleGNN, self).__init__()
+        self.conv1 = GCNConv(num_features, \
+hidden_channels)   #2
+        self.conv2 = GCNConv(hidden_channels,\
+ hidden_channels)  #3
+    def forward(self, x, edge_index):   #4
+        x = self.conv1(x, edge_index)  #5
+        x = torch.relu(x)   #6
+        x = torch.dropout(x, p=0.5, train=self.training)   #7
+        x = self.conv2(x, edge_index)    #8
+        return x   #9
+#1 Initializes the GNN class with input and hidden layer sizes
+#2 First GCN layer from input features to hidden channels
+#3 Second GCN layer within the hidden space
+#4 Forward pass function defines data flow
+#5 First GCN layer processing
+#6 Activation function for nonlinearity
+#7 Dropout for regularization during training
+#8 Second GCN layer processing
+#9 Returns the final node embeddings
+
+================================================================================
+--- PAGINA 105 ---
+================================================================================
+
+Figure 2.7 Architecture diagram of the SimpleGNN model
+Let’s talk about the architecture aspects specific to GNNs.
+The activ ation and dropout are common in man y deep
+learning scenarios. The GNN la yers, howev er, are different
+from con ventional deep learning la yers in a fundamental
+
+================================================================================
+--- PAGINA 106 ---
+================================================================================
+
+way. The core principle that allows GNNs to learn from gr aph
+data is message passing. F or each GNN la yer, in addition to
+updating the la yer’s weights, a “message” is gathered from
+every node or edge neighborhood and used to update an
+embedding. Essentially , each node sends messages to its
+neighbors and simultaneously receiv es messages from them.
+For every node, its new embedding is computed b y
+combining its own features with the aggregated messages
+from its neighbors, through a combination of nonlinear
+transformations.
+In this example, we’re going to be using a gr aph
+convolutional network (GCN) to act as our message-passing
+GNN la yers. W e describe GCNs in much more detail in
+chapter 3. F or now , you just need to know that GCNs act as
+message-passing la yers that are critical in constructing
+embeddings.
+DATA PREPARATION
+Next, we prepare our data. W e’ll start with the same gr aph
+from the previous section, books_gml , in its NetworkX  form. W e
+have to con vert this NetworkX  object into a tensor form that is
+suitable to use with PyT orch oper ations. Because PyT orch
+Geometric (PyG) has man y functions that con vert gr aph
+objects, we can do this quite simply with data =
+from_NetworkX(gml_graph) . Method from_NetworkX  specifically
+translates the edge lists and node/edge attributes into
+PyTorch tensors.
+For GNNs, gener ating node embeddings requires initializing
+node features. In our case, we don’ t have any predefined
+node features. When no node features are a vailable or they
+aren’t informativ e, it’s common pr actice to initializ e the node
+features r andomly . A more effectiv e approach is to use
+Xavier initialization , which sets the initial node features with
+
+================================================================================
+--- PAGINA 107 ---
+================================================================================
+
+values dr awn from a distribution that k eeps the v ariety of
+activations consistent across la yers. This technique ensures
+that the model starts with a balanced representation,
+preventing problems such as v anishing or exploding
+gradients.
+By initializing data.x  with X avier initialization, we pro vide the
+GNN with a starting point that allows it to learn meaningful
+node embeddings from noninformativ e features. During
+training, the network adjusts these initial v alues to minimiz e
+the loss function. When the loss function is aligned with a
+specific target, such as node prediction, the embeddings
+learned from the initial r andom features will become tailored
+to the task at hand, resulting in more effectiv e
+representations. W e randomiz e the node features using the
+following:
+data.x = torch.randn((data.num_nodes, 64), dtype=torch.float)
+'nn.init.xavier_uniform_(data.x) '
+We could ha ve also used the embeddings from the N2V
+exercise to use as node features. R ecall the node_embeddings
+object from section 2.1.3:
+node_embeddings = [embeddings[str(node)] for node in gml_graph.nodes()]
+From this, we can con vert the node embedding to a PyT orch
+tensor object and assign it to the node feature object,
+data.x :
+node_features = torch.tensor(node_embeddings, dtype=torch.float) 
+data.x = node_features
+PASSING THE GRAPH THROUGH THE GNN
+With the structure of our GNN model defined and our gr aph
+data formatted for PyG, we proceed to the embedding
+gener ation step . We initializ e our model, SimpleGNN , specif ying
+
+================================================================================
+--- PAGINA 108 ---
+================================================================================
+
+the number of features for each node and the siz e of the
+hidden channels within the network.
+model = SimpleGNN(num_features=data.x.shape[1], hidden_channels=64)
+Here, we specif y 64 hidden channels because we w ant to
+compare the resulting embeddings to the ones we produced
+using the node2vec  method, which had 64 dimensions.
+Because the second GNN la yer is the last la yer, the output
+will be a 64-element v ector.
+Once initializ ed, we switch the model to ev aluation mode
+using model.eval() . This mode is used during inference or
+validation phases when we w ant to mak e predictions or
+assess model performance without modif ying the model’ s
+parameters. Specifically , model.eval()  turns off certain
+behaviors specific to tr aining, such as dropout , which
+randomly deactiv ates some neurons to prev ent overfitting,
+and batch normaliza tion, which normaliz es inputs across a
+mini-batch. By disabling these features, the model pro vides
+consistent and deterministic outputs, ensuring that the
+evaluation accur ately reflects its true performance on
+unseen data.
+It’s important to disable gr adient computations because
+they’re not necessary for the forw ard pass and embedding
+gener ation. So , we emplo y torch.no_grad() , which ensures
+that the computational gr aph that records oper ations for
+backpropagation isn’ t constructed, prev enting us from
+accidentally changing performance.
+Next, we pass our node-feature matrix ( data.x)  and the edge
+index (data.edge_ index ) through the model. The result is
+gnn_embeddings , a tensor where each row corresponds to the
+embedding of a node in our gr aph— a numerical
+representation learned b y our GNN, ready for downstream
+tasks such as visualization or classification:
+
+================================================================================
+--- PAGINA 109 ---
+================================================================================
+
+model.eval()
+with torch.no_grad():
+    gnn_embeddings = model(data.x, data.edge_index)
+After producing these embeddings, we use UMAP to visualiz e
+them, as we did in section 2.1.3. Since we’v e been working
+with PyT orch tensor data t ypes running on a GPU , we need
+to con vert our embeddings to a NumPy arr ay data t ype to
+use analysis methods outside of PyT orch, which are done on
+a CPU:
+gnn_embeddings_np = gnn_embeddings.detach().cpu().numpy()
+With this con version, we can produce the UMAP calculations
+and visualization following the process we used in the N2V
+case. The resulting scatterplot (figure 2.8) is a first glimpse
+at the clusters within our gr aph. W e add different shadings
+based on each node’ s label (left -, right -, or neutr al-leaning)
+to see that similar leaning books are fairly well grouped,
+given that these embeddings were constructed from
+topology alone.
+Next, let ’s discuss both how GNN embeddings are used and
+how they differ from those produced with N2V .
+
+================================================================================
+--- PAGINA 111 ---
+================================================================================
+
+Figure 2.8 Visualization of embeddings generated from passing a
+graph through a GNN
+2.2.2 GNN v s. N2V embeddings
+Throughout this book, we predominantly use GNNs to
+gener ate embeddings because this embedding process is
+intrinsic to a GNN’ s architecture. While embeddings pla y a
+pivotal role in the methodologies and applications we explore
+in the rest of the book, their presence is often subtle and not
+always highlighted. This approach allows us to focus on the
+broader concepts and applications of GNN-based machine
+learning without getting slowed down b y the technicalities.
+Nonetheless, it ’s important to acknowledge that the
+underlying power and adaptabilit y of embeddings are centr al
+to the adv anced techniques and insights we get into
+throughout the text.
+GNN-produced node embeddings are particularly powerful
+because they enable us to tackle a broad r ange of gr aph-
+related tasks b y using their inductiv e nature. Inductiv e
+learning allows these embeddings to gener alize to new ,
+unseen nodes or ev en entirely new gr aphs without needing
+to retr ain the model. In contr ast, N2V embeddings are
+limited to the specific gr aphs they were tr ained on and can’ t
+easily adapt to new data. Let ’s reiter ate the k ey ways in
+which GNN embeddings differ from other embedding
+methods, such as N2V [1, 3].
+ADAPTABILITY TO NEW GRAPHS
+One of the critical features of GNN embeddings is their
+adaptabilit y. Because GNNs learn a function that maps node
+features to embeddings, this function can be applied to
+nodes in new gr aphs without needing to be retr ained,
+provided the nodes ha ve similar feature spaces. This
+
+================================================================================
+--- PAGINA 112 ---
+================================================================================
+
+inductiv e capabilit y is particularly v aluable in dynamic
+environments where the gr aph ma y evolve over time or in
+applications where the model needs to be applied to
+different but structur ally similar gr aphs. N2V , on the other
+hand, needs to be reapplied for each new gr aph or set of
+nodes.
+ENHANCED FEATURE INTEGRATION
+GNNs inherently consider node features during the
+embedding process, allowing for a complex and nuanced
+representation of each node. This integr ation of node
+features, alongside the structur al information, offers a more
+comprehensiv e view compared to N2V and other methods
+that focus on a gr aph’s topology . This capabilit y mak es GNN
+embeddings particularly suited for tasks where node
+features contain significant additional information.
+TASK-SPECIFIC OPTIMIZATION
+GNN embeddings are tr ained alongside specific tasks, such
+as node classification, link prediction, or ev en graph
+classification. Through end-to-end tr aining, the GNN model
+learns to optimiz e the embeddings for the task at hand,
+leading to potentially higher performance and efficiency
+compared to using pre-gener ated embeddings such as those
+from N2V .
+That said, while GNN embeddings offer clear adv antages in
+terms of adaptabilit y and applicabilit y to new data, N2V
+embeddings ha ve their strengths, particularly in capturing
+nuanced patterns within a specific gr aph’s structure. In
+practice, the choice between GNN and N2V embeddings ma y
+depend on the specific requirements of the task, the nature
+of the gr aph data, and the constr aints of the computational
+environment.
+
+================================================================================
+--- PAGINA 113 ---
+================================================================================
+
+For tasks where the gr aph structure is static and well-
+defined, N2V might pro vide a simpler and computationally
+efficient solution. Con versely , for dynamic gr aphs, large-
+scale applications, or scenarios requiring the incorpor ation of
+node features, GNNs will often be the more robust and
+versatile choice. Additionally , when the task itself is not well-
+defined and the work is explor atory, N2V is lik ely faster and
+easier to use.
+We’ve now successfully built our first GNN embedding. This
+is the k ey first step for all GNN models, and ev erything from
+this point will build on it. In the next section, we giv e an
+example of some of these next steps and show how to use
+embeddings to solv e a machine learning problem.
+2.3 Using node embeddings
+Semi-supervised learning, which in volves a combination of
+labeled and unlabeled data, pro vides a v aluable opportunit y
+to compare different embedding techniques. In this chapter ,
+we’ll explore how GNN and N2V embeddings can be used to
+predict labels when the majorit y of the data lacks labels.
+Our task in volves the P olitical Books dataset ( books_graph ),
+where nodes represent political books and edges indicate co-
+purchase relationships. T o mak e the process clearer , let’s
+review the steps tak en so far and outline our next steps, as
+illustr ated in figure 2.9.
+
+================================================================================
+--- PAGINA 114 ---
+================================================================================
+
+Figure 2.9 Overview of steps taken in chapter 2
+We began with the books_graph  dataset in gr aph format and
+performed light preprocessing to prepare the data for
+embedding. F or N2V , this in volved con verting the dataset
+from a .gml file to a NetworkX  format. F or the GNN-based
+embeddings, we con verted the NetworkX  graph into a PyT orch
+tensor and initializ ed the node features using X avier
+initialization to ensure balanced v ariabilit y across la yers.
+After preparing the data, we gener ated embeddings using
+both N2V and GCNs. Now , in this section, we’ll apply these
+
+================================================================================
+--- PAGINA 115 ---
+================================================================================
+
+embeddings to a semi-supervised classification problem.
+This in volves further processing to define the classification
+task, where only 20% of the book labels are retained,
+simulating a realistic scenario with sparse labeled data.
+We’ll use the two sets of embeddings (N2V and GCN) with
+two different classifiers: a r andom forest classifier (to use
+the embeddings as tabular features) and a GCN classifier (to
+use the gr aph structure and node features). The goal is to
+predict the political orientation of the books, with the
+remaining 80% of the labels inferred based on the giv en
+embeddings.
+2.3.1 Data preprocessing
+To start, we do a little more preprocessing to our books_gml
+dataset (see listing 2.5). W e must format the labels in a
+suitable w ay for the learning process. Because all the nodes
+are labeled, we also ha ve to set up the semi-supervised
+problem b y randomly selecting the nodes from which we
+hide the labels.
+Nodes associated with attribute 'c' are classified as 'right' ,
+while those with 'l' are classified as 'left' . Nodes that don’ t
+fit these criteria, including those with neutr al or unspecified
+attributes, are categoriz ed as 'neutral' . These classifications
+are then placed into a NumPy arr ay, labels , for optimiz ed
+computational handling.
+Then, an arr ay, indices , is created, representing the
+positional index es of all nodes within the dataset. A subset
+of these indices, corresponding to 20% of the total node
+count, is designated as our labeled data.
+To manage the labeled and unlabeled data, Boolean masks,
+labelled_mask  and unlabelled_mask , are initializ ed and
+
+================================================================================
+--- PAGINA 116 ---
+================================================================================
+
+populated. The labelled_mask  is set to True for indices selected
+as labeled; these are the ground truth labels for
+corresponding nodes. Similarly , unlabelled_mask  is set to False.
+These masks segment the dataset for tr aining and
+evaluation, ensuring that algorithms are correctly tr ained
+and v alidated on the correct subsets of data.
+Listing 2.5 Preprocessing for semi-supervised problem
+labels = []
+for node, data in gml_graph.nodes(data=True):   #1
+    if data['value'] == 'c':
+        labels.append('right')
+    elif data['value'] == 'l':
+        labels.append('left')
+    else:  
+        labels.append('neutral')
+labels = np.array(labels)
+random.seed(52)   #2
+indices = list(range(len(labels)))   #3
+labelled_percentage = 0.2    #4
+labelled_indices = random.sample(indices, \
+int(labelled_percentage * len(labels)))   #5
+labelled_mask = np.zeros(len(labels), dtype=bool)   #6
+unlabelled_mask = np.ones(len(labels), dtype=bool)
+labelled_mask[labelled_indices] = True   #7
+unlabelled_mask[labelled_indices] = False
+labelled_labels = labels[labelled_mask]   #8
+unlabelled_labels = labels[unlabelled_mask]
+label_mapping = {'left': 0, 'right': 1, 'neutral': 2}   #9
+numeric_labels = np.array([label_mapping[label] for label in labels])
+#1 Extracts labels and handles neutral values
+#2 Random seed for reproducibility
+#3 Indices of all nodes
+#4 20% of data to keep as labeled
+#5 Selects a subset of indices to remain labeled
+#6 Initializes masks for labeled and unlabeled data
+#7 Updates masks
+#8 Uses masks to split the dataset
+#9 Transformed labels to numerical form
+
+================================================================================
+--- PAGINA 117 ---
+================================================================================
+
+Now we tr ansform the data for model tr aining, as shown in
+listing 2.6. F or the GNN-deriv ed embeddings, X_train_gnn  and
+y_train_gnn  are assigned arr ays of embeddings and
+corresponding numeric labels filtered b y a labelled_mask . This
+mask is a Boolean arr ay indicating which nodes in the gr aph
+are part of the labeled subset, ensuring that only data points
+with known labels are included in the tr aining set.
+For N2V embeddings, a similar approach is adopted with an
+added preprocessing step to align the embeddings with their
+corresponding labels. The embeddings for each node are
+aggregated into NumPy arr ay X_n2v in the same order as the
+nodes appear in the books_graph . This ensures consistency
+between the embeddings and their labels, a crucial step for
+supervised learning tasks. Subsequently , X_train_n2v  and
+y_train_n2v  are populated with N2V embeddings and labels,
+again applying the labelled_mask  to filter for the labeled data
+points.
+Listing 2.6 Preprocessing: constructing training data
+X_train_gnn = gnn_embeddings[labelled_mask]   #1
+Y_train_gnn = numeric_labels[labelled_mask]  
+X_n2v = np.array([embeddings[str(node)] \
+for node in gml_graph.nodes()])  #2
+X_train_n2v = X_n2v[labelled_mask]              #3
+y_train_n2v = numeric_labels[labelled_mask]     #3
+#1 For GNN embeddings
+#2 For N2V embeddings
+#3 Ensures N2V embeddings are in the same order as labels
+The extr a alignment step for the N2V embeddings isn’ t
+necessary for the GNN embeddings because GNN models
+inherently maintain the order of nodes as they process the
+entire gr aph in a structured manner . As a result, the output
+embeddings from a GNN are natur ally ordered in
+correspondence with the input gr aph’s node order .
+
+================================================================================
+--- PAGINA 118 ---
+================================================================================
+
+In contr ast, N2V gener ates embeddings through
+independent r andom w alks starting from each node, and the
+order of the resulting embeddings doesn’ t necessarily match
+the order of nodes in the original gr aph data structure.
+Therefore, an explicit alignment step is required to ensure
+that each N2V embedding is correctly associated with its
+corresponding label, as extr acted from the gr aph. This step
+is critical for supervised learning tasks where the correct
+matching of features (embeddings) to labels is essential for
+model tr aining and ev aluation. F or this task, we use the
+attribute index_to_key , which contains the identifiers of the
+nodes in the order they are processed and stored within the
+model.
+2.3.2 Random forest classification
+With our data prepped, we use GNN and N2V embeddings
+from sections 2.1 and 2.2 as input features for a
+RandomForestClassifier , as shown in listing 2.7.
+Listing 2.7 Preprocessing: constructing training data
+clf_gnn = RandomForestClassifier()   #1
+clf_gnn.fit(X_train_gnn, y_train_gnn)
+clf_n2v = RandomForestClassifier()  #2
+clf_n2v.fit(X_train_n2v, y_train_n2v)
+#1 Classifier for GNN embeddings
+#2 Classifier for N2V embeddings
+This approach allows us to directly compare the embeddings’
+predictiv e power , where we compare results in table 2.2.
+
+================================================================================
+--- PAGINA 119 ---
+================================================================================
+
+Table 2.2 Classification performance
+Embedding TypeAccuracyF1 Score
+GNN 83.33% 82.01%
+N2V 84.52% 80.72%
+For this basic classification ex ercise, we’ll ev aluate the
+performance of our models using two fundamental metrics:
+Accuracy — This metric measur es the proportion of correct
+predictions made by the model out of all predictions. It provides
+a straightf orward assessment of how often the classifier correctly
+identi fies the political orienta tion of the books. For instance, an
+accuracy of 84.52% means that the model correctly predicted
+the orientation of the books appr oximately 85 times out of 100.
+F1 score—This is a more nuanced metric that balances precision
+and recall, which is particularly useful in cases where the data is
+imbalanced—meaning the classes aren’t equal ly represented. It
+provides a harmonic mean of precision (the number of true
+positive predictions divided by the total number of positive
+predictions) and recall (the number of true positive predictions
+divided by the total number of actual positives). A higher F1
+score indicates a model’ s robust performance in correctly
+identi fying both the presence and absence of the different
+classes, minimizing both f alse posi tives and f alse negativ es.
+The performance metrics rev eal that N2V embeddings yield
+a slightly higher accur acy of 84.52% when used within a
+RandomForestClassifier , compared to 83.33% for GNN
+embeddings. Howev er, GNN embeddings achiev e a
+marginally better F1 score of 82.01%, compared to 80.72%
+for N2V embeddings. This nuanced difference underscores
+potential tr adeoffs between the two embedding t ypes: while
+N2V pro vides slightly better o verall prediction accur acy, GNN
+
+================================================================================
+--- PAGINA 120 ---
+================================================================================
+
+embeddings ma y offer a more balanced performance across
+both the majorit y and minorit y classes.
+In gener al, the inductiv e nature of GNNs presents a robust
+framework for learning node representations for gr aphs of
+many different siz es. Ev en on smaller gr aphs, GNNs can
+effectiv ely learn the underlying patterns and inter actions
+between nodes, as evidenced b y the higher F1 score,
+indicating a better balance between precision and recall in
+classification tasks.
+In this context, the choice between GNN and N2V
+embeddings might also hinge on the specific goals of the
+analysis and the performance metrics of greatest interest. If
+the priorit y is achieving the highest possible accur acy and
+the dataset is unlik ely to expand significantly , N2V could be
+the more suitable option. Con versely , if the task v alues a
+balance between precision and recall and there’ s potential
+for applying the learned model to similar but new gr aphs,
+GNNs offer v aluable flexibilit y and robustness, ev en for
+smaller datasets. Ha ving used the N2V and GNN embeddings
+as inputs to a r andom forest model, let ’s next study what
+happens when we use them as inputs to a full end-to-end
+GNN model.
+2.3.3 Embeddings in an e nd-to-end model
+In the previous section, we used GNN and N2V embeddings
+as static inputs to a tr aditional machine learning model,
+namely a r andom forest classifier . Here, we use an end-to-
+end GNN model applied to the same problem of label
+prediction. By end-to-end , we mean that the embeddings
+will be gener ated while we also predict labels. This means
+that the embeddings here won’ t be static because, as the
+GNN learns, it will update the node embeddings.
+
+================================================================================
+--- PAGINA 121 ---
+================================================================================
+
+To build this model, we’ll use the same tools as before—the
+books_gml  dataset, and the SimpleGNN  architecture. W e’ll
+change the GNN slightly , by adding a log softmax  activ ation at
+the end, to facilitate the output for a three-label
+classification problem. W e’ll also slightly modif y the output
+of our SimpleGNN  class, allowing us to observ e the embeddings
+as well as the predictiv e output. Our process includes the
+following:
+Data pr ep
+Model/ar chitectur e modi fication
+Establ ish the tr aining loop
+Study perf ormance
+Study embeddings pr e-training and post -training
+DATA PREP
+Assuming we use the books_gml  data set, the process to
+transform it for use within the PyG fr amework remains the
+same. W e’ll train two v ersions of the data: one with node
+features initializ ed randomly , and one with node features
+using the N2V embeddings.
+MODEL MODIFICATION
+We use the same SimpleGNN  class with modifications. First, in
+this enhanced v ersion of the SimpleGNN  class, we extend its
+functionalit y to pro vide a predictiv e output for each node.
+This is achiev ed by applying a log softmax  activ ation to the
+embeddings produced b y the second GCN la yer. The log
+softmax  output pro vides a normaliz ed log probabilit y
+distribution o ver the potential classes for each node for the
+classification task.
+
+================================================================================
+--- PAGINA 122 ---
+================================================================================
+
+Second, we introduce dual outputs. The method returns two
+values: the r aw embeddings from the conv2 layer, which
+capture the node representations, and the log softmax  of
+these embeddings. F or us to observ e both the embedding
+and the predictions, we ha ve the forward  method return both.
+In addition to this two-la yer model, we added two la yers to
+this architecture to ha ve a four -layer model for comparison,
+as shown in listing 2.8.
+Listing 2.8 Preprocessing: Constructing training data
+class SimpleGNN_inference(torch.nn.Module):
+    def __init__(self, num_features, hidden_channels):
+        super(SimpleGNN, self).__init__()
+        self.conv1 = GCNConv(num_features, hidden_channels)
+        self.conv2 = GCNConv(hidden_channels, hidden_channels)
+    def forward(self, x, edge_index):
+        # First Graph Convolutional layer
+        x = self.conv1(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, training=self.training)
+        # Second Graph Convolutional layer
+        x = self.conv2(x, edge_index)
+        predictions = F.log_softmax(x, dim=1)    #1
+        return x, predictions   #2
+#1 Predicts classes by passing the final conv layer through a log softmax
+#2 The class returns both the last embedding and the prediction.
+ESTABLISH THE TRAINING LOOP
+We progr am the tr aining loop for the GNN model in a semi-
+supervised learning context, as shown in listing 2.9. This
+loop iter ates o ver a specified number of epochs, where an
+epoch represents a complete pass through the entire
+training dataset. Within each epoch, the model’ s parameters
+are updated to minimiz e a loss function, which quantifies the
+difference between the predicted outputs and the actual
+labels for the nodes in the tr aining set. F or those familiar
+with progr amming deep learning tr aining loops, this should
+
+================================================================================
+--- PAGINA 123 ---
+================================================================================
+
+be very familiar . For those who could do with a quick
+reminder , the following describes some of the k ey steps in
+initializing and running the tr aining loop:
+Optimiz er initialization —The optimiz er is initialized with a specific
+learning rate when it’s created. For example, here we use the
+Adam optimiz er, with an ini tial learning r ate of 0.01.
+Zeroing the gradients —optimizer.zero_grad()  ensur es that the
+gradients are reset before each update, preventing them from
+accumulating acr oss epochs.
+Model forward pass—The model processes the node features
+(data.x ) and the graph structur e (data.edge_index ) to produce
+output predictions. In semi- supervised settings, not all nodes
+have labels, so the model’ s output includes predictions for both
+labeled and unlabeled nodes.
+Applying the training mask—out_masked  = out[data.train_mask]
+applies a mask to the model’ s output to select only the
+predictions corresponding to labeled nodes. This is crucial in
+semi-supervised learning, where only a subset of nodes has
+known labels.
+Loss computation and backp ropagation —Loss function loss_fn
+compar es the selected predictions (out_masked ) with the true
+labels of the labeled nodes (train_labels ). The loss.backward()
+call computes the gradient of the loss function with respect to
+the model parameters, which is then used to update these
+parameters via optimizer.step() .
+Logging —The training loop prints the loss at regular interv als
+(every 10 epochs in this case) to moni tor the tr aining pr ogress.
+
+================================================================================
+--- PAGINA 124 ---
+================================================================================
+
+Listing 2.9 Training  loop
+for epoch in range(3000):    #1
+    optimizer.zero_grad()
+    _, out = model(data.x, data.edge_index)   #2
+    out_masked = out[data.train_mask]   #3
+    loss = loss_fn(out_masked, train_labels)   #4
+    loss.backward()
+    optimizer.step()
+    if epoch % 10 == 0:    #5
+        print(f'Epoch {epoch}, Log Loss: {loss.item()}')
+#1 Number of epochs
+#2 Passes both node features and edge_index to the model
+#3 Applies the training mask to select only the outputs for the labeled
+nodes
+#4 Computes the loss using only the labeled nodes
+#5 Prints the loss every 10 epochs
+This process iter atively refines the model’ s parameters to
+impro ve its predictions on the labeled portion of the dataset,
+with the goal of learning a model that can gener alize well to
+the unlabeled nodes and potentially to new , unseen data.
+GNN RESULTS: RANDOMIZED VS. N2V NODE
+FEATURES
+Let’s compare the classification task comparing the GNN
+performance from the r andomiz ed node features v ersus the
+N2V node features, as shown in table 2.3.
+
+================================================================================
+--- PAGINA 125 ---
+================================================================================
+
+Table 2.3 Classification performance of the GNN model where the
+input graph uses different node features
+Model GNN AccuracyGNN F1 Score
+Two-layer, randomized features82.27% 82.14%
+Two-layer, N2V features 87.79% 88.10%
+Four-layer, randomized features86.58% 86.90%
+Four-layer, N2V features 88.99% 89.29%
+The table summariz es the performance of different GNN
+models based on their accur acy and F1 score. It highlights
+that GNNs using N2V features consistently outperform those
+using r andomiz ed features across all model configur ations.
+Specifically , the four -layer GNN with N2V features achiev es
+the highest accur acy and F1 score, indicating the
+effectiv eness of incorpor ating meaningful node
+representations deriv ed from N2V embeddings. If we had
+more information about specific features for the node, as we
+do in chapter 3, the GNN embeddings ma y further impro ve
+accur acy for the GNN model.
+RESULTS: GNN VS. RANDOM FOREST
+We now compare the performance of the GNN model from
+this section with the r andom forest model from the previous
+section (see table 2.4).
+
+================================================================================
+--- PAGINA 126 ---
+================================================================================
+
+Table 2.4 Comparison of classification performance between the
+GNN model and the random forest model
+Model Data Input AccuracyF1
+Score
+Random forestEmbedding from GNN 83.33% 82.01%
+Random forestEmbedding from N2V 84.52% 80.72%
+Two-layer
+simple GNNGraph with randomized node
+features82.27% 82.14%
+Two-layer
+simple GNNGraph with n2v embeddings
+as node features87.79% 88.10%
+Four-layer
+simple GNNGraph with randomized node
+features86.58% 86.90%
+Four-layer
+simple GNNGraph with n2v embeddings
+as node features88.99% 89.29%
+Figure 2.10 visualiz es the results from table 2.4. Ov erall, the
+GNN models outperformed the r andom forest models.
+
+================================================================================
+--- PAGINA 127 ---
+================================================================================
+
+Figure 2.10 Chart comparing the classification performance of the
+random forest with the GNN. Only one GNN model is
+outperformed by the random forest: The two-layer model trained
+on graph data with randomized node features is outperformed in
+terms of accuracy.
+When comparing the performance of the GNN models with
+the random forest models, we can mak e sev eral
+
+================================================================================
+--- PAGINA 128 ---
+================================================================================
+
+observ ations. R andom forest, when tr ained on embeddings
+derived from GNN pass-through or N2V embeddings,
+achiev es compar able accur acy to the two-la yer simple GNN
+model. Howev er, when considering the F1 score, both GNN
+models outperform r andom forest. Notably , the four -layer
+simple GNN model, especially when using N2V embeddings
+as features, exhibits significantly better performance than
+the random forest model, showcasing higher accur acy and
+F1 score.
+This indicates that while r andom forest ma y outperform
+simpler GNN architectures such as the two-la yer model in
+terms of accur acy, the more complex GNN architectures
+demonstr ate superior performance in terms of F1 score,
+especially when using sophisticated node embeddings such
+as N2V . Therefore, the choice between r andom forest and
+GNN should consider both accur acy and F1 score, as well as
+the complexit y of the model architecture and the nature of
+the input features, to achiev e optimal performance for the
+given task and dataset.
+It’s important to note that this short example didn’ t
+extensiv ely fine-tune either the GNN or the r andom forest
+models. Further optimization of both t ypes of models could
+potentially lead to significant impro vements in their
+performance. Fine-tuning h yperpar ameters, adjusting model
+architectures, and optimizing tr aining processes could all
+contribute to enhancing the accur acy and F1 score of both
+GNNs and r andom forest classifiers. Therefore, while the
+results presented here pro vide starting insights into the
+performance on a small gr aph dataset, we suggest y ou try
+out the models and experiment with performance.
+
+================================================================================
+--- PAGINA 129 ---
+================================================================================
+
+2.4 Under the Hood
+This section gets deeper into the theoretical foundations of
+graph representations and embeddings, particularly in the
+context of GNNs. It emphasiz es the importance of
+embeddings in tr ansforming complex gr aph data into lower -
+dimensional, manageable forms that retain essential
+information.
+We distinguish between two primary t ypes of learning:
+transductiv e and inductiv e. Transductiv e methods, such as
+N2V, optimiz e embeddings specifically for the tr aining data,
+making them effectiv e within a known dataset but less
+adaptable to new data. In contr ast, inductiv e methods, as
+exemplified b y GNNs, enable gener alization to new , unseen
+data b y integr ating both gr aph structure and node features
+during tr aining. This section also examines the mechanisms
+behind N2V (r andom w alk) and GNNs (message passing).
+2.4.1 Representations and embeddings
+Understanding gr aph representations and the role of
+embeddings is crucial for effectiv ely applying GNNs in
+machine learning. R epresentations con vert complex gr aph
+data into simpler , manageable forms without losing essential
+information, facilitating analysis and interpretation of the
+underlying structures within gr aphs. In the context of GNNs,
+representations enable the processing of gr aph data in a w ay
+that is compatible with machine learning algorithms,
+ensuring that the rich and complex structures of gr aphs are
+preserv ed.
+Traditional methods such as adjacency matrices and edge
+lists pro vide a foundational w ay to represent gr aph
+structures, but they often fall short in capturing richer
+
+================================================================================
+--- PAGINA 130 ---
+================================================================================
+
+information, such as node features or subtle topological
+details. This limitation is where gr aph embeddings come into
+play. A gr aph embedding is a low -dimensional v ector
+representation of a gr aph, node, or edge that retains
+essential structur al and relational information. Much lik e
+reducing a high-resolution image to a compact feature
+vector, embeddings condense the gr aph’s complexit y while
+preserving its distinguishing char acteristics.
+Embeddings simplif y data handling and open new
+possibilities for machine learning applications. They enable
+visualization of complex gr aphs in two or three dimensions,
+allowing us to explore their inherent structures and
+relationships more intuitiv ely. Furthermore, embeddings
+serve as v ersatile inputs for v arious downstream tasks, such
+as node classification and link prediction, as demonstr ated in
+earlier sections of this chapter . By pro viding a bridge
+between r aw graph data and machine learning models,
+embeddings are k ey to unlocking the full potential of GNNs.
+THE SIGNIFICANCE OF NODE SIMILARITY AND
+CONTEXT
+An important use of gr aph embeddings is to encapsulate the
+notion of similarit y and context within the gr aph. In a spatial
+context, pro ximity (or similarit y) often tr anslates to a
+measur able distance or angle between points.
+For graphs, howev er, these concepts are redefined in terms
+of connections and paths. The similarit y between nodes can
+be interpreted through their connectivit y, that is, how man y
+“hops” or steps it tak es to mo ve from one node to another ,
+or the lik elihood of tr aversing from one node to another
+during r andom w alks on the gr aph (figure 2.11).
+
+================================================================================
+--- PAGINA 131 ---
+================================================================================
+
+Figure 2.11 Comparison of similarit y concepts: using distance on
+a plane (left) and using steps along a graph (right)
+Another w ay to think about pro ximity is in terms of
+probabilit y: Giv en two nodes (node A and node B), what is
+the chance that I will encounter node B if I start to hop from
+node A? In figure 2.12, if the number of hops is 1, the
+probabilit y is 0, as there is no w ay to reach node B from
+node A in one hop . Howev er, if the number of hops is 2, then
+we need to first count to see how man y different possible
+routes there are. Let ’s also assume that no node can be
+encountered twice in a tr aversal and that each direction is
+equally lik ely. With these assumptions, there are three
+unique routes of 2 hops starting from node A. Of those, only
+one leads to node B . Thus, the probabilit y is one out of
+three, or 33%. This probabilistic approach to measuring
+proximity between nodes offers a nuanced understanding of
+the gr aph’s topology , meaning that gr aph structures can be
+encoded within a probabilit y space.
+
+================================================================================
+--- PAGINA 132 ---
+================================================================================
+
+Figure 2.12 Illustrating the notion of proximity computed in
+terms of probability: given a walk from node A, the probability of
+encountering node B is a measure of proximity.
+The ideas explained here are relev ant as we approach the
+topic of inductiv e and tr ansductiv e methods as applied to
+graph embeddings. Both of these methodologies use the
+notion of node pro ximity, although in distinct w ays, to
+gener ate embeddings that capture the essence of node
+relationships and gr aph structure. Inductiv e methods ex cel
+in gener alizing to accommodate new , unseen data, enabling
+models to adapt and learn bey ond their initial tr aining set.
+Conversely , transductiv e methods specializ e in optimizing
+embeddings specifically for the tr aining data itself , making
+them highly effectiv e within their learned context but less
+flexible when introduced to new data.
+2.4.2 Transductive and inductive methods
+The w ay an embedding is created determines the scope of
+its subsequent usage. Here we examine embedding methods
+that can be broadly classified as tr ansductiv e and inductiv e.
+
+================================================================================
+--- PAGINA 133 ---
+================================================================================
+
+Transductiv e embedding methods learn representations for a
+fixed set of nodes in a single, static gr aph:
+These methods directly optimiz e individual embeddings for each
+node.
+The entir e graph structur e must be a vailable during tr aining.
+These methods can’t naturally gener alize to unseen nodes or
+graphs.
+Adding new nodes r equires retraining the entir e model.
+Examples include DeepW alk [8], N2V, and matrix factorization
+approaches.
+Transductiv e methods allow us to reduce the scope of the
+prediction problem. For transduction, we’re only concerned with
+the data we’r e presented wi th.
+These methods are computational ly costly for large amounts of
+data.
+Inductiv e embedding methods learn a function to gener ate
+embeddings, allowing gener alization to unseen nodes and
+even entirely new gr aphs:
+These methods learn to aggregate and transform node features
+and local gr aph structur e.
+These methods can gener ate embeddings for previously unseen
+nodes wi thout r etraining.
+Node at tributes or structur al features are often used.
+These methods are more flexible and scalable for dynamic or
+expanding gr aphs.
+Examples include GraphSAGE, GCNs, and graph attention
+networks (GA Ts).
+Let’s illustr ate this with two examples:
+Example 1: Email spam detection —An inductiv e model for email
+spam detection is trained on a dataset of labeled emails (spam
+
+================================================================================
+--- PAGINA 134 ---
+================================================================================
+
+or not spam) and learns to gener alize from the training data.
+Once trained, the model can classify new incoming emails as
+spam or not spam wi thout needing to r etrain.
+Transductiv e wouldn’ t be better in this example because
+models would require retr aining with ev ery new batch of
+emails, making them computationally expensiv e and
+impractical for real-time spam detection.
+Example 2: Semi-supervised learning for communi ty detection in
+social networks —A transductiv e model uses the entire graph to
+identi fy communi ties within a social network. Using a
+combination of labeled and unlabeled nodes, the model exploi ts
+the network in a better way: inductiv e models wouldn’ t take full
+advantage of the specific network structur e and node
+interconnections because they only process part of the data—the
+training set. This isn’t enough information for accurate
+communi ty detection.
+Table 2.5 compares the t ypes of gr aph representation we’v e
+learned so far , consisting of representations gener ated b y
+both nonembedding methods, and embedding methods.
+
+================================================================================
+--- PAGINA 135 ---
+================================================================================
+
+Table 2.5 Different methods of graph representation
+Representation Description Examples
+Basic data
+representations• Great for analytical
+methods that involve
+network traversal
+• Useful for some node
+classification algorithms
+• Information provided:
+Node and edge
+neighbors• Adjacency list
+• Edge list
+• Adjacency matrix
+Transductive
+(shallow)
+embeddings• Useless for data not
+trained on
+• Difficult to scale• DeepWalk
+• N2V
+• TransE
+• RESCAL
+• Graph factorization
+• Spectral techniques
+Inductive
+embeddings• Models can be
+generalized to new and
+structurally different
+graphs
+• Represents data as
+vectors in continuous
+space
+• Learns a mapping from
+data (new and old) to
+positions within the
+continuous space• GNNs can be used
+to inductively
+generate
+embeddings
+• Transformers
+• N2V with feature
+concatenation
+
+================================================================================
+--- PAGINA 136 ---
+================================================================================
+
+SUMMARY OF TERMS RELATED TO TRANSDUCTIVE EMBEDDIN G
+METHODS
+Two additional terms related to embedding methods and
+sometimes used interchangeably with it are shallow
+methods  and encoders . Here, we’ll briefly distinguish these
+terms.
+Transductiv e methods, explained earlier , are a large class
+of methods of which gr aph embedding is one application.
+So, outside of our present context of representation
+learning, the attributes of tr ansductiv e learning remain the
+same.
+In machine learning, shallow  is often used to refer to the
+opposite of deep learning models or algorithms. Such
+models are distinguished from deep learning models in
+that they don’ t use multiple processing la yers to produce
+an output from input data. In our context of gr aph/node
+embeddings, this term also refers to methods that aren’ t
+based on deep learning, but more specifically points to
+methods that mimic a simple lookup table, r ather than a
+gener alized model produced from a supervised learning
+algorithm.
+Any method that reproduces a low dimensional
+representation of data, an embedding, is often known as
+an encoder . This encoder simply matches a giv en data
+point such as a node (or ev en an entire gr aph) to its
+respectiv e embedding in low dimensional space. GNNs can
+be broadly understood as a class of encoders, similar to
+Transformers. Howev er, there are specific GNN encoders,
+such as the gr aph autoencoder (GAE), which y ou’ll meet in
+chapter 5.
+
+================================================================================
+--- PAGINA 137 ---
+================================================================================
+
+2.4.3 N2V: Random walks across graphs
+Random w alk approaches construct embeddings b y using
+random w alks across the gr aph. With these, the similarit y
+between two nodes, A and B , is defined as the probabilit y
+that one will encounter node B on a r andom gr aph tr aversal
+from node A (as we described in section 2.4.1). These w alks
+are unrestricted, with no restriction prev enting a w alk from
+backtr acking or encountering the same node multiple times.
+For each node, we perform a r andom w alk within its
+neighborhood. As we perform more and more r andom w alks,
+we begin to notice similarities in the t ypes of nodes we
+encounter . A potential mental model is exploring a cit y or
+forest. In a distinct neighborhood, for example, as we tak e
+the same streets or paths multiple times, we begin to notice
+that houses ha ve a similar st yle and trees ha ve a similar
+species.
+The result of a r andom w alk method is a v ector of nodes
+visited for each w alk, with different starting nodes. In the
+upcoming figure 2.13, we show some examples of how we
+can w alk (or search) across a gr aph.
+DeepW alk is one method that creates embeddings b y
+performing sev eral random w alks of a fix ed siz e for each
+node and calculating embeddings from each of these. Here,
+any path is equally lik ely to occur , making the w alks
+unbiased and meaning that all nodes connected b y an edge
+are equally lik ely to be encountered at each step . The output
+for a DeepW alk on the gr aph in figure 2.13 might be the
+vector [u, s1, s3] or the v ector [u, s1, s2, s4, s5]. Each of
+these v ectors contains the unique nodes visited in a r andom
+walk.
+
+================================================================================
+--- PAGINA 138 ---
+================================================================================
+
+N2V impro ved on DeepW alk by introducing tunable bias in
+these r andom w alks. The idea is to be able to tr ade off
+learnings from a node’ s close-b y neighborhood and from
+further a way. N2V captures this in two par ameters:
+p—Contr ols the probabi lity that the path walked will return to the
+previous node.
+q—Contr ols the probabi lity of whether a depth-first search (DFS,
+a hopping strategy that emphasiz es faraway nodes) or breadth-
+first search (BFS, a strategy that emphasiz es nearb y nodes). DFS
+and BFS are illustrated in figure 2.13, where we demonstr ate
+what happens f or four hops.
+To mimic the DeepW alk algorithm, both p and q would be set
+to 0 such that the search is unbiased . So, for figure 2.13, the
+output for N2V could be [u, s1,s2] or [u,s4,s5,s6] depending
+on whether the w alks are BFS or DFS .
+Figure 2.13 Depth-first search (DFS) and breadth first search
+(BFS) on a graph where embeddings are generated based on
+random walks using these graph-traversal strategies. DFS (light
+arrows) prioritizes going deep down one path, while BFS (dark
+arrows) prioritizes checking all adjacent and nearby paths.
+
+================================================================================
+--- PAGINA 139 ---
+================================================================================
+
+Once we ha ve the v ector of nodes, we create embeddings b y
+using a neur al network to predict the most lik ely neighboring
+node for a giv en node. Usually , this neur al network is
+shallow , with one hidden la yer. After tr aining, the hidden
+layer becomes that node’ s embedding.
+2.4.4 Message passing as deep learning
+Deep learning methods in gener al are composed of building
+blocks, or la yers, that tak e some tensor -based input and
+then produce an output that is tr ansformed as it flows
+through the v arious la yers. A t the end, more tr ansformations
+and aggregations are applied to yield a prediction. Howev er,
+often the output of the hidden la yers is directly exploited for
+other tasks within the model architecture or are used as
+inputs to other models. This is what we sa w in our
+classification problem in section 2.3. W e constructed a
+vector of visited nodes, and these nodes were then passed
+to a deep learning model. The deep learning model learned
+to predict future nodes based on a starting node. But the
+actual embeddings were contained within the hidden layer  of
+the network.
+Tip  For a refresher on deep learning, read Deep
+Learning with Python  by François Chollet (Manning,
+2021).
+We show the classic architecture for a deep feed-forw ard
+neural network, specifically a multila yer perceptron (MLP), in
+figure 2.14. Briefly , the network tak es a node v ector as
+input, and the hidden la yers are tr ained to produce an
+output v ector that achiev es some task, such as identif ying a
+node class. The input v ector ma y be flattened images, and
+the output ma y be a single number reflecting where there is
+a dog or cat in the image. F or the N2V example, the input is
+a vector of starting nodes, and the output is the
+
+================================================================================
+--- PAGINA 140 ---
+================================================================================
+
+corresponding other node v ectors that are visited after
+traversing the gr aph from the starting node. In the image
+example, the output is the explicit task function, namely to
+classif y images based on whether they contain a dog or cat.
+In N2V , the output is implicit in the gr aph structure. W e
+know the subsequent nodes that are visited, but we’re
+interested in the w ay the network has encoded the data,
+that is, how it has built an embedding of the node data. This
+is contained within the hidden la yer, where t ypically we just
+take the last la yer.
+Figure 2.14 Structure of a mult ilayer perceptron
+For GNNs, the input will be the entire gr aph structure, and
+the output will be the embeddings. Therefore, the model is
+explicit in how it constructs the embeddings. Howev er, the
+output isn’ t restricted to embeddings. Instead, we can ha ve
+the output as a classification, such as whether the book has
+a specific political affiliation in that node in the gr aph. The
+embeddings are again implicit in the hidden la yers. Howev er,
+the entire process is wr apped into a single model, so we
+
+================================================================================
+--- PAGINA 141 ---
+================================================================================
+
+don’t need to extr act this data. Instead, we’v e used the
+embeddings to achiev e our goal, such as node classification.
+While the architecture of GNNs is v ery different from feed-
+forward neur al networks, there are some par allels. In man y
+of the GNNs we learn about, a gr aph in tensor form is
+passed into the GNN architecture, and one or more iter ations
+of message passing is applied. The message-passing process
+is shown in figure 2.15.
+Figure 2.15 Elements of our message-passing layer. Each
+message-passing layer consists of an aggregation, a
+transformation, and an update step.
+In chapter 1, we first discussed the idea of message passing.
+In its simplest form, message passing reflects that we’re
+taking information or data from nodes or edges and sending
+it somewhere else [1]. The messages are the data, and
+we’re passing the messages across the structure of our
+graph. Each message can contain information from either
+sender or receiv er, or often both.
+We can now explain further wh y message passing is so
+important to GNNs. The message passing step updates the
+information about each node b y using the node information
+and nodes neighborhood information (both in terms of
+nearb y node data and the edge data connecting them).
+
+================================================================================
+--- PAGINA 142 ---
+================================================================================
+
+Message passing is how we construct representations about
+our gr aph. These are the critical mechanisms that build
+graph embeddings, which inform other tasks such as node
+classification. There are two important aspects to consider
+when constructing these node (or edge) embeddings.
+First, we need to think about what is inside a message. In
+our earlier example, we had a list of books on political
+topics. This dataset only had information about the books’
+co-purchasing connections and their political leaning labels.
+Howev er, if we had additional information such as the book
+length, author name, or ev en the synopsis, then those node
+features could be contained within our messages. Howev er,
+it’s important to remember that it could also be edge data,
+such as when another book w as bought together , that could
+also be contained in messages. In fact, sometimes messages
+can contain both node and edge data.
+Second, we need to think about how much local information
+we want to consider when making each embedding. W e want
+to know how much of the neighborhood to sample. W e
+already discussed this when we introduced r andom w alk
+methods. W e need to define how man y hops to tak e when
+sampling our gr aph.
+Both the data and the number of hops are critical to
+message passing in GNNs. The features, either node or edge
+data, are the messages, and the number of hops is the
+number of times we pass a message. Both of these are
+controlled b y the la yers of a GNN. The number of hidden
+layers is the number of hops that we’ll be sending messages.
+The input to each hidden la yer is the data contained in a
+message. This is almost alw ays the case for GNNs but it ’s
+worth noting that it isn’ t always true. Sometimes, other
+mechanisms such as attention can determine the depth of
+message-passing samples from the neighborhood. W e’ll
+
+================================================================================
+--- PAGINA 143 ---
+================================================================================
+
+discuss gr aph attention networks (GA Ts) in chapter 4. Until
+then, understanding that the number of la yers in a GNN
+reflects the number of hops undertak en during message
+passing is a good intuition to ha ve.
+For a feed-forw ard network, lik e the one on the left in figure
+2.15, information is passed between the nodes of our neur al
+network. In a GNN, this information comprises the messages
+that we send o ver our gr aph. F or each message-passing
+step, the v ertex in our neur al network collects information
+from nodes or edges one hop a way. So, if we w ant our node
+representations to tak e account of nodes from three hops
+away from each node, we need three hidden message-
+passing la yers. Three la yers ma y not seem lik e very man y,
+but the amount of a gr aph we co ver scales exponentially
+with the number of hops. Intuitiv ely, we can understand this
+as a t ype of six degrees of separ ation principle—that all
+people are only six degrees of social separ ation apart from
+each other . This would mean that y ou and I could be
+connected b y six short hops across the global combined
+social network.
+Different message-passing schemes lead to different fla vors
+of GNNs. So , for each GNN we study in this book, we’ll pa y
+close attention to the math and code implementation for
+message passing. One important aspect is how we
+aggregate messages, which we’ll discuss in chapter 3 when
+we discuss GCNs in depth.
+After message passing, the resulting tensor is passed
+through feed-forw ard la yers that result in a prediction. In
+the left of figure 2.16, which illustr ates a GNN model for
+node prediction, the data flows through message-passing
+layers, the tensor then passes through an additional MLP
+and activ ation function to output a prediction. F or example,
+we could use our GNN to classif y whether emplo yees are
+
+================================================================================
+--- PAGINA 144 ---
+================================================================================
+
+likely to join a new compan y or ha ve good
+recommendations.
+
+================================================================================
+--- PAGINA 146 ---
+================================================================================
+
+Figure 2.16 A simple GNN architecture diagram (left). A graph is
+input on the left, encountering node-information-passing layers.
+This is followed by MLP layers. After an activation is applied, a
+prediction is yielded. A GNN architecture (right).
+Howev er, as with the feed-forw ard neur al network illustr ated
+previously , we can also output just the hidden la yers and
+work directly with that output. F or GNNs, this output is the
+graph, node, or edge embeddings.
+One final note on message passing in GNNs is that in each
+step in the message-passing la yer of our GNNs, we’ll be
+passing information from nodes to another node one hop
+away. Importantly , a neur al network then tak es the data
+from the one-hop neighbors and applies a nonlinear
+transformation. This is the beaut y of GNNs; we’re applying
+many small neur al networks at the lev el of individual nodes
+and/or edges to build embeddings of the gr aph features.
+Therefore,  when we sa y that a message-passing la yer is lik e
+the first la yer of a neur al network, we’re really sa ying that
+it’s the first la yer of man y individual neur al networks that
+are all learning on local node data or edge-specific data. In
+practice, the o verall code constructing and tr aining is the
+same as if it were one single tr ansformation, but the
+intuition that we’re applying individual nonlinear
+transformations will become useful as we tr avel deeper into
+the workings of complex GNN models.
+Summary
+Node and graph embeddings are powerf ul methods to extract
+insights from our data, and they can serve as inputs/f eatures in
+our machine learning models. There are several independent
+methods for gener ating such embeddings. GNNs have
+embedding bui lt into the ar chitectur e.
+
+================================================================================
+--- PAGINA 147 ---
+================================================================================
+
+Graph embeddings, including node and edge embeddings, serve
+as foundational techniques to transform complex graph data into
+structur ed formats sui table f or machine learning tasks.
+We explor ed two main types of graph embeddings: N2V, a
+transductiv e method, and GNN-based embeddings, an inductiv e
+method, each wi th distinct char acteristics and appl ications.
+N2V operates on fixed datasets using random walks to establ ish
+node contexts and similarities, but it doesn’ t gener alize to
+unseen data or gr aphs.
+GNNs, on the other hand, are versati le, inductiv e frameworks
+that can gener ate embeddings for new, unseen data, making
+them adaptable acr oss di fferent gr aph structur es.
+The comparison of embeddings in machine learning tasks, such
+as semi-supervised learning, reveals the importance of choosing
+the right embedding method based on the data size, complexi ty,
+and speci fic problem at hand.
+Despi te the effectiveness of random forest classifiers in handl ing
+both N2V and GNN embeddings for smaller graphs, GNNs
+demonstr ate a unique ability to use graph topology and node
+features, particularly in lar ger and mor e complex gr aphs.
+Embeddings can be used as features in traditional machine
+learning models and in graph data visual ization and insight
+extraction.
+
+================================================================================
+--- PAGINA 148 ---
+================================================================================
+
+Part 2  Graph neural
+networks
+Now that y ou understand the basics, it ’s time to roll up y our
+sleeves and div e into the core architectures that mak e
+graph neur al networks (GNNs) work. This section bridges
+the theoretical and pr actical b y introducing k ey GNN
+architectures and applying them to real- world problems.
+You’ll explore foundational models such as gr aph
+convolutional networks (GCNs), Gr aphSAGE, and gr aph
+attention networks (GA Ts), as well as gr aph autoencoders
+(GAEs)—each designed to harness the unique structure of
+graph data.
+These architectures come to life through real- world
+applications. They ha ve been used for fak e review
+detection, product category prediction, and molecular gr aph
+gener ation for drug disco very. By blending cutting-edge
+models with highly effectiv e use cases, this part of the book
+provides both the understanding and pr actical tools needed
+to unlock the tr ansformativ e potential of GNNs in y our
+projects.
