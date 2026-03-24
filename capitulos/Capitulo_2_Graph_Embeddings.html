@@ -12,8 +12,8 @@
     <header>
         <h1>Capitulo 2: Graph Embeddings</h1>
         <p class="subtitle">Graph Neural Networks in Action - Keita Broadwater</p>
-        <p class="book-info">Guia de Estudio Interactiva | Enfoque Banca &amp; AML | Paginas 79-148</p>
-        <p style="margin-top:10px; color: var(--dc-green); font-weight:600; font-size: 0.9em; letter-spacing: 0.5px;">NODE2VEC &nbsp;|&nbsp; GNN EMBEDDINGS &nbsp;|&nbsp; SEMI-SUPERVISED LEARNING &nbsp;|&nbsp; TRANSDUCTIVO vs INDUCTIVO &nbsp;|&nbsp; MESSAGE PASSING</p>
+        <p class="book-info">Guia Conceptual Interactiva | Enfoque Banca &amp; AML | Basado en Paginas 79-148</p>
+        <p style="margin-top:10px; color: var(--dc-green); font-weight:600; font-size: 0.9em; letter-spacing: 0.5px;">GAT RECAP &nbsp;|&nbsp; NODE2VEC &nbsp;|&nbsp; GNN EMBEDDINGS &nbsp;|&nbsp; SEMI-SUPERVISED LEARNING &nbsp;|&nbsp; TRANSDUCTIVO vs INDUCTIVO &nbsp;|&nbsp; MESSAGE PASSING</p>
     </header>
 
     <div class="global-progress" id="globalProgress">
@@ -24,9 +24,11 @@
 
     <nav id="mainNav">
         <button data-section="intro" onclick="navClick('intro',this)">Intro<span class="lock-icon"></span></button>
+        <button data-section="gat_recap" onclick="navClick('gat_recap',this)">GAT Recap<span class="lock-icon"></span></button>
         <button data-section="n2v" onclick="navClick('n2v',this)">Node2Vec<span class="lock-icon"></span></button>
         <button data-section="gnn_emb" onclick="navClick('gnn_emb',this)">GNN Embeddings<span class="lock-icon"></span></button>
         <button data-section="comparacion" onclick="navClick('comparacion',this)">N2V vs GNN<span class="lock-icon"></span></button>
+        <button data-section="metricas" onclick="navClick('metricas',this)">Metricas<span class="lock-icon"></span></button>
         <button data-section="semi_supervised" onclick="navClick('semi_supervised',this)">Semi-Supervised<span class="lock-icon"></span></button>
         <button data-section="under_hood" onclick="navClick('under_hood',this)">Under the Hood<span class="lock-icon"></span></button>
         <button data-section="aml" onclick="navClick('aml',this)">AML/Banca<span class="lock-icon"></span></button>
@@ -42,14 +44,13 @@
         <h2>Introduccion al Capitulo 2</h2>
 
         <div class="stat-cards">
-            <div class="stat-card"><div class="number">70</div><div class="label">Paginas del capitulo</div></div>
-            <div class="stat-card"><div class="number">2</div><div class="label">Metodos de embedding</div></div>
-            <div class="stat-card"><div class="number">4</div><div class="label">Modelos comparados</div></div>
-            <div class="stat-card"><div class="number">89%</div><div class="label">Mejor F1 Score logrado</div></div>
+            <div class="stat-card"><div class="number">3</div><div class="label">Metodos de embedding (N2V, GCN, GAT)</div></div>
+            <div class="stat-card"><div class="number">8</div><div class="label">Escenarios AML con metodo recomendado</div></div>
+            <div class="stat-card"><div class="number" style="font-size:1.4em;">&#128274;&#8594;&#128275;</div><div class="label">De metodos fijos a modelos que aceptan nodos nuevos</div></div>
         </div>
 
         <h3>De que trata este capitulo?</h3>
-        <p>Este capitulo es el <strong>puente entre la teoria y la practica</strong>. Aprenderas a crear <strong>graph embeddings</strong> (representaciones numericas de grafos) usando dos metodos fundamentales: <strong>Node2Vec (N2V)</strong> y <strong>GNNs</strong>, y los compararas en un problema real de clasificacion semi-supervisada.</p>
+        <p>Este capitulo es <strong>conceptual</strong>: el objetivo es <em>entender a fondo</em> como funcionan los graph embeddings, por que existen diferentes metodos y cuando usar cada uno. Recapitularemos <strong>GAT</strong> (notebook anterior), exploraremos <strong>Node2Vec (N2V)</strong> y <strong>GNNs (GCN)</strong>, los compararemos, y entenderemos por que necesitamos <strong>GraphSAGE</strong> para el mundo real. La implementacion a fondo sera en el <strong>notebook del Capitulo 3</strong>.</p>
 
         <div class="danger-box">
             <h4>Enfoque AML/Banca de esta guia</h4>
@@ -65,12 +66,14 @@
         <div class="highlight">
             <h4>Al terminar este capitulo seras capaz de:</h4>
             <ul>
-                <li>Crear embeddings con <strong>Node2Vec</strong> y entender sus parametros (p, q, walk_length)</li>
-                <li>Crear embeddings con una <strong>GNN (GCN)</strong> usando PyTorch Geometric</li>
-                <li>Visualizar embeddings con <strong>UMAP</strong> para descubrir clusters</li>
-                <li>Comparar N2V vs GNN en un problema de clasificacion semi-supervisada</li>
-                <li>Entender la diferencia entre aprendizaje <strong>transductivo</strong> e <strong>inductivo</strong></li>
-                <li>Comprender <strong>message passing</strong> como el motor de las GNNs</li>
+                <li><strong>Recapitular GAT</strong>: los 4 pasos, multi-cabeza, &alpha;<sub>ij</sub>, y sus limitaciones de escalabilidad</li>
+                <li>Entender como <strong>Node2Vec</strong> crea embeddings con random walks y que controlan p, q, walk_length</li>
+                <li>Entender como una <strong>GNN (GCN)</strong> crea embeddings con message passing</li>
+                <li>Saber por que <strong>UMAP</strong> es preferido para visualizar embeddings en 2D</li>
+                <li><strong>Comparar N2V vs GCN vs GAT</strong> y saber cuando usar cada uno</li>
+                <li>Distinguir entre aprendizaje <strong>transductivo</strong> e <strong>inductivo</strong> y por que importa en produccion</li>
+                <li>Comprender <strong>message passing</strong> como el motor de las GNNs (AGGREGATE &rarr; TRANSFORM &rarr; UPDATE)</li>
+                <li>Conocer <strong>GraphSAGE</strong> como solucion al problema de escalabilidad (lo implementaremos en el Capitulo 3)</li>
             </ul>
         </div>
 
@@ -89,6 +92,12 @@
                 <tr><td>Formato del archivo</td><td>GML (Graph Modeling Language)</td></tr>
                 <tr><td>Tarea</td><td>Clasificacion semi-supervisada (predecir orientacion politica)</td></tr>
             </table>
+        </div>
+
+        <div class="graph-card">
+            <h4 style="text-align:center">Exploracion Interactiva: Grafo &#8596; Matriz de Adyacencia</h4>
+            <p style="text-align:center; font-size:0.85em; color: var(--dc-gray-500); margin-bottom:10px;">Pasa el mouse sobre un nodo, arista o celda de la matriz para ver la correspondencia bidireccional</p>
+            <canvas id="canvasAdjMatrix" width="700" height="360"></canvas>
         </div>
 
         <div class="purple-box">
@@ -202,29 +211,43 @@
             </div>
         </div>
 
-        <div class="danger-box">
-            <h4>Librerias necesarias para reproducir el capitulo</h4>
-            <div class="graph-card" style="background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 0.9em; padding: 16px; line-height: 1.6; margin-top:10px;">
-                pip install networkx node2vec umap-learn matplotlib<br>
-                pip install torch torch-geometric  <span style="color:#6a9955;"># Para la parte de GNN</span><br>
-                pip install scikit-learn  <span style="color:#6a9955;"># Para Random Forest</span>
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                &#128230; Librerias necesarias si quieres experimentar por tu cuenta
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <p>No necesitas instalar nada para seguir esta guia &mdash; es conceptual. Pero si quieres reproducir los resultados del libro:</p>
+                <div class="graph-card" style="background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 0.9em; padding: 16px; line-height: 1.6; margin-top:10px;">
+                    pip install networkx node2vec umap-learn matplotlib<br>
+                    pip install torch torch-geometric  <span style="color:#6a9955;"># Para la parte de GNN</span><br>
+                    pip install scikit-learn  <span style="color:#6a9955;"># Para Random Forest</span>
+                </div>
             </div>
         </div>
 
         <h3>Flujo del Capitulo</h3>
         <div class="flow-diagram">
-            <div class="flow-step">Seccion 2.1: Node2Vec (N2V)<br><small>Crear embeddings con random walks</small></div>
+            <div class="flow-step" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">GAT Recap<br><small>Recapitulacion del notebook anterior: atencion, multi-cabeza, limitaciones</small></div>
             <div class="flow-arrow">&#8595;</div>
-            <div class="flow-step green">Seccion 2.2: GNN Embeddings<br><small>Crear embeddings con Graph Convolutional Network</small></div>
+            <div class="flow-step">Seccion 2.1: Node2Vec (N2V)<br><small>Entender embeddings via random walks (sin red profunda)</small></div>
             <div class="flow-arrow">&#8595;</div>
-            <div class="flow-step orange">Seccion 2.3: Comparacion<br><small>N2V vs GNN en clasificacion semi-supervisada</small></div>
+            <div class="flow-step green">Seccion 2.2: GNN Embeddings<br><small>Entender embeddings via message passing (GCN)</small></div>
             <div class="flow-arrow">&#8595;</div>
-            <div class="flow-step blue">Seccion 2.4: Under the Hood<br><small>Teoria: transductivo/inductivo, random walks, message passing</small></div>
+            <div class="flow-step orange">Seccion 2.3: Comparacion<br><small>N2V vs GCN vs GAT &mdash; cuando usar cada uno</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step" style="background: linear-gradient(135deg, #059669, #10b981);">Seccion 2.3b: Semi-Supervised Learning<br><small>Entrenar con 20% etiquetado, predecir el 80% restante</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step blue">Seccion 2.4: Under the Hood<br><small>Teoria: transductivo/inductivo, message passing, escalabilidad</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step" style="background: linear-gradient(135deg, #f59e0b, #d97706);">AML/Banca + Preview GraphSAGE<br><small>Que metodo elegir para cada escenario</small></div>
         </div>
 
         <div class="success-box">
-            <h4>Conexion con el Capitulo 1</h4>
-            <p>En el Cap 1 aprendimos <em>que</em> son los embeddings (una lista de numeros que resume algo complejo). Ahora vamos a aprender <em>como</em> crearlos y <em>como</em> usarlos para resolver problemas reales.</p>
+            <h4>Conexion con lo anterior</h4>
+            <p><strong>Capitulo 1:</strong> Aprendimos <em>que</em> son los embeddings (una lista de numeros que resume algo complejo).</p>
+            <p><strong>Notebook GAT (2_Graph_Attention_Network.ipynb):</strong> Implementamos GAT con CiteSeer &mdash; aprendimos atencion, multi-cabeza y coeficientes &alpha;<sub>ij</sub>. Pero vimos que GAT no escala a grafos grandes.</p>
+            <p style="margin-top:8px;"><strong>Ahora:</strong> Vamos a aprender <em>como</em> crear embeddings con otros metodos (N2V, GCN), compararlos con GAT, y entender por que necesitamos GraphSAGE.</p>
         </div>
 
         <div class="checkpoint" id="cp-intro">
@@ -238,9 +261,94 @@
         </div>
     </div>
 
+    <!-- ====================== SECCION: GAT RECAP ====================== -->
+    <div id="gat_recap" class="section">
+        <h2>Recapitulacion: GAT y el Mecanismo de Atencion</h2>
+
+        <div class="purple-box">
+            <h4>&#128279; Conexion con el Notebook Anterior</h4>
+            <p>En el notebook <strong>2_Graph_Attention_Network.ipynb</strong> implementamos GAT con el dataset CiteSeer. Antes de explorar otros metodos de embedding, recapitulemos que aprendimos y por que necesitamos mas herramientas.</p>
+        </div>
+
+        <h3>&#9889; Los 4 Pasos de una Capa GAT</h3>
+        <div class="info-box">
+            <p>Cada capa GAT ejecuta estos pasos para <strong>cada cabeza de atencion</strong> en paralelo:</p>
+        </div>
+
+        <div class="flow-diagram">
+            <div class="flow-step">1. TRANSFORMACION LINEAL<br><small>h'<sub>i</sub> = W<sup>k</sup> h<sub>i</sub> &mdash; Proyecta features a nueva dimension</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step orange">2. SCORES DE ATENCION<br><small>e<sub>ij</sub> = LeakyReLU(a<sup>kT</sup>[h'<sub>i</sub> || h'<sub>j</sub>]) &mdash; Mide afinidad entre pares</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step green">3. SOFTMAX<br><small>&alpha;<sub>ij</sub> = softmax(e<sub>ij</sub>) &mdash; Normaliza pesos sobre vecinos (suman 1)</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">4. AGREGACION<br><small>z<sub>i</sub> = &Sigma; &alpha;<sub>ij</sub> h'<sub>j</sub> &mdash; Mezcla ponderada de vecinos</small></div>
+        </div>
+
+        <h3>&#128065; Multi-Cabeza: K Perspectivas Paralelas</h3>
+        <div class="success-box">
+            <p>GAT usa <strong>K cabezas de atencion independientes</strong>, cada una con sus propios pesos W<sup>k</sup> y a<sup>k</sup>. Cada cabeza "ve" el grafo de forma diferente:</p>
+            <table class="comparison-table" style="margin:15px 0;">
+                <tr><th>Cabeza</th><th>&alpha;<sub>0,1</sub></th><th>&alpha;<sub>0,2</sub></th><th>&alpha;<sub>0,3</sub></th><th>Interpretacion</th></tr>
+                <tr><td><strong>1</strong></td><td>0.72</td><td>0.18</td><td>0.10</td><td>Enfoca fuerte en nodo 1</td></tr>
+                <tr><td><strong>2</strong></td><td>0.25</td><td>0.60</td><td>0.15</td><td>Prefiere nodo 2</td></tr>
+                <tr><td><strong>3</strong></td><td>0.33</td><td>0.34</td><td>0.33</td><td>~Uniforme (todos iguales)</td></tr>
+            </table>
+            <p>Las salidas se <strong>concatenan</strong> (capas intermedias) o se <strong>promedian</strong> (capa final) para producir los embeddings.</p>
+        </div>
+
+        <h3>&#128200; Resultados del Notebook GAT</h3>
+        <div class="highlight">
+            <h4>GAT vs GCN en CiteSeer (nuestros resultados)</h4>
+            <table class="comparison-table" style="margin:15px 0;">
+                <tr><th>Modelo</th><th>Cabezas</th><th>Capas</th><th>Test Accuracy</th></tr>
+                <tr><td>GCN</td><td>N/A (pesos fijos)</td><td>2 (GCNConv 16 dims)</td><td>~70%</td></tr>
+                <tr><td><strong>GAT (GATv2)</strong></td><td><strong>8 cabezas</strong></td><td>2 (GAT 8&times;heads)</td><td><strong>~72%</strong></td></tr>
+            </table>
+            <p>GAT supera a GCN porque los <strong>coeficientes de atencion &alpha;<sub>ij</sub></strong> permiten ponderar a cada vecino segun su relevancia, en vez de usar pesos fijos basados en el grado del nodo.</p>
+        </div>
+
+        <h3>&#9888; Limitaciones de GAT</h3>
+        <div class="danger-box">
+            <h4>Por que GAT no es suficiente?</h4>
+            <ul>
+                <li><strong>Transductivo en la practica:</strong> Necesita el grafo completo en memoria durante entrenamiento. No escala a grafos de millones de nodos.</li>
+                <li><strong>Over-smoothing:</strong> Con muchas capas GAT, los embeddings de todos los nodos convergen al mismo vector (se pierde informacion discriminativa).</li>
+                <li><strong>Costo computacional:</strong> K cabezas &times; N nodos &times; vecinos = muchas operaciones. En grafos de transacciones bancarias (50M+ nodos), es impractico.</li>
+            </ul>
+        </div>
+
+        <div class="info-box">
+            <h4>&#127919; Objetivo de Este Capitulo</h4>
+            <p>GAT produce <strong>embeddings con atencion</strong>, pero es solo uno de varios metodos. En este capitulo exploraremos:</p>
+            <ul>
+                <li><strong>Node2Vec:</strong> Embeddings via random walks (sin red neuronal profunda, transductivo)</li>
+                <li><strong>GNN Embeddings:</strong> Embeddings via message passing (GCNConv, inductivo)</li>
+                <li><strong>Comparacion completa:</strong> N2V vs GNN vs GAT &mdash; cuando usar cada uno</li>
+                <li><strong>Aplicacion AML:</strong> Que metodo elegir segun el escenario bancario</li>
+            </ul>
+            <p>Al final, entenderas <strong>todo el espectro de metodos de embedding</strong> y estaras listo para GraphSAGE (escalabilidad).</p>
+        </div>
+
+        <div class="checkpoint" id="cp-gat_recap">
+            <h4>&#9881; Checkpoint &mdash; Desbloquea la siguiente seccion</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">Que producen los coeficientes de atencion &alpha;<sub>ij</sub> en GAT?</p>
+            <div class="cp-option" onclick="checkCP('gat_recap',this,false)">Los embeddings finales de cada nodo</div>
+            <div class="cp-option" onclick="checkCP('gat_recap',this,true)">Un peso (escalar) que indica cuanta atencion prestar a cada vecino para la agregacion</div>
+            <div class="cp-option" onclick="checkCP('gat_recap',this,false)">La matriz de adyacencia normalizada</div>
+            <div class="cp-feedback" id="cpFb-gat_recap"></div>
+        </div>
+    </div>
+
     <!-- ====================== SECCION: NODE2VEC ====================== -->
     <div id="n2v" class="section">
         <h2>Node2Vec (N2V) &mdash; Embeddings con Random Walks</h2>
+
+        <div class="success-box">
+            <h4>&#128204; Cambio de enfoque: de atencion a caminatas</h4>
+            <p>GAT crea embeddings usando <strong>atencion aprendida</strong> entre vecinos (necesita una red neuronal profunda + el grafo completo en memoria). Ahora vamos al otro extremo: <strong>Node2Vec</strong>, un metodo que crea embeddings sin ninguna red profunda &mdash; solo caminatas aleatorias por el grafo + una red neuronal <em>shallow</em> de una capa. Es mas simple, mas rapido, pero tiene sus limitaciones.</p>
+        </div>
 
         <div class="purple-box">
             <h4>&#129504; Que es Node2Vec? (la idea, sin formulas)</h4>
@@ -349,11 +457,26 @@
         <div class="graph-card">
             <h4 style="text-align:center; margin-bottom:5px;">&#127916; Animacion: Como N2V crea un embedding</h4>
             <p style="text-align:center; font-size:0.85em; color: var(--dc-gray-500); margin-bottom:10px;">Observa las 4 fases: grafo original &#8594; el turista pasea &#8594; la red aprende &#8594; numeros finales</p>
-            <canvas id="canvasN2VPipeline" width="750" height="550"></canvas>
+            <canvas id="canvasN2VPipeline" width="1100" height="720"></canvas>
             <div class="btn-group">
                 <button class="btn btn-primary" onclick="animateN2VPipeline()">&#9654; Iniciar Animacion</button>
-                <button class="btn btn-warning" onclick="drawN2VPipelineBase()">Reiniciar</button>
+                <button id="n2vPauseBtn" class="btn btn-danger" onclick="n2vTogglePause()" style="display:none;">&#9208; Pausar</button>
+                <button class="btn btn-warning" onclick="n2vStop()">&#9632; Detener</button>
             </div>
+            <div class="btn-group" style="margin-top:6px;">
+                <button class="btn btn-primary" onclick="n2vStepPrev()" style="font-size:0.95em;">&#9664; Anterior</button>
+                <button class="btn btn-primary" onclick="n2vStepNext()" style="font-size:0.95em;">Siguiente &#9654;</button>
+            </div>
+            <p id="n2vStepLabel" style="text-align:center; font-size:0.88em; color:var(--dc-green); margin-top:4px; font-weight:600;"></p>
+            <div class="btn-group" style="margin-top:4px;">
+                <button class="btn btn-secondary" onclick="n2vJumpTo(1)" style="font-size:0.82em;">1. Grafo</button>
+                <button class="btn btn-secondary" onclick="n2vJumpTo(2)" style="font-size:0.82em;">2. Turista</button>
+                <button class="btn btn-secondary" onclick="n2vJumpTo('3a')" style="font-size:0.82em;">3a. Parejas</button>
+                <button class="btn btn-secondary" onclick="n2vJumpTo('3b')" style="font-size:0.82em;">3b. Pesos</button>
+                <button class="btn btn-secondary" onclick="n2vJumpTo('3c')" style="font-size:0.82em;">3c. Entrena</button>
+                <button class="btn btn-secondary" onclick="n2vJumpTo(4)" style="font-size:0.82em;">4. Resultado</button>
+            </div>
+            <p style="text-align:center; font-size:0.8em; color:var(--dc-gray-500); margin-top:4px;">Navega paso a paso, salta a una fase, o usa "Iniciar" para la animacion completa</p>
         </div>
 
         <div class="flow-diagram">
@@ -371,6 +494,7 @@
         <div class="success-box">
             <h4>&#127919; Resumen antes de los parametros</h4>
             <p>Node2Vec <strong>no sabe nada de politica</strong>. Solo sabe que ciertos libros se compran juntos (las aristas). Pero al pasear miles de veces por la red de co-compras y entrenar una red neuronal, <strong>descubre solo</strong> que hay 3 grupos (izquierda, derecha, neutral) &mdash; porque los libros de cada grupo estan mas conectados entre si.</p>
+            <p style="margin-top:8px;"><strong>Contraste con GAT:</strong> Mientras GAT decide <em>cuanto</em> escuchar a cada vecino (via &alpha;<sub>ij</sub>), N2V ni siquiera habla con los vecinos directamente &mdash; solo observa <em>con quien aparece</em> durante las caminatas. Dos filosofias completamente distintas para el mismo objetivo: crear un buen embedding.</p>
             <p style="margin-top:8px;">Ahora si, veamos los parametros que controlan <em>como</em> camina el turista...</p>
         </div>
 
@@ -467,16 +591,17 @@
                     <p><strong>q = 1</strong> = equilibrado (DeepWalk clasico)</p>
                 </div>
                 <div class="graph-card">
-                    <canvas id="canvasBFSDFS" width="700" height="350"></canvas>
-                    <p style="text-align:center; font-size:0.9em; color: var(--dc-gray-500);">BFS (flechas oscuras): explora cerca &nbsp;|&nbsp; DFS (flechas claras): explora lejos</p>
+                    <canvas id="canvasBFSDFS" width="700" height="360"></canvas>
+                    <p style="text-align:center; font-size:0.9em; color: var(--dc-gray-500);">&#128433; Pasa el mouse sobre un nodo para ver el recorrido BFS vs DFS desde ese punto</p>
                 </div>
             </div>
         </div>
 
-        <h3>Codigo Clave</h3>
+        <h3>Asi se ve en Codigo</h3>
+        <p style="margin-bottom:12px; color: var(--dc-gray-500); font-size:0.9em;">No necesitas ejecutar esto &mdash; leelo para entender como los parametros que vimos se traducen a lineas de codigo:</p>
         <div class="graph-card" style="background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 0.9em; padding: 20px; line-height: 1.6;">
-            <span style="color:#569cd6;">import</span> NetworkX <span style="color:#569cd6;">as</span> nx<br>
-            <span style="color:#569cd6;">from</span> Node2Vec <span style="color:#569cd6;">import</span> Node2Vec<br><br>
+            <span style="color:#569cd6;">import</span> networkx <span style="color:#569cd6;">as</span> nx<br>
+            <span style="color:#569cd6;">from</span> node2vec <span style="color:#569cd6;">import</span> Node2Vec<br><br>
             <span style="color:#6a9955;"># 1. Cargar grafo</span><br>
             books_graph = nx.read_gml(<span style="color:#ce9178;">'polbooks.gml'</span>)<br><br>
             <span style="color:#6a9955;"># 2. Inicializar N2V</span><br>
@@ -485,7 +610,7 @@
             &nbsp;&nbsp;&nbsp;&nbsp;walk_length=<span style="color:#b5cea8;">30</span>,<br>
             &nbsp;&nbsp;&nbsp;&nbsp;num_walks=<span style="color:#b5cea8;">200</span>,<br>
             &nbsp;&nbsp;&nbsp;&nbsp;workers=<span style="color:#b5cea8;">4</span>)<br><br>
-            <span style="color:#6a9955;"># 3. Entrenar</span><br>
+            <span style="color:#6a9955;"># 3. Entrenar (window=10: contexto de 10 nodos alrededor en cada walk)</span><br>
             model = node2vec.fit(window=<span style="color:#b5cea8;">10</span>, min_count=<span style="color:#b5cea8;">1</span>, batch_words=<span style="color:#b5cea8;">4</span>)<br><br>
             <span style="color:#6a9955;"># 4. Extraer embeddings</span><br>
             embeddings = {<span style="color:#569cd6;">str</span>(node): model.wv[<span style="color:#569cd6;">str</span>(node)]<br>
@@ -506,6 +631,7 @@
         <div class="danger-box">
             <h4>Limitacion importante de N2V</h4>
             <p>N2V es <strong>transductivo</strong>: solo funciona con los nodos que vio durante el entrenamiento. Si llega un nodo nuevo al grafo, hay que <strong>reentrenar todo el modelo</strong>. Esto es critico en AML donde llegan cuentas nuevas todos los dias.</p>
+            <p style="margin-top:8px;">En la siguiente seccion veremos como las <strong>GNNs resuelven este problema</strong> con message passing: aprenden una <em>funcion</em> generalizable, no un embedding fijo por nodo.</p>
         </div>
 
         <div class="checkpoint" id="cp-n2v">
@@ -525,14 +651,20 @@
 
         <div class="purple-box">
             <h4>La diferencia fundamental</h4>
-            <p>Mientras N2V crea embeddings como paso <strong>separado</strong> (primero caminas, luego entrenas), las GNNs integran la creacion de embeddings <strong>directamente en el proceso de aprendizaje</strong>. Los embeddings se refinan mientras la red aprende la tarea.</p>
+            <p>Mientras N2V crea embeddings como paso <strong>separado</strong> (primero caminas, luego entrenas con Word2Vec), las GNNs integran la creacion de embeddings <strong>directamente en el proceso de aprendizaje</strong>. Los embeddings se refinan mientras la red aprende la tarea.</p>
+        </div>
+
+        <div class="info-box">
+            <h4>&#129300; Por que GCN y no GAT aqui?</h4>
+            <p>En este capitulo usamos <strong>GCNConv</strong> (Graph Convolutional Network) como modelo GNN porque es el <strong>punto de partida mas simple</strong>: pesos de agregacion fijos basados en el grado del nodo (sin atencion). Asi podemos comparar limpiamente con N2V. Recuerda la progresion:</p>
+            <p style="text-align:center; font-size:1.1em; margin-top:8px;"><strong>N2V</strong> (sin red profunda) &rarr; <strong>GCN</strong> (red profunda, pesos fijos) &rarr; <strong>GAT</strong> (pesos aprendidos, &alpha;) &rarr; <strong>GraphSAGE</strong> (muestreo + escala)</p>
         </div>
 
         <h3>&#129504; Analogia: El Chisme de Vecindario</h3>
         <div class="info-box">
             <p>Imagina que vives en un vecindario y quieres saber <strong>que tipo de persona es cada vecino</strong>, pero solo puedes hablar con tus vecinos directos:</p>
             <table class="comparison-table" style="margin:15px 0;">
-                <tr><th>Lo que pasa en el vecindario</th><th>Lo que hace la GNN</th></tr>
+                <tr><th>Lo que pasa en el vecindario</th><th>Lo que hace la GNN (GCN)</th></tr>
                 <tr>
                     <td><strong>Ronda 1:</strong> Le preguntas a tus vecinos directos como son</td>
                     <td><strong>Capa 1:</strong> Cada nodo recibe los features de sus vecinos a 1 hop</td>
@@ -547,7 +679,8 @@
                 </tr>
             </table>
             <div class="highlight">
-                <p>&#128161; <strong>La clave:</strong> Despues de 2 rondas de "chisme", cada nodo tiene un resumen que incluye info de su vecindario a 2 saltos de distancia &mdash; <strong>sin haber caminado por el grafo</strong>. La estructura llega a ti por difusion.</p>
+                <p>&#128161; <strong>La clave:</strong> Despues de 2 rondas de "chisme", cada nodo tiene un resumen que incluye info de su vecindario a 2 saltos de distancia &mdash; <strong>sin haber caminado por el grafo</strong> (como N2V). La estructura llega a ti por difusion.</p>
+                <p style="margin-top:8px;"><strong>Diferencia con GAT:</strong> En GCN, todos los vecinos contribuyen <em>por igual</em> (ponderados solo por su grado). En GAT, cada vecino tiene un peso &alpha;<sub>ij</sub> diferente segun su relevancia. GCN es mas rapido pero menos expresivo.</p>
             </div>
         </div>
 
@@ -556,9 +689,18 @@
             <p style="text-align:center; font-size:0.85em; color: var(--dc-gray-500); margin-bottom:10px;">Observa como el nodo central recibe y agrega mensajes de sus vecinos en cada capa</p>
             <canvas id="canvasGNNPipeline" width="750" height="480"></canvas>
             <div class="btn-group">
-                <button class="btn btn-primary" onclick="animateGNNPipeline()">&#9654; Iniciar Animacion</button>
+                <button class="btn btn-primary" onclick="animateGNNPipeline()">&#9654; Animacion Completa</button>
                 <button class="btn btn-warning" onclick="drawGNNPipelineBase()">Reiniciar</button>
             </div>
+            <div class="btn-group" style="margin-top:8px;">
+                <button class="gnn-pipe-step-btn btn btn-secondary" data-step="0" onclick="gnnPipeGoto(0)" style="font-size:0.85em;">1. Grafo</button>
+                <button class="gnn-pipe-step-btn btn btn-secondary" data-step="1" onclick="gnnPipeGoto(1)" style="font-size:0.85em;">2. Mensajes</button>
+                <button class="gnn-pipe-step-btn btn btn-secondary" data-step="2" onclick="gnnPipeGoto(2)" style="font-size:0.85em;">3. 2-Hop</button>
+                <button class="gnn-pipe-step-btn btn btn-secondary" data-step="3" onclick="gnnPipeGoto(3)" style="font-size:0.85em;">4. Embedding</button>
+                <button class="btn btn-primary" onclick="gnnPipePrev()" style="font-size:0.85em;">&#9664; Anterior</button>
+                <button class="btn btn-primary" onclick="gnnPipeNext()" style="font-size:0.85em;">Siguiente &#9654;</button>
+            </div>
+            <p id="gnnPipeStepLabel" style="text-align:center; font-size:0.85em; color:var(--dc-gray-500); margin-top:6px;">Usa los botones para navegar paso a paso por el pipeline GNN</p>
         </div>
 
         <h3>Arquitectura: SimpleGNN</h3>
@@ -574,7 +716,8 @@
             <div class="flow-step">OUTPUT: Node Embeddings (64D)<br><small>Cada nodo tiene un vector de 64 numeros</small></div>
         </div>
 
-        <h3>Codigo de la Arquitectura</h3>
+        <h3>Asi se ve la Arquitectura en Codigo</h3>
+        <p style="margin-bottom:12px; color: var(--dc-gray-500); font-size:0.9em;">Observa como cada linea corresponde a un paso del diagrama anterior:</p>
         <div class="graph-card" style="background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 0.9em; padding: 20px; line-height: 1.6;">
             <span style="color:#569cd6;">class</span> <span style="color:#4ec9b0;">SimpleGNN</span>(torch.nn.Module):<br>
             &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">def</span> <span style="color:#dcdcaa;">__init__</span>(self, num_features, hidden_channels):<br>
@@ -589,7 +732,7 @@
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">return</span> x
         </div>
 
-        <h3>Preparacion de Datos</h3>
+        <h3>Preparacion de Datos (como funciona por dentro)</h3>
         <div class="accordion-item">
             <div class="accordion-header" onclick="toggleAccordion(this)">
                 Conversion: NetworkX &#8594; PyTorch Geometric
@@ -623,7 +766,8 @@
             </div>
         </div>
 
-        <h3>Generacion de Embeddings</h3>
+        <h3>Asi se Generan los Embeddings en Codigo</h3>
+        <p style="margin-bottom:12px; color: var(--dc-gray-500); font-size:0.9em;">Nota como el forward pass produce embeddings incluso sin entrenar:</p>
         <div class="graph-card" style="background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 0.9em; padding: 20px; line-height: 1.6;">
             <span style="color:#6a9955;"># Inicializar modelo</span><br>
             model = SimpleGNN(num_features=<span style="color:#b5cea8;">64</span>, hidden_channels=<span style="color:#b5cea8;">64</span>)<br><br>
@@ -641,7 +785,8 @@
         </div>
 
         <div class="graph-card">
-            <h4 style="text-align:center">Simulacion: Message Passing en GNN</h4>
+            <h4 style="text-align:center">Simulacion Interactiva: Message Passing en GNN</h4>
+            <p style="text-align:center; font-size:0.85em; color: var(--dc-gray-500); margin-bottom:8px;">&#128433; Pasa el mouse sobre un nodo para ver sus vecinos y embedding. Usa los botones para la animacion completa.</p>
             <canvas id="canvasGNNMP" width="700" height="400"></canvas>
             <div class="btn-group">
                 <button class="btn btn-primary" onclick="animateGNNMessagePassing()">&#9654; Animar Message Passing</button>
@@ -662,23 +807,36 @@
 
     <!-- ====================== SECCION: COMPARACION ====================== -->
     <div id="comparacion" class="section">
-        <h2>N2V vs GNN &mdash; Comparacion de Embeddings</h2>
+        <h2>Comparacion de Metodos de Embedding: N2V vs GCN vs GAT</h2>
 
-        <h3>Diferencias Fundamentales</h3>
+        <div class="purple-box">
+            <h4>&#128204; Momento de unir las piezas</h4>
+            <p>Ya conocemos tres metodos para crear embeddings: <strong>Node2Vec</strong> (random walks, sin red profunda), <strong>GCN</strong> (message passing, pesos fijos) y <strong>GAT</strong> (message passing + atencion aprendida). Comparemoslos lado a lado para entender cuando usar cada uno.</p>
+        </div>
+
+        <h3>Diferencias Fundamentales: N2V vs GCN vs GAT</h3>
         <div style="overflow-x: auto;">
             <table class="comparison-table">
-                <tr><th>Aspecto</th><th>Node2Vec (N2V)</th><th>GNN Embeddings</th></tr>
-                <tr><td><strong>Tipo de aprendizaje</strong></td><td>Transductivo</td><td>Inductivo</td></tr>
-                <tr><td><strong>Usa features de nodos?</strong></td><td>No, solo topologia</td><td>Si, topologia + features</td></tr>
-                <tr><td><strong>Nodos nuevos?</strong></td><td>Requiere reentrenar</td><td>Generaliza sin reentrenar</td></tr>
-                <tr><td><strong>Cuando se crea el embedding?</strong></td><td>Paso separado (antes de la tarea)</td><td>Durante la tarea (end-to-end)</td></tr>
-                <tr><td><strong>Grafos dinamicos?</strong></td><td>No adaptable</td><td>Adaptable</td></tr>
-                <tr><td><strong>Complejidad</strong></td><td>Mas simple, rapido</td><td>Mas complejo, poderoso</td></tr>
-                <tr><td><strong>Mejor para</strong></td><td>Grafos estaticos, exploracion</td><td>Grafos grandes/dinamicos, produccion</td></tr>
+                <tr><th>Aspecto</th><th>Node2Vec (N2V)</th><th>GNN (GCN)</th><th style="background: linear-gradient(135deg, #6d28d9, #8b5cf6); color:white;">GAT</th></tr>
+                <tr><td><strong>Tipo de aprendizaje</strong></td><td>Transductivo</td><td>Inductivo</td><td>Inductivo (en teoria), pero necesita grafo completo</td></tr>
+                <tr><td><strong>Usa features de nodos?</strong></td><td>No, solo topologia</td><td>Si, topologia + features</td><td>Si, topologia + features</td></tr>
+                <tr><td><strong>Nodos nuevos?</strong></td><td>Requiere reentrenar</td><td>Generaliza sin reentrenar</td><td>Generaliza, pero requiere grafo en memoria</td></tr>
+                <tr><td><strong>Pesos de agregacion</strong></td><td>N/A (no agrega)</td><td>Fijos (por grado: 1/&radic;d<sub>i</sub>d<sub>j</sub>)</td><td><strong>Aprendidos (&alpha;<sub>ij</sub> via atencion)</strong></td></tr>
+                <tr><td><strong>Multi-perspectiva?</strong></td><td>p,q controlan BFS/DFS</td><td>No (1 sola perspectiva)</td><td><strong>Si (K cabezas paralelas)</strong></td></tr>
+                <tr><td><strong>Interpretabilidad</strong></td><td>Baja (caja negra)</td><td>Baja (pesos fijos)</td><td><strong>Alta (inspeccionar &alpha; por cabeza)</strong></td></tr>
+                <tr><td><strong>Escalabilidad</strong></td><td>Buena (random walks)</td><td>Media (grafo completo)</td><td>Baja (K cabezas &times; grafo completo)</td></tr>
+                <tr><td><strong>Complejidad</strong></td><td>Mas simple, rapido</td><td>Intermedio</td><td>Mas complejo, mas poderoso</td></tr>
+                <tr><td><strong>Mejor para</strong></td><td>Grafos estaticos, exploracion</td><td>Grafos medianos, produccion</td><td>Grafos medianos donde interpretabilidad importa</td></tr>
             </table>
         </div>
 
-        <h3>Resultados en el Political Books Dataset</h3>
+        <div class="info-box">
+            <h4>&#128161; Nota sobre la Escalabilidad</h4>
+            <p>Ninguno de estos tres metodos escala bien a grafos de <strong>millones de nodos</strong> (como redes de transacciones bancarias). Para eso necesitamos <strong>GraphSAGE</strong>, que veremos en el siguiente notebook: usa <em>muestreo de vecinos</em> (mini-batches) para entrenar sin cargar el grafo completo en memoria.</p>
+        </div>
+
+        <h3>En la Practica: Que Implica Cada Metodo?</h3>
+        <p>Mas alla de la tabla, veamos como impacta cada metodo en un proyecto real:</p>
 
         <div class="accordion-item">
             <div class="accordion-header" onclick="toggleAccordion(this)">
@@ -743,6 +901,341 @@
         </div>
     </div>
 
+    <!-- ====================== SECCION: METRICAS DE CLASIFICACION ====================== -->
+    <div id="metricas" class="section">
+        <h2>Metricas de Clasificacion: Evaluando Nuestros Modelos</h2>
+
+        <div class="purple-box">
+            <h4>&#128202; Por que necesitamos metricas?</h4>
+            <p>En la seccion anterior vimos que nuestro mejor modelo logra <strong>89.29% F1</strong> y <strong>88.99% Accuracy</strong>. Pero, que significan realmente estos numeros? Si un modelo dice "99% accuracy" en deteccion de fraude, es automaticamente bueno? <strong>Spoiler: no necesariamente.</strong> Esta seccion te ensenara a leer e interpretar cada metrica como un profesional.</p>
+        </div>
+
+        <!-- ===== LA MATRIZ DE CONFUSION ===== -->
+        <h3>La Matriz de Confusion: El Punto de Partida</h3>
+
+        <div class="info-box">
+            <h4>&#128161; Todo empieza con 4 numeros</h4>
+            <p>Antes de hablar de precision, recall o F1, necesitas entender los <strong>4 bloques fundamentales</strong> de cualquier clasificador. Toda metrica se construye a partir de estos cuatro conteos:</p>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table class="comparison-table" style="max-width: 650px; margin: 0 auto;">
+                <tr>
+                    <th colspan="2" rowspan="2" style="border-bottom: 2px solid var(--dc-gray-600);"></th>
+                    <th colspan="2" style="text-align:center; background: linear-gradient(135deg, #6d28d9, #8b5cf6); color:white;">Prediccion del Modelo</th>
+                </tr>
+                <tr>
+                    <th style="text-align:center;">Positivo</th>
+                    <th style="text-align:center;">Negativo</th>
+                </tr>
+                <tr>
+                    <th rowspan="2" style="background: linear-gradient(135deg, #2563eb, #3b82f6); color:white; writing-mode: vertical-lr; text-orientation: mixed; text-align:center; padding: 10px;">Realidad</th>
+                    <th style="text-align:center;">Positivo</th>
+                    <td style="background: rgba(40, 167, 69, 0.15); text-align:center; font-weight:700; font-size:1.1em;">
+                        TP<br><small style="font-weight:400;">(Verdadero Positivo)</small><br>
+                        <small style="color: var(--dc-green);">&#10003; Fraude real detectado</small>
+                    </td>
+                    <td style="background: rgba(220, 53, 69, 0.15); text-align:center; font-weight:700; font-size:1.1em;">
+                        FN<br><small style="font-weight:400;">(Falso Negativo)</small><br>
+                        <small style="color: var(--dc-red);">&#10007; Fraude real NO detectado</small>
+                    </td>
+                </tr>
+                <tr>
+                    <th style="text-align:center;">Negativo</th>
+                    <td style="background: rgba(220, 53, 69, 0.15); text-align:center; font-weight:700; font-size:1.1em;">
+                        FP<br><small style="font-weight:400;">(Falso Positivo)</small><br>
+                        <small style="color: var(--dc-red);">&#10007; Cuenta limpia marcada como fraude</small>
+                    </td>
+                    <td style="background: rgba(40, 167, 69, 0.15); text-align:center; font-weight:700; font-size:1.1em;">
+                        TN<br><small style="font-weight:400;">(Verdadero Negativo)</small><br>
+                        <small style="color: var(--dc-green);">&#10003; Cuenta limpia correctamente ignorada</small>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="danger-box" style="margin-top: 15px;">
+            <h4>&#128680; La Analogia AML</h4>
+            <p>Piensa en un <strong>sistema de alertas de lavado de dinero</strong>:</p>
+            <ul>
+                <li><strong>TP:</strong> El sistema alerta sobre una cuenta que SÍ esta lavando dinero. &#10003; Perfecto.</li>
+                <li><strong>FP:</strong> El sistema alerta sobre una cuenta <em>inocente</em>. &#10007; Un analista pierde horas investigando nada (costo operativo).</li>
+                <li><strong>FN:</strong> El sistema NO alerta sobre una cuenta que SÍ lava dinero. &#10007; <strong>Este es el peor error</strong> &mdash; el criminal escapa y hay riesgo regulatorio.</li>
+                <li><strong>TN:</strong> El sistema no alerta sobre una cuenta limpia. &#10003; Correcto, no hay accion necesaria.</li>
+            </ul>
+        </div>
+
+        <!-- ===== ACCURACY ===== -->
+        <h3>Accuracy (Exactitud)</h3>
+
+        <div class="flow-diagram" style="text-align: center;">
+            <div class="flow-step blue" style="display:inline-block; font-size: 1.2em; padding: 15px 25px;">
+                Accuracy = (TP + TN) / (TP + TN + FP + FN)
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h4>&#128161; En palabras simples</h4>
+            <p><strong>De todas las predicciones que hice, cuantas acerte?</strong> Es la metrica mas intuitiva, pero tambien la mas enganosa en datasets desbalanceados.</p>
+        </div>
+
+        <div class="danger-box">
+            <h4>&#9888; La Trampa del Accuracy en AML</h4>
+            <p>Imagina 10,000 transacciones: <strong>9,950 legítimas</strong> y <strong>50 fraudulentas</strong>. Un modelo "tonto" que siempre diga "legítima" tendría:</p>
+            <p style="text-align:center; font-size:1.3em; margin: 10px 0;"><strong>Accuracy = 9,950 / 10,000 = 99.5%</strong></p>
+            <p>Suena genial? <strong>Pero no detectó NINGÚN fraude.</strong> El accuracy es inutil cuando las clases estan muy desbalanceadas. Por eso necesitamos precision y recall.</p>
+        </div>
+
+        <!-- ===== PRECISION ===== -->
+        <h3>Precision (Valor Predictivo Positivo)</h3>
+
+        <div class="flow-diagram" style="text-align: center;">
+            <div class="flow-step green" style="display:inline-block; font-size: 1.2em; padding: 15px 25px;">
+                Precision = TP / (TP + FP)
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h4>&#128161; En palabras simples</h4>
+            <p><strong>De todas las alertas que generé, cuantas eran fraude REAL?</strong></p>
+            <p>Precision alta = pocas falsas alarmas. Si tu equipo AML tiene <strong>recursos limitados</strong> para investigar alertas, quieres precision alta para no desperdiciar tiempo en falsos positivos.</p>
+        </div>
+
+        <div class="highlight">
+            <h4>Ejemplo concreto</h4>
+            <p>Tu modelo genera <strong>100 alertas</strong>. De esas 100, <strong>80 resultan ser fraude real</strong> (TP = 80) y <strong>20 eran cuentas limpias</strong> (FP = 20).</p>
+            <p style="text-align:center; font-size:1.2em; margin-top:8px;"><strong>Precision = 80 / (80 + 20) = 80%</strong></p>
+            <p>Tu equipo sabe que <strong>4 de cada 5 alertas</strong> valen la pena investigar. Bastante eficiente.</p>
+        </div>
+
+        <!-- ===== RECALL ===== -->
+        <h3>Recall (Sensibilidad / Tasa de Deteccion)</h3>
+
+        <div class="flow-diagram" style="text-align: center;">
+            <div class="flow-step orange" style="display:inline-block; font-size: 1.2em; padding: 15px 25px;">
+                Recall = TP / (TP + FN)
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h4>&#128161; En palabras simples</h4>
+            <p><strong>De todos los fraudes REALES que existían, cuantos logre detectar?</strong></p>
+            <p>Recall alto = pocos fraudes se escapan. En AML, los <strong>reguladores</strong> (CNBV, FinCEN, FCA) se preocupan mucho por el recall: no quieren que ningun caso de lavado pase desapercibido.</p>
+        </div>
+
+        <div class="highlight">
+            <h4>Ejemplo concreto</h4>
+            <p>En tu base hay <strong>50 cuentas</strong> que realmente lavan dinero. Tu modelo detecta <strong>40 de ellas</strong> (TP = 40) pero <strong>10 se le escapan</strong> (FN = 10).</p>
+            <p style="text-align:center; font-size:1.2em; margin-top:8px;"><strong>Recall = 40 / (40 + 10) = 80%</strong></p>
+            <p><strong>10 criminales escaparon.</strong> Si el regulador descubre esos 10, el banco enfrenta multas millonarias.</p>
+        </div>
+
+        <!-- ===== PRECISION vs RECALL TRADEOFF ===== -->
+        <h3>El Dilema: Precision vs Recall</h3>
+
+        <div class="concepts-grid">
+            <div class="concept-card" style="cursor:default; background: linear-gradient(135deg, #2563eb, #3b82f6);">
+                <h4>Alta Precision, Bajo Recall</h4>
+                <p>"Solo alerto cuando estoy MUY seguro"<br><br>
+                Pocas alertas, pero casi todas son fraude real.<br>
+                <strong>Problema:</strong> muchos fraudes se escapan (FN alto).<br>
+                <strong>Util cuando:</strong> investigar es muy caro.</p>
+            </div>
+            <div class="concept-card" style="cursor:default; background: linear-gradient(135deg, #dc3545, #e74c3c);">
+                <h4>Alto Recall, Baja Precision</h4>
+                <p>"Alerto ante la minima sospecha"<br><br>
+                Casi ningun fraude se escapa.<br>
+                <strong>Problema:</strong> demasiadas falsas alarmas (FP alto).<br>
+                <strong>Util cuando:</strong> el costo de no detectar es altísimo (AML).</p>
+            </div>
+        </div>
+
+        <div class="danger-box">
+            <h4>&#128680; En AML: Recall es rey</h4>
+            <p>Los reguladores prefieren <strong>1,000 falsas alarmas</strong> antes que <strong>1 caso de lavado no detectado</strong>. Por eso los sistemas AML en produccion suelen tener <strong>recall &gt; 95%</strong> aunque la precision sea mas baja (30-50%). El costo de un falso negativo (multa regulatoria, facilitacion de crimen) supera enormemente al de un falso positivo (analista investiga y descarta).</p>
+        </div>
+
+        <!-- ===== F1 SCORE ===== -->
+        <h3>F1 Score: El Balance Perfecto</h3>
+
+        <div class="flow-diagram" style="text-align: center;">
+            <div class="flow-step pink" style="display:inline-block; font-size: 1.2em; padding: 15px 25px;">
+                F1 = 2 &times; (Precision &times; Recall) / (Precision + Recall)
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h4>&#128161; En palabras simples</h4>
+            <p>El F1 es la <strong>media armonica</strong> de precision y recall. No es un simple promedio: <strong>penaliza fuertemente</strong> cuando una de las dos metricas es baja.</p>
+        </div>
+
+        <div class="highlight">
+            <h4>Por que media armonica y no promedio simple?</h4>
+            <p>Supongamos Precision = 100% y Recall = 1%:</p>
+            <ul>
+                <li><strong>Promedio simple:</strong> (100 + 1) / 2 = <strong>50.5%</strong> &mdash; suena razonable (pero el modelo es inutil!)</li>
+                <li><strong>Media armonica (F1):</strong> 2 &times; (1.0 &times; 0.01) / (1.0 + 0.01) = <strong>1.98%</strong> &mdash; refleja que el modelo es terrible</li>
+            </ul>
+            <p>La media armonica <strong>castiga el desequilibrio</strong>. Para tener F1 alto, AMBAS metricas deben ser altas.</p>
+        </div>
+
+        <div class="success-box">
+            <h4>Nuestros Resultados del Capítulo</h4>
+            <p>Ahora puedes interpretar la tabla anterior con otros ojos:</p>
+            <ul>
+                <li><strong>GNN 4 capas + N2V: F1 = 89.29%</strong> &rarr; Tanto precision como recall son altos y balanceados</li>
+                <li><strong>Random Forest + N2V: F1 = 80.72%</strong> pero <strong>Accuracy = 84.52%</strong> &rarr; Accuracy mayor pero F1 menor sugiere <em>desequilibrio</em> entre precision y recall</li>
+                <li><strong>El best model por F1 ≠ best model por Accuracy</strong> (RF con N2V: Acc 84.52% > RF con GNN emb: Acc 83.33%, pero F1 es al reves)</li>
+            </ul>
+        </div>
+
+        <!-- ===== MACRO vs MICRO vs WEIGHTED ===== -->
+        <h3>Multi-clase: Macro, Micro y Weighted Average</h3>
+
+        <div class="info-box">
+            <h4>&#128161; Problema con 3+ clases</h4>
+            <p>En nuestro dataset tenemos <strong>3 clases</strong> (liberal, conservative, neutral). El F1 "basico" es para clasificacion binaria. Para multi-clase, debemos elegir <strong>como promediar</strong> el F1 de cada clase.</p>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table class="comparison-table">
+                <tr>
+                    <th>Metodo</th>
+                    <th>Formula</th>
+                    <th>Cuando usarlo</th>
+                </tr>
+                <tr>
+                    <td><strong>Macro</strong></td>
+                    <td>Promedio simple del F1 de cada clase</td>
+                    <td>Cuando <strong>todas las clases importan igual</strong>, sin importar cuantas muestras tenga cada una</td>
+                </tr>
+                <tr>
+                    <td><strong>Micro</strong></td>
+                    <td>Suma global de TP, FP, FN y calcula F1</td>
+                    <td>Cuando quieres una <strong>metrica global</strong> (coincide con accuracy en multi-clase)</td>
+                </tr>
+                <tr style="background: var(--dc-green-light);">
+                    <td><strong>Weighted</strong></td>
+                    <td>Promedio ponderado por #muestras por clase</td>
+                    <td><strong>La mas comun en la practica</strong> &mdash; clases con mas muestras pesan mas</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="highlight">
+            <h4>Ejemplo con Political Books</h4>
+            <p>Si el test set tiene: <strong>35 conservative, 30 liberal, 19 neutral</strong>:</p>
+            <ul>
+                <li><strong>Macro F1:</strong> (F1_conservative + F1_liberal + F1_neutral) / 3 &mdash; los 19 neutrales pesan igual que los 35 conservative</li>
+                <li><strong>Weighted F1:</strong> F1_conservative&times;(35/84) + F1_liberal&times;(30/84) + F1_neutral&times;(19/84) &mdash; proporcional al tamano de cada clase</li>
+            </ul>
+            <p>En el capitulo usamos <code>weighted</code> porque el dataset esta ligeramente desbalanceado.</p>
+        </div>
+
+        <!-- ===== SUPPORT ===== -->
+        <h3>Support: Cuantas Muestras por Clase?</h3>
+
+        <div class="info-box">
+            <h4>&#128161; En palabras simples</h4>
+            <p><strong>Support</strong> es simplemente el <strong>numero de muestras reales</strong> de cada clase en el conjunto de test. No es una metrica de rendimiento, pero es <strong>crucial</strong> para interpretar las demas metricas.</p>
+        </div>
+
+        <div class="danger-box">
+            <h4>&#9888; Por que importa</h4>
+            <p>Si una clase tiene <strong>support = 2</strong> (solo 2 muestras de test), un F1 de 100% o 0% no es estadísticamente significativo. Siempre revisa el support antes de confiar en las metricas por clase.</p>
+        </div>
+
+        <!-- ===== CLASSIFICATION REPORT ===== -->
+        <h3>El classification_report de sklearn</h3>
+
+        <div class="graph-card" style="padding: 20px;">
+            <h4 style="text-align:center; margin-bottom:15px;">Salida tipica de classification_report</h4>
+<pre style="background: var(--dc-bg-lighter); padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.9em; line-height: 1.6; overflow-x: auto; color: var(--dc-white);">
+              precision    recall  f1-score   support
+
+ conservative       0.91      0.91      0.91        35
+      liberal       0.90      0.93      0.92        30
+      neutral       0.79      0.74      0.76        19
+
+     accuracy                           0.88        84
+    macro avg       0.87      0.86      0.86        84
+ weighted avg       0.88      0.88      0.88        84
+</pre>
+            <p style="text-align:center; font-size:0.85em; color: var(--dc-gray-500); margin-top:10px;">Ejemplo ilustrativo basado en los resultados del capítulo (GNN 4 capas + N2V)</p>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                Como leer este reporte linea por linea
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <div class="info-box">
+                    <p><strong>Linea 1 (conservative):</strong> Precision 91% = de los que el modelo dice "conservative", 91% lo son. Recall 91% = de los conservative reales, detecta 91%. F1 = 91%. Support = 35 muestras.</p>
+                    <p><strong>Linea 3 (neutral):</strong> F1 = 76% &mdash; la clase mas dificil. Tiene menos support (19) y los neutrales son libros que no tienen posicion poliatica clara, difíciles de clasificar.</p>
+                    <p><strong>accuracy:</strong> 88% global (equivale a micro-average en multi-clase).</p>
+                    <p><strong>macro avg:</strong> Promedio sin ponderar &rarr; 86% (los 19 neutrales pesan igual que los 35 conservative).</p>
+                    <p><strong>weighted avg:</strong> Promedio ponderado &rarr; 88% (classes mas grandes pesan mas).</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== RESUMEN VISUAL ===== -->
+        <h3>Resumen Visual de Metricas</h3>
+
+        <div class="concepts-grid">
+            <div class="concept-card" style="cursor:default;">
+                <h4>Accuracy</h4>
+                <p><strong>(TP+TN) / Total</strong><br><br>
+                &#10003; Intuitiva<br>
+                &#10007; Enganosa con clases desbalanceadas<br>
+                &#128161; Usala como referencia, no como metrica unica</p>
+            </div>
+            <div class="concept-card" style="cursor:default; background: linear-gradient(135deg, #28a745, #20c997);">
+                <h4>Precision</h4>
+                <p><strong>TP / (TP+FP)</strong><br><br>
+                "De mis alertas, cuantas son reales?"<br>
+                &#128161; Prioriza cuando investigar es caro</p>
+            </div>
+            <div class="concept-card" style="cursor:default; background: linear-gradient(135deg, #dc3545, #e74c3c);">
+                <h4>Recall</h4>
+                <p><strong>TP / (TP+FN)</strong><br><br>
+                "De los fraudes reales, cuantos detecte?"<br>
+                &#128161; Prioriza en AML y compliance</p>
+            </div>
+            <div class="concept-card" style="cursor:default; background: linear-gradient(135deg, #6d28d9, #8b5cf6);">
+                <h4>F1 Score</h4>
+                <p><strong>2&times;P&times;R / (P+R)</strong><br><br>
+                Balance entre precision y recall<br>
+                &#128161; Metrica principal en el capitulo</p>
+            </div>
+        </div>
+
+        <div class="success-box">
+            <h4>Regla de Oro para el Examen y la Practica</h4>
+            <table class="comparison-table" style="margin-top:10px;">
+                <tr><th>Pregunta</th><th>Metrica Clave</th></tr>
+                <tr><td>Es bueno mi modelo en general?</td><td>Accuracy (si clases balanceadas) o Weighted F1 (si no)</td></tr>
+                <tr><td>Cuantas de mis alertas son reales?</td><td><strong>Precision</strong></td></tr>
+                <tr><td>Cuantos fraudes se me escapan?</td><td><strong>Recall</strong></td></tr>
+                <tr><td>Tengo buen balance deteccion/falsas alarmas?</td><td><strong>F1 Score</strong></td></tr>
+                <tr><td>Que clase le cuesta mas al modelo?</td><td>F1 por clase + <strong>Support</strong></td></tr>
+                <tr><td>Todas las clases importan igual?</td><td><strong>Macro</strong> avg</td></tr>
+                <tr><td>Quiero ponderar por tamano de clase?</td><td><strong>Weighted</strong> avg</td></tr>
+            </table>
+        </div>
+
+        <div class="checkpoint" id="cp-metricas">
+            <h4>&#9881; Checkpoint &mdash; Desbloquea la siguiente seccion</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">En un sistema AML donde no detectar un fraude (FN) tiene consecuencias regulatorias severas, que metrica debes priorizar?</p>
+            <div class="cp-option" onclick="checkCP('metricas',this,false)">Accuracy (que tan correcto es en general)</div>
+            <div class="cp-option" onclick="checkCP('metricas',this,false)">Precision (que tan confiables son mis alertas)</div>
+            <div class="cp-option" onclick="checkCP('metricas',this,true)">Recall (que tan pocos fraudes se me escapan)</div>
+            <div class="cp-feedback" id="cpFb-metricas"></div>
+        </div>
+    </div>
+
     <!-- ====================== SECCION: SEMI-SUPERVISED ====================== -->
     <div id="semi_supervised" class="section">
         <h2>Aprendizaje Semi-Supervisado</h2>
@@ -757,7 +1250,10 @@
             <p>En la vida real, solo tienes unas <strong>pocas cuentas confirmadas como sospechosas</strong> (por investigaciones anteriores, SARs). Pero tienes <strong>millones de cuentas sin etiquetar</strong>. El aprendizaje semi-supervisado es perfecto para este escenario.</p>
         </div>
 
-        <h3>Comparacion de Modelos (4 configuraciones)</h3>
+        <h3>Comparacion de Modelos (6 configuraciones)</h3>
+        <div class="info-box" style="margin-bottom:15px;">
+            <p>El capitulo prueba <strong>6 combinaciones</strong> de modelos y features con el Political Books dataset (20% etiquetados, 80% a predecir). Observa como el <strong>tipo de features</strong> y la <strong>profundidad del modelo</strong> afectan los resultados:</p>
+        </div>
         <div style="overflow-x: auto;">
             <table class="comparison-table">
                 <tr><th>Modelo</th><th>Input</th><th>Accuracy</th><th>F1 Score</th></tr>
@@ -772,7 +1268,24 @@
 
         <div class="graph-card">
             <h4 style="text-align:center">Comparacion Visual de Rendimiento</h4>
+            <p style="text-align:center; font-size:0.85em; color: var(--dc-gray-500); margin-bottom:8px;">Barras comparando Accuracy (azul) y F1 Score (verde) de las 6 configuraciones. Observa como N2V + GNN 4 capas domina ambas metricas.</p>
             <canvas id="canvasResults" width="700" height="350"></canvas>
+        </div>
+
+        <div class="graph-card">
+            <h4 style="text-align:center">&#127918; Playground: Compara Configuraciones</h4>
+            <p style="text-align:center; font-size:0.85em; color: var(--dc-gray-500); margin-bottom:10px;">Selecciona modelo, features y capas para comparar el rendimiento de cada configuracion</p>
+            <div class="btn-group" style="margin-bottom:10px;">
+                <button class="btn btn-primary" onclick="pgSetModel('RF')" style="font-size:0.85em;">Random Forest</button>
+                <button class="btn btn-primary" onclick="pgSetModel('GNN')" style="font-size:0.85em;">GNN</button>
+                <span style="color:var(--dc-gray-500); margin:0 8px;">|</span>
+                <button class="btn btn-warning" onclick="pgSetN2V(false)" style="font-size:0.85em;">Sin N2V</button>
+                <button class="btn btn-warning" onclick="pgSetN2V(true)" style="font-size:0.85em;">Con N2V</button>
+                <span style="color:var(--dc-gray-500); margin:0 8px;">|</span>
+                <button class="btn btn-success" onclick="pgSetLayers(2)" style="font-size:0.85em;">2 Capas</button>
+                <button class="btn btn-success" onclick="pgSetLayers(4)" style="font-size:0.85em;">4 Capas</button>
+            </div>
+            <canvas id="canvasPlayground" width="700" height="300"></canvas>
         </div>
 
         <h3>Insights Clave</h3>
@@ -786,8 +1299,8 @@
                 <p>En general, los modelos GNN end-to-end <strong>superan al Random Forest</strong>, especialmente en F1 score (balance entre precision y recall).</p>
             </div>
             <div class="concept-card" style="cursor:default; background: linear-gradient(135deg, #fd7e14, #ffc107);">
-                <h4>Mas Capas = Mejor</h4>
-                <p>El modelo de 4 capas supera al de 2 capas. Mas capas = mas hops de message passing = captura relaciones mas lejanas.</p>
+                <h4>Mas Capas = Mejor (hasta cierto punto)</h4>
+                <p>El modelo de 4 capas supera al de 2 capas aqui. Mas capas = mas hops = relaciones mas lejanas. <strong>Pero cuidado:</strong> con demasiadas capas ocurre <em>over-smoothing</em> (los embeddings de todos los nodos convergen). En este dataset funciona porque es pequeno (105 nodos).</p>
             </div>
         </div>
 
@@ -826,6 +1339,11 @@
     <!-- ====================== SECCION: UNDER THE HOOD ====================== -->
     <div id="under_hood" class="section">
         <h2>Under the Hood &mdash; Teoria Profunda</h2>
+
+        <div class="purple-box">
+            <h4>&#128204; De los resultados a la teoria</h4>
+            <p>Ya vimos <em>que</em> funciona (N2V + GNN = 89% F1) y <em>cuando</em> usar cada metodo. Ahora entendamos <em>por que</em>. Esta seccion profundiza en los fundamentos teoricos: las familias de representaciones, la diferencia transductivo/inductivo que determina la escalabilidad, y el mecanismo de message passing que hace posible todo lo anterior.</p>
+        </div>
 
         <h3>Representaciones y Embeddings</h3>
         <div class="accordion-item">
@@ -880,6 +1398,10 @@
                     </ul>
                     <p><strong>Ejemplos:</strong> GraphSAGE, GCNs, GATs</p>
                 </div>
+                <div class="info-box">
+                    <h4>&#9888; Matiz importante sobre GAT</h4>
+                    <p>GAT es <strong>inductivo en teoria</strong> (aprende una funcion, no memoriza embeddings). Sin embargo, en la practica necesita el <strong>grafo completo en memoria</strong> para entrenar y hacer inferencia. Para AML con millones de transacciones, esto es una limitacion real. <strong>GraphSAGE</strong> resuelve esto muestreando subgrafos.</p>
+                </div>
             </div>
         </div>
 
@@ -919,24 +1441,27 @@
         </div>
 
         <h3>Message Passing como Deep Learning</h3>
-        <div class="accordion-item">
-            <div class="accordion-header" onclick="toggleAccordion(this)">
-                Anatomia de una capa de Message Passing
-                <span class="accordion-icon">&#9660;</span>
-            </div>
-            <div class="accordion-body">
-                <div class="flow-diagram">
-                    <div class="flow-step">AGGREGATE<br><small>Recoger mensajes de vecinos a 1 hop</small></div>
-                    <div class="flow-arrow">&#8595;</div>
-                    <div class="flow-step orange">TRANSFORM<br><small>Aplicar transformacion no-lineal (neural network)</small></div>
-                    <div class="flow-arrow">&#8595;</div>
-                    <div class="flow-step green">UPDATE<br><small>Actualizar el embedding del nodo</small></div>
-                </div>
-                <div class="highlight">
-                    <h4>Numero de capas = Numero de hops</h4>
-                    <p>Cada capa de message passing recoge info de vecinos a 1 hop. Con 3 capas, cada nodo "ve" hasta 3 hops de distancia. El alcance crece <strong>exponencialmente</strong> (principio de "6 grados de separacion").</p>
-                </div>
-            </div>
+        <div class="flow-diagram">
+            <div class="flow-step">AGGREGATE<br><small>Recoger mensajes de vecinos a 1 hop</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step orange">TRANSFORM<br><small>Aplicar transformacion no-lineal (neural network)</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step green">UPDATE<br><small>Actualizar el embedding del nodo</small></div>
+        </div>
+        <div class="highlight">
+            <h4>Numero de capas = Numero de hops</h4>
+            <p>Cada capa de message passing recoge info de vecinos a 1 hop. Con 3 capas, cada nodo "ve" hasta 3 hops de distancia. El alcance crece <strong>exponencialmente</strong> (principio de "6 grados de separacion").</p>
+        </div>
+        <div class="purple-box" style="margin-top:15px;">
+            <h4>&#128279; Conexion con GAT: La Agregacion es el Paso Clave</h4>
+            <p>El paso <strong>AGGREGATE</strong> es donde las arquitecturas difieren:</p>
+            <table class="comparison-table" style="margin:12px 0;">
+                <tr><th>Arquitectura</th><th>Como agrega de vecinos</th></tr>
+                <tr><td><strong>GCN</strong></td><td>Promedio ponderado por grado: &Sigma; (1/&radic;d<sub>i</sub>d<sub>j</sub>) &middot; h'<sub>j</sub> (pesos <strong>fijos</strong>)</td></tr>
+                <tr><td><strong>GAT</strong></td><td>Suma ponderada por atencion: &Sigma; &alpha;<sub>ij</sub> &middot; h'<sub>j</sub> (pesos <strong>aprendidos</strong>)</td></tr>
+                <tr><td><strong>GraphSAGE</strong></td><td>Mean/LSTM/Pool sobre vecinos <strong>muestreados</strong> (no todos)</td></tr>
+            </table>
+            <p>Todas siguen el patron AGGREGATE &rarr; TRANSFORM &rarr; UPDATE, pero con diferente estrategia de agregacion. GAT usa atencion para decidir <em>cuanto</em> pesar a cada vecino; GraphSAGE ademas muestrea para escalar.</p>
         </div>
 
         <div class="accordion-item">
@@ -991,6 +1516,11 @@
     <div id="aml" class="section">
         <h2>Embeddings en AML &amp; Banca</h2>
 
+        <div class="purple-box">
+            <h4>&#127919; Momento de aplicar todo lo aprendido</h4>
+            <p>Ya dominamos los metodos: <strong>N2V</strong> (rapido, transductivo, sin features), <strong>GCN</strong> (inductivo, pesos fijos, features + topologia), <strong>GAT</strong> (atencion aprendida, interpretable, pero no escala). Ahora la pregunta clave: <em>cual elegimos para cada escenario real de AML?</em></p>
+        </div>
+
         <div class="danger-box">
             <h4>Por que los embeddings son cruciales para AML?</h4>
             <p>Los sistemas AML tradicionales usan <strong>reglas fijas</strong> (ej: "alerta si transaccion > $10,000"). Los embeddings permiten capturar <strong>patrones complejos de comportamiento</strong> que las reglas no pueden detectar: cadenas de mulas, comunidades sospechosas, cuentas puente ocultas.</p>
@@ -1022,21 +1552,51 @@
             </div>
         </div>
 
+        <h3>&#127919; Cheat Sheet: Que Metodo Elegir para Cada Escenario AML</h3>
+        <div style="overflow-x: auto;">
+            <table class="comparison-table">
+                <tr><th>Escenario AML</th><th>Mejor Metodo</th><th>Razon</th></tr>
+                <tr><td>Investigacion puntual de una red sospechosa</td><td><strong>N2V</strong></td><td>Red estatica, exploracion rapida</td></tr>
+                <tr><td>Monitoreo continuo (grafo mediano, &lt;100K nodos)</td><td><strong>GAT</strong></td><td>Atencion aprendida + interpretabilidad para el regulador</td></tr>
+                <tr><td>Analisis historico de un caso cerrado</td><td><strong>N2V</strong></td><td>Grafo fijo, datos completos</td></tr>
+                <tr><td>Sistema de alertas en tiempo real</td><td><strong>GNN/GAT</strong></td><td>Debe procesar datos nuevos sin reentrenar</td></tr>
+                <tr><td>Primer analisis exploratorio</td><td><strong>N2V</strong></td><td>Rapido, sin features requeridos</td></tr>
+                <tr><td>Modelo en produccion (grafo grande, &gt;1M nodos)</td><td><strong style="color:#fbbf24;">GraphSAGE</strong></td><td>Mini-batching, escala a millones de nodos</td></tr>
+                <tr><td>Auditoria regulatoria (explicar decisiones)</td><td><strong>GAT</strong></td><td>Los &alpha;<sub>ij</sub> muestran exactamente que vecinos influyeron</td></tr>
+                <tr><td>Red de transacciones bancarias masiva (50M+ nodos)</td><td><strong style="color:#fbbf24;">GraphSAGE</strong></td><td>Unico metodo que puede muestrear subgrafos sin cargar todo en RAM</td></tr>
+            </table>
+        </div>
+
         <div class="accordion-item">
             <div class="accordion-header" onclick="toggleAccordion(this)">
-                N2V vs GNN para AML: Cual elegir?
+                &#128270; GAT para Auditoria: Por que los reguladores lo prefieren
                 <span class="accordion-icon">&#9660;</span>
             </div>
             <div class="accordion-body">
-                <table class="comparison-table">
-                    <tr><th>Escenario AML</th><th>Mejor Metodo</th><th>Razon</th></tr>
-                    <tr><td>Investigacion puntual de una red sospechosa</td><td><strong>N2V</strong></td><td>Red estatica, exploracion rapida</td></tr>
-                    <tr><td>Monitoreo continuo de transacciones</td><td><strong>GNN</strong></td><td>Cuentas nuevas diariamente, necesita generalizar</td></tr>
-                    <tr><td>Analisis historico de un caso cerrado</td><td><strong>N2V</strong></td><td>Grafo fijo, datos completos</td></tr>
-                    <tr><td>Sistema de alertas en tiempo real</td><td><strong>GNN</strong></td><td>Debe procesar datos nuevos sin reentrenar</td></tr>
-                    <tr><td>Primer analisis exploratorio</td><td><strong>N2V</strong></td><td>Rapido, sin features requeridos</td></tr>
-                    <tr><td>Modelo en produccion</td><td><strong>GNN</strong></td><td>Escalable, adaptable, end-to-end</td></tr>
-                </table>
+                <div class="success-box">
+                    <h4>Explicabilidad con coeficientes de atencion</h4>
+                    <p>Cuando un modelo GAT marca una cuenta como sospechosa, puedes mostrar al regulador:</p>
+                    <ul>
+                        <li><em>"La cabeza 1 asigno &alpha; = 0.70 al nodo 3 (cuenta en lista de sanciones)"</em></li>
+                        <li><em>"La cabeza 4 detecto patron inusual: atencion distribuida uniformemente entre 5 cuentas shell"</em></li>
+                    </ul>
+                    <p>Con GCN o N2V no puedes dar este nivel de detalle. Los <strong>&alpha;<sub>ij</sub> son la ventana de cristal</strong> del modelo.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                &#128640; GraphSAGE: Cuando el Grafo no Cabe en Memoria
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <div class="info-box">
+                    <h4>El problema de escala</h4>
+                    <p>Un banco grande tiene ~50 millones de cuentas y miles de millones de transacciones. GCN y GAT necesitan el <strong>grafo completo en GPU</strong>. Eso es imposible.</p>
+                    <p style="margin-top:10px;"><strong>GraphSAGE</strong> resuelve esto con <strong>NeighborLoader</strong>: en vez de procesar todo el grafo, muestrea K vecinos por nodo y entrena en mini-batches, igual que las redes neuronales clasicas.</p>
+                    <p style="margin-top:10px;color:#fbbf24;"><strong>Lo veremos en detalle en el notebook 3_GraphSAGE.ipynb</strong></p>
+                </div>
             </div>
         </div>
 
@@ -1049,14 +1609,19 @@
                 <div class="purple-box">
                     <h4>N2V = Fotografia</h4>
                     <p>Captura un <strong>instante congelado</strong> de tu red financiera. Perfecto para analizar "como se veia la red el dia X". Pero si la red cambia, necesitas tomar otra foto.</p>
-                    <h4 style="margin-top:15px;">GNN = Camara de Video</h4>
-                    <p>Se <strong>adapta en tiempo real</strong>. Puede procesar la red financiera a medida que evoluciona: nuevas cuentas, nuevas transacciones, nuevos patrones. No necesitas "tomar otra foto".</p>
+                    <h4 style="margin-top:15px;">GCN = Camara de Video (fija)</h4>
+                    <p>Se <strong>adapta en tiempo real</strong>. Pero filma con un angulo fijo &mdash; todos los vecinos reciben el mismo peso. No distingue que conexiones importan mas.</p>
+                    <h4 style="margin-top:15px;">GAT = Camara de Video (inteligente, con zoom)</h4>
+                    <p>Filma en tiempo real Y puede hacer <strong>zoom en lo importante</strong>. Cada cabeza de atencion es como un camarografo diferente enfocando distintos aspectos. <strong>Ideal para explicar al regulador que miro el modelo.</strong></p>
+                    <h4 style="margin-top:15px;">GraphSAGE = Dron con multiples camaras</h4>
+                    <p>No necesita filmar <strong>toda la ciudad a la vez</strong>. Vuela sobre zonas especificas (muestreo de vecinos), captura lo necesario y construye el panorama completo desde fragmentos. <strong>Escala a ciudades enormes.</strong></p>
                 </div>
             </div>
         </div>
 
         <div class="graph-card">
-            <h4 style="text-align:center">Simulacion: Embeddings AML</h4>
+            <h4 style="text-align:center">Simulacion Interactiva: Red de Transacciones AML</h4>
+            <p style="text-align:center; font-size:0.85em; color: var(--dc-gray-500); margin-bottom:8px;">&#128433; Pasa el mouse sobre una cuenta para ver su tipo, conexiones y embedding. Anima para ver como se agrupan en el embedding space.</p>
             <canvas id="canvasAML" width="700" height="400"></canvas>
             <div class="btn-group">
                 <button class="btn btn-primary" onclick="drawAMLGraph()">Redibujar</button>
@@ -1079,7 +1644,7 @@
     <div id="quiz1" class="section">
         <h2>Quiz Basico &mdash; Fundamentos de Embeddings</h2>
 
-        <div class="score-display">Puntuacion: <span id="score1">0</span> / <span id="total1">12</span></div>
+        <div class="score-display">Puntuacion: <span id="score1">0</span> / <span id="total1">13</span></div>
         <div class="progress-bar"><div class="progress-fill" id="progress1" style="width:0%">0%</div></div>
 
         <div class="quiz-question" data-quiz="1">
@@ -1128,11 +1693,11 @@
         </div>
 
         <div class="quiz-question" data-quiz="1">
-            <h4>6. Que tipo de aprendizaje es Node2Vec?</h4>
-            <div class="option" onclick="checkQ(this,true,1,'Correcto! N2V es transductivo: solo funciona con los nodos que vio durante entrenamiento.')">Transductivo</div>
-            <div class="option" onclick="checkQ(this,false,1,'Inductivo permite generalizar a nodos nuevos. N2V no puede hacer eso.')">Inductivo</div>
-            <div class="option" onclick="checkQ(this,false,1,'Supervisado necesita etiquetas. N2V aprende de la estructura sin etiquetas.')">Supervisado</div>
-            <div class="option" onclick="checkQ(this,false,1,'No supervisado es cercano pero el termino correcto es transductivo.')">No supervisado</div>
+            <h4>6. En cuanto a su capacidad de generalizar a nodos nuevos, como se clasifica Node2Vec?</h4>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! N2V es transductivo: solo funciona con los nodos que vio durante entrenamiento. No generaliza a nodos nuevos.')">Transductivo (no generaliza a nodos nuevos)</div>
+            <div class="option" onclick="checkQ(this,false,1,'Inductivo permite generalizar a nodos nuevos. N2V no puede hacer eso.')">Inductivo (generaliza a nodos nuevos)</div>
+            <div class="option" onclick="checkQ(this,false,1,'Supervisado se refiere al uso de etiquetas, no a la generalizacion. N2V es transductivo.')">Supervisado</div>
+            <div class="option" onclick="checkQ(this,false,1,'N2V SI es no-supervisado (no usa labels), pero eso es un eje diferente. En cuanto a generalizacion, es transductivo.')">No supervisado</div>
             <div class="feedback"></div>
         </div>
 
@@ -1190,10 +1755,19 @@
             <div class="feedback"></div>
         </div>
 
+        <div class="quiz-question" data-quiz="1">
+            <h4>13. Que producen los coeficientes de atencion &alpha;<sub>ij</sub> en GAT?</h4>
+            <div class="option" onclick="checkQ(this,false,1,'Los embeddings son vectores, no escalares. Los alpha son escalares de ponderacion.')">Los embeddings finales de cada nodo</div>
+            <div class="option" onclick="checkQ(this,true,1,'Correcto! Cada alpha es un escalar que indica cuanta atencion (peso) darle a cada vecino en la agregacion.')">Un peso escalar que indica cuanta atencion prestar a cada vecino para la agregacion ponderada</div>
+            <div class="option" onclick="checkQ(this,false,1,'La matriz de adyacencia es fija (estructura del grafo). Los alpha se aprenden durante el entrenamiento.')">Una nueva matriz de adyacencia</div>
+            <div class="option" onclick="checkQ(this,false,1,'Los alpha no son probabilidades de clase, son pesos de atencion entre pares de nodos.')">Las probabilidades de clasificacion de cada nodo</div>
+            <div class="feedback"></div>
+        </div>
+
         <div class="btn-group"><button class="btn btn-danger" onclick="resetQuiz(1)">Reiniciar Quiz</button></div>
         <div class="checkpoint" id="cp-quiz1" style="margin-top:20px;">
             <h4>&#127942; Resultado del Quiz Basico</h4>
-            <p class="cp-subtitle">Necesitas al menos 70% (9 de 12 correctas) para desbloquear el Quiz Avanzado</p>
+            <p class="cp-subtitle">Necesitas al menos 70% (10 de 13 correctas) para desbloquear el Quiz Avanzado</p>
             <div id="quiz1UnlockMsg" style="padding:14px; border-radius:8px; display:none;"></div>
         </div>
     </div>
@@ -1202,7 +1776,7 @@
     <div id="quiz2" class="section">
         <h2>Quiz Avanzado &mdash; Comprension Profunda</h2>
 
-        <div class="score-display">Puntuacion: <span id="score2">0</span> / <span id="total2">10</span></div>
+        <div class="score-display">Puntuacion: <span id="score2">0</span> / <span id="total2">12</span></div>
         <div class="progress-bar"><div class="progress-fill" id="progress2" style="width:0%">0%</div></div>
 
         <div class="quiz-question" data-quiz="2">
@@ -1286,10 +1860,28 @@
             <div class="feedback"></div>
         </div>
 
+        <div class="quiz-question" data-quiz="2">
+            <h4>11. Por que GAT no escala bien a grafos de millones de nodos como redes bancarias?</h4>
+            <div class="option" onclick="checkQ(this,false,2,'GAT si tiene mecanismo de atencion, ese es su punto fuerte.')">Porque no tiene mecanismo de atencion</div>
+            <div class="option" onclick="checkQ(this,false,2,'GAT si puede usar features de nodos, al igual que GCN.')">Porque no puede usar features de nodos</div>
+            <div class="option" onclick="checkQ(this,true,2,'Correcto! GAT necesita el grafo completo en GPU/RAM para calcular atencion entre todos los pares de vecinos. GraphSAGE resuelve esto con muestreo.')">Porque necesita el grafo completo en memoria para calcular la atencion entre todos los pares de vecinos</div>
+            <div class="option" onclick="checkQ(this,false,2,'GAT es inductivo en teoria. El problema es la memoria, no la generalizacion.')">Porque es puramente transductivo y no generaliza</div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-question" data-quiz="2">
+            <h4>12. Para un sistema AML en produccion con 50M+ cuentas, que arquitectura resuelve el problema de escalabilidad?</h4>
+            <div class="option" onclick="checkQ(this,false,2,'N2V no escala bien porque necesita reentrenar para nodos nuevos y es transductivo.')">Node2Vec</div>
+            <div class="option" onclick="checkQ(this,false,2,'GAT necesita el grafo completo en memoria. 50M nodos no caben en GPU.')">GAT (con muchas cabezas de atencion)</div>
+            <div class="option" onclick="checkQ(this,true,2,'Correcto! GraphSAGE usa NeighborLoader para muestrear subgrafos y entrenar en mini-batches, sin necesitar el grafo completo en memoria.')">GraphSAGE (con muestreo de vecinos via NeighborLoader)</div>
+            <div class="option" onclick="checkQ(this,false,2,'GCN tambien necesita el grafo completo. El problema es la memoria, no la complejidad del modelo.')">GCN (mas simple = mas rapido)</div>
+            <div class="feedback"></div>
+        </div>
+
         <div class="btn-group"><button class="btn btn-danger" onclick="resetQuiz(2)">Reiniciar Quiz</button></div>
         <div class="checkpoint" id="cp-quiz2" style="margin-top:20px;">
             <h4>&#127942; Resultado del Quiz Avanzado</h4>
-            <p class="cp-subtitle">Necesitas al menos 70% (7 de 10 correctas) para desbloquear Flashcards</p>
+            <p class="cp-subtitle">Necesitas al menos 70% (9 de 12 correctas) para desbloquear Flashcards</p>
             <div id="quiz2UnlockMsg" style="padding:14px; border-radius:8px; display:none;"></div>
         </div>
     </div>
@@ -1313,6 +1905,11 @@
     <!-- ====================== SECCION: EJERCICIOS ====================== -->
     <div id="ejercicios" class="section">
         <h2>Ejercicios Practicos</h2>
+
+        <div class="success-box">
+            <h4>&#128161; Enfoque de estos ejercicios</h4>
+            <p>Este capitulo es <strong>conceptual</strong>: los ejercicios estan disenados para reforzar tu <em>comprension</em>, no para que programes desde cero. El codigo que aparece es para que <strong>leas, entiendas y experimentes</strong> si quieres. La implementacion completa la haremos en el <strong>notebook del Capitulo 3 (GraphSAGE)</strong>.</p>
+        </div>
 
         <div class="info-box">
             <h4>&#128218; Recursos para los ejercicios</h4>
@@ -1352,9 +1949,9 @@
             <div id="codeExercise"></div>
         </div>
 
-        <h3>Ejercicio 3: Crear Embeddings N2V (Hands-On)</h3>
+        <h3>Ejercicio 3: Lee y Entiende el Pipeline N2V</h3>
         <div class="graph-card">
-            <p><strong>Objetivo:</strong> Reproducir el Listing 2.1 del libro con el dataset <code>polbooks.gml</code>.</p>
+            <p><strong>Objetivo:</strong> Lee el codigo del Listing 2.1 del libro y responde las preguntas de reflexion. Si quieres, ejecutalo con <code>polbooks.gml</code>.</p>
             <div class="graph-card" style="background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 0.85em; padding: 16px; line-height: 1.6; margin: 12px 0;">
                 <span style="color:#6a9955;"># pip install node2vec networkx umap-learn matplotlib</span><br><br>
                 <span style="color:#569cd6;">import</span> networkx <span style="color:#569cd6;">as</span> nx<br>
@@ -1404,9 +2001,9 @@
         <h3>Ejercicio 6: Verdadero o Falso</h3>
         <div class="graph-card" id="tfExercise"></div>
 
-        <h3>Ejercicio 7: Construir la SimpleGNN (Avanzado)</h3>
+        <h3>Ejercicio 7: Lee y Analiza la SimpleGNN (Avanzado)</h3>
         <div class="graph-card">
-            <p><strong>Objetivo:</strong> Reproducir el Listing 2.4 del libro &mdash; crear una GNN que genere embeddings.</p>
+            <p><strong>Objetivo:</strong> Lee el Listing 2.4 del libro, identifica cada componente del diagrama de arquitectura, y responde los retos.</p>
             <div class="graph-card" style="background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 0.85em; padding: 16px; line-height: 1.6; margin: 12px 0;">
                 <span style="color:#6a9955;"># pip install torch torch-geometric</span><br><br>
                 <span style="color:#569cd6;">import</span> torch<br>
@@ -1466,20 +2063,22 @@
         <div class="stat-cards">
             <div class="stat-card"><div class="number" id="finalScore1">-</div><div class="label">Quiz Basico</div></div>
             <div class="stat-card"><div class="number" id="finalScore2">-</div><div class="label">Quiz Avanzado</div></div>
-            <div class="stat-card"><div class="number">70</div><div class="label">Paginas estudiadas</div></div>
-            <div class="stat-card"><div class="number">89%</div><div class="label">Mejor F1 Score</div></div>
+            <div class="stat-card"><div class="number">3</div><div class="label">Metodos dominados</div></div>
+            <div class="stat-card"><div class="number">&#10003;</div><div class="label">Listo para GraphSAGE</div></div>
         </div>
 
         <div class="highlight">
-            <h3>Los 7 Puntos Mas Importantes</h3>
+            <h3>Los 9 Puntos Mas Importantes</h3>
             <ol style="line-height: 2.2; font-size: 1.05em;">
                 <li><strong>Embeddings</strong> transforman grafos complejos en vectores numericos de baja dimension, preservando estructura y relaciones.</li>
                 <li><strong>Node2Vec (N2V)</strong> crea embeddings via random walks. Es transductivo: no generaliza a nodos nuevos.</li>
                 <li><strong>GNN embeddings</strong> son inductivos: generalizan a datos nuevos integrando features + topologia.</li>
+                <li><strong>GAT</strong> mejora la agregacion con coeficientes de atencion &alpha;<sub>ij</sub> aprendidos y K cabezas paralelas. Clave para interpretabilidad y auditoria regulatoria.</li>
                 <li><strong>Semi-supervised learning</strong> es ideal para AML: pocas cuentas etiquetadas, muchas sin etiquetar.</li>
                 <li><strong>N2V + GNN combinados</strong> dan el mejor rendimiento (89.29% F1) al usar N2V embeddings como features iniciales de la GNN.</li>
-                <li><strong>Message passing</strong> es el motor de las GNNs: cada capa agrega info de vecinos a 1 hop. Mas capas = mas alcance.</li>
-                <li>Para <strong>AML en produccion</strong>, usar GNN (inductivo) para manejar cuentas nuevas. N2V para investigaciones puntuales.</li>
+                <li><strong>Message passing</strong> es el motor de las GNNs: cada capa agrega info de vecinos a 1 hop. Mas capas = mas alcance. GCN usa pesos fijos, GAT usa atencion.</li>
+                <li>Para <strong>AML en produccion</strong>: GAT para grafos medianos con necesidad de explicabilidad. <strong>GraphSAGE</strong> para grafos masivos (50M+ nodos) via muestreo de vecinos.</li>
+                <li><strong>Escalabilidad</strong> es la limitacion principal de GCN y GAT: necesitan el grafo completo en memoria. GraphSAGE (siguiente notebook) resuelve esto con mini-batching.</li>
             </ol>
         </div>
 
@@ -1489,28 +2088,32 @@
         </div>
 
         <div class="success-box">
-            <h3>Preparacion para el Capitulo 3: GCN y GraphSAGE</h3>
-            <p>En el proximo capitulo aprenderas:</p>
+            <h3>Siguiente: Notebook 3 &mdash; GraphSAGE (Escalabilidad)</h3>
+            <p>Ya dominamos <strong>GAT</strong> (atencion aprendida, multi-cabeza, interpretabilidad) y <strong>embeddings</strong> (N2V transductivo, GNN inductivo). Pero ambos tienen un problema: <strong>necesitan el grafo completo en memoria</strong>.</p>
+            <p style="margin-top:10px;">En el siguiente notebook (<strong>3_GraphSAGE.ipynb</strong>) aprenderas:</p>
             <ul>
-                <li>Como funcionan las <strong>Graph Convolutional Networks (GCN)</strong> en detalle</li>
-                <li>La arquitectura <strong>GraphSAGE</strong> y su funcion de agregacion</li>
-                <li>Diferencias entre convolucion <strong>spectral vs spatial</strong></li>
-                <li>Aplicacion practica: <strong>deteccion de resenas falsas</strong> y <strong>prediccion de categorias de productos</strong></li>
+                <li><strong>GraphSAGE:</strong> Arquitectura que muestrea K vecinos por nodo en vez de usar todos</li>
+                <li><strong>NeighborLoader:</strong> Mini-batching para grafos &mdash; entrena con subgrafos, no con el grafo completo</li>
+                <li><strong>Comparacion triple:</strong> GraphSAGE vs GAT vs GCN en PubMed (19K+ nodos)</li>
+                <li><strong>Escalabilidad real:</strong> Como manejar grafos de millones de nodos para AML</li>
             </ul>
+            <div class="highlight" style="margin-top:15px;">
+                <p><strong>La progresion completa:</strong> GCN (pesos fijos) &rarr; GAT (atencion aprendida) &rarr; <strong>GraphSAGE (atencion + escalabilidad)</strong></p>
+            </div>
         </div>
 
         <div class="concepts-grid">
             <div class="concept-card" style="cursor:default">
                 <h4>Conceptos Dominados</h4>
-                <p>Node2Vec, GNN Embeddings, Random Walks, BFS/DFS, UMAP, Xavier Init, GCNConv, Semi-supervised, Transductivo, Inductivo, End-to-end, Message Passing, Encoders</p>
+                <p>Node2Vec, GNN Embeddings, GAT (atencion, multi-cabeza, &alpha;<sub>ij</sub>), Random Walks, BFS/DFS, UMAP, Xavier Init, GCNConv, Semi-supervised, Transductivo, Inductivo, End-to-end, Message Passing, Encoders</p>
             </div>
             <div class="concept-card" style="cursor:default; background: linear-gradient(135deg, #28a745, #20c997);">
                 <h4>Aplicaciones AML</h4>
-                <p>Embeddings transaccionales, Deteccion de mulas, Monitoreo continuo con GNN, Investigacion puntual con N2V</p>
+                <p>Embeddings transaccionales, Deteccion de mulas, GAT para auditoria regulatoria, Monitoreo continuo con GNN, Investigacion puntual con N2V</p>
             </div>
             <div class="concept-card" style="cursor:default; background: linear-gradient(135deg, #fd7e14, #ffc107);">
                 <h4>Proximos Pasos</h4>
-                <p>Cap 3: GCN/GraphSAGE / Fake review detection / Product bundling / Convoluciones en grafos</p>
+                <p>Notebook 3: GraphSAGE / NeighborLoader / Mini-batching / Comparacion triple (SAGE vs GAT vs GCN) en PubMed</p>
             </div>
         </div>
 

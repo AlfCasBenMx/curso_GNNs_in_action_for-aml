@@ -5,15 +5,15 @@
 
 /* ---------- SECTION ORDER & STATE ---------- */
 const sectionOrder = [
-  'intro','n2v','gnn_emb','comparacion','semi_supervised',
-  'under_hood','aml','quiz1','quiz2','flashcards','ejercicios','resumen'
+  'intro','gat_recap','n2v','gnn_emb','comparacion','metricas',
+  'semi_supervised','under_hood','aml','quiz1','quiz2','flashcards','ejercicios','resumen'
 ];
 
 let completed = {};
 let unlocked  = { intro: true };
 let scores    = { 1: 0, 2: 0 };
 let answered  = { 1: {}, 2: {} };
-let totals    = { 1: 12, 2: 10 };
+let totals    = { 1: 13, 2: 12 };
 
 /* ---------- PERSISTENCE ---------- */
 function saveProgress(){
@@ -485,6 +485,10 @@ function animateGNNMessagePassing(){
    N2V PIPELINE ANIMATION — Full embedding creation demo (rewritten)
    ================================================================ */
 function drawN2VPipelineBase(){
+  n2vClearTimers();
+  _n2vPaused = false;
+  const pauseBtn = document.getElementById('n2vPauseBtn');
+  if(pauseBtn) pauseBtn.style.display = 'none';
   const c = document.getElementById('canvasN2VPipeline');
   if(!c) return;
   const ctx = c.getContext('2d');
@@ -514,18 +518,18 @@ function drawN2VPipelineBase(){
   ctx.fillStyle = '#94a3b8';
   ctx.font = '14px Inter';
   ctx.textAlign = 'center';
-  ctx.fillText('Pulsa "Iniciar Animacion"', 480, 230);
-  ctx.fillText('para ver las 4 fases', 480, 255);
+  ctx.fillText('Pulsa "Iniciar Animacion"', W/2, 230);
+  ctx.fillText('para ver las 4 fases', W/2, 255);
 
   // Bottom: phase indicators
   const phLabels = ['1. Grafo','2. Turista pasea','3. Red aprende','4. Embedding!'];
   const phColors = ['#4ea8de','#ffc107','#7c3aed','#03EF62'];
   phLabels.forEach((l,i) => {
-    const px = 120 + i * 170;
+    const px = 175 + i * 250;
     ctx.fillStyle = '#1e293b';
-    ctx.fillRect(px - 60, H - 30, 120, 22);
+    ctx.fillRect(px - 75, H - 30, 150, 22);
     ctx.fillStyle = phColors[i];
-    ctx.font = 'bold 11px Inter';
+    ctx.font = 'bold 12px Inter';
     ctx.textAlign = 'center';
     ctx.fillText(l, px, H - 14);
   });
@@ -533,12 +537,12 @@ function drawN2VPipelineBase(){
 
 // Shared graph drawing helper
 const _pipeNodes = [
-  { x: 95, y: 130, label: 'A', col: '#ff6b6b' },
-  { x: 45, y: 210, label: 'B', col: '#ff6b6b' },
-  { x: 145,y: 210, label: 'C', col: '#4ea8de' },
-  { x: 25, y: 300, label: 'D', col: '#4ea8de' },
-  { x: 95, y: 350, label: 'E', col: '#4ea8de' },
-  { x: 165,y: 300, label: 'F', col: '#03EF62' },
+  { x: 95, y: 160, label: 'A', col: '#ff6b6b' },
+  { x: 45, y: 260, label: 'B', col: '#ff6b6b' },
+  { x: 145,y: 260, label: 'C', col: '#4ea8de' },
+  { x: 25, y: 370, label: 'D', col: '#4ea8de' },
+  { x: 95, y: 450, label: 'E', col: '#4ea8de' },
+  { x: 165,y: 370, label: 'F', col: '#03EF62' },
 ];
 const _pipeEdges = [[0,1],[0,2],[1,2],[1,3],[1,4],[2,5],[3,4],[4,5]];
 const _pipeAdj = {0:[1,2], 1:[0,2,3,4], 2:[0,1,5], 3:[1,4], 4:[1,3,5], 5:[2,4]};
@@ -577,22 +581,485 @@ function _drawPipelineGraph(ctx, highlightEdges, walkerAt){
   ctx.fillStyle = '#4ea8de';
   ctx.font = 'bold 11px Inter';
   ctx.textAlign = 'center';
-  ctx.fillText('Grafo: 6 libros', 95, 80);
+  ctx.fillText('Grafo: 6 libros', 95, 110);
   ctx.fillStyle = '#94a3b8';
   ctx.font = '10px Inter';
-  ctx.fillText('aristas = co-compras', 95, 395);
+  ctx.fillText('aristas = co-compras', 95, 500);
   // Legend
   ctx.font = '9px Inter';
   [[_pipeNodes[0].col,'Izquierda'],[_pipeNodes[2].col,'Derecha'],[_pipeNodes[5].col,'Neutral']].forEach(([c,l],i)=>{
     ctx.fillStyle = c;
-    ctx.beginPath(); ctx.arc(20, 420 + i*16, 5, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(20, 530 + i*16, 5, 0, Math.PI*2); ctx.fill();
     ctx.fillStyle = '#94a3b8';
     ctx.textAlign = 'left';
-    ctx.fillText(l, 30, 424 + i*16);
+    ctx.fillText(l, 30, 534 + i*16);
   });
 }
 
+/* ================================================================
+   N2V PIPELINE CONTROLS — Pause, Stop, Timer management
+   ================================================================ */
+let _n2vTimerIds = [];
+let _n2vPaused = false;
+let _n2vPendingFn = null;
+
+function _n2vDelay(fn, ms){
+  if(_n2vPaused){ _n2vPendingFn = fn; return; }
+  const id = setTimeout(fn, ms);
+  _n2vTimerIds.push(id);
+}
+
+function n2vClearTimers(){
+  _n2vTimerIds.forEach(id => clearTimeout(id));
+  _n2vTimerIds = [];
+  _n2vPendingFn = null;
+}
+
+function n2vStop(){
+  n2vClearTimers();
+  _n2vPaused = false;
+  const btn = document.getElementById('n2vPauseBtn');
+  if(btn){ btn.style.display = 'none'; btn.innerHTML = '&#9208; Pausar'; }
+  drawN2VPipelineBase();
+}
+
+function n2vTogglePause(){
+  _n2vPaused = !_n2vPaused;
+  const btn = document.getElementById('n2vPauseBtn');
+  if(_n2vPaused){
+    n2vClearTimers();
+    if(btn) btn.innerHTML = '&#9654; Continuar';
+  } else {
+    if(btn) btn.innerHTML = '&#9208; Pausar';
+    if(_n2vPendingFn){ const fn = _n2vPendingFn; _n2vPendingFn = null; _n2vDelay(fn, 400); }
+  }
+}
+
+/* ================================================================
+   N2V PIPELINE JUMP — Static renders for each phase (no auto-advance)
+   ================================================================ */
+function n2vJumpTo(phase){
+  n2vClearTimers();
+  _n2vPaused = false;
+  const pauseBtn = document.getElementById('n2vPauseBtn');
+  if(pauseBtn) pauseBtn.style.display = 'none';
+
+  const c = document.getElementById('canvasN2VPipeline');
+  if(!c) return;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  const PX = 215, PY = 45, PW = W - 225, PH = H - 60;
+
+  function clearAll(){
+    ctx.fillStyle = '#0a1628';
+    ctx.fillRect(0, 0, W, H);
+    const phLabels = ['1. Grafo','2. Turista pasea','3. Red aprende','4. Embedding!'];
+    const phColors = ['#4ea8de','#ffc107','#7c3aed','#03EF62'];
+    phLabels.forEach((l,i) => {
+      const px = 175 + i * 250;
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(px - 75, H - 30, 150, 22);
+      ctx.fillStyle = phColors[i];
+      ctx.font = 'bold 12px Inter';
+      ctx.textAlign = 'center';
+      ctx.fillText(l, px, H - 14);
+    });
+  }
+  function hlPhase(idx){
+    const phColors = ['#4ea8de','#ffc107','#7c3aed','#03EF62'];
+    const px = 175 + idx * 250;
+    ctx.strokeStyle = phColors[idx];
+    ctx.lineWidth = 2;
+    ctx.strokeRect(px - 77, H - 32, 154, 26);
+  }
+
+  // ===== PHASE 1 =====
+  if(phase === 1){
+    clearAll();
+    _drawPipelineGraph(ctx);
+    hlPhase(0);
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(PX, PY, PW, PH);
+    ctx.fillStyle = '#4ea8de';
+    ctx.font = 'bold 16px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText('Fase 1: Tenemos un grafo', PX + PW/2, PY + 40);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '14px Inter';
+    ctx.textAlign = 'left';
+    const lines1 = [
+      'Este grafo tiene 6 libros (nodos)',
+      'conectados por co-compras (aristas).',
+      '',
+      'Cada libro tiene un color que indica',
+      'su orientacion politica, pero N2V',
+      'NO VE los colores. Solo ve las',
+      'conexiones (quien compra con quien).',
+      '',
+      'Objetivo: convertir cada nodo en',
+      'una lista de numeros (embedding)',
+      'que capture su "posicion" en la red.',
+    ];
+    lines1.forEach((l,i) => {
+      ctx.fillStyle = l.startsWith('NO VE') ? '#ffc107' : (l === '' ? '#ffc107' : '#e2e8f0');
+      ctx.fillText(l, PX + 25, PY + 85 + i * 28);
+    });
+  }
+
+  // ===== PHASE 2 =====
+  if(phase === 2){
+    clearAll();
+    hlPhase(1);
+    // Generate static demo walks
+    const demoWalks = [[0,1,3,4,5],[0,2,5,4,1],[0,1,2,0,1]];
+    _drawPipelineGraph(ctx);
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(PX, PY, PW, PH);
+    ctx.fillStyle = '#ffc107';
+    ctx.font = 'bold 16px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText('Fase 2: Resultado de los paseos', PX + PW/2, PY + 40);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '14px Inter';
+    ctx.textAlign = 'left';
+    demoWalks.forEach((walk, w) => {
+      const y = PY + 90 + w * 65;
+      ctx.fillStyle = '#ffc107';
+      ctx.font = 'bold 13px Inter';
+      ctx.fillText('Walk ' + (w+1) + ':', PX + 25, y);
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = 'bold 16px monospace';
+      ctx.fillText(walk.map(i => _pipeLabels[i]).join('  \u2192  '), PX + 90, y);
+      ctx.fillStyle = '#ce9178';
+      ctx.font = '13px monospace';
+      ctx.fillText('"' + walk.map(i => _pipeLabels[i]).join(' ') + '"', PX + 90, y + 24);
+    });
+    ctx.fillStyle = '#03EF62';
+    ctx.font = 'bold 14px Inter';
+    ctx.textAlign = 'left';
+    ctx.fillText('\u2714 Nodos que aparecen juntos frecuentemente', PX + 25, PY + 310);
+    ctx.fillText('   en las "oraciones" son similares.', PX + 25, PY + 338);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Inter';
+    ctx.fillText('En realidad se hacen 200+ walks por cada nodo.', PX + 25, PY + 380);
+    ctx.fillText('Aqui solo mostramos 3 para entender la idea.', PX + 25, PY + 405);
+  }
+
+  // ===== PHASE 3a =====
+  if(phase === '3a'){
+    clearAll();
+    _drawPipelineGraph(ctx);
+    hlPhase(2);
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(PX, PY, PW, PH);
+    ctx.fillStyle = '#7c3aed';
+    ctx.font = 'bold 15px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText('Fase 3a: De paseos a "parejas de entrenamiento"', PX + PW/2, PY + 35);
+    const tx = PX + 20;
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '13px Inter';
+    ctx.textAlign = 'left';
+    ctx.fillText('Tomemos una walk:  A \u2192 B \u2192 D \u2192 E \u2192 F', tx, PY + 65);
+    ctx.fillStyle = '#ffc107';
+    ctx.font = 'bold 13px Inter';
+    ctx.fillText('Con ventana = 2, creamos parejas (input, contexto):', tx, PY + 95);
+    const pairs = [
+      { input: 'A', ctx_: 'B', note: 'A aparece cerca de B' },
+      { input: 'A', ctx_: 'D', note: 'A aparece cerca de D' },
+      { input: 'B', ctx_: 'A', note: 'B aparece cerca de A' },
+      { input: 'B', ctx_: 'D', note: 'B aparece cerca de D' },
+      { input: 'B', ctx_: 'E', note: 'B aparece cerca de E' },
+      { input: 'D', ctx_: 'B', note: 'D aparece cerca de B' },
+      { input: 'D', ctx_: 'E', note: 'D aparece cerca de E' },
+      { input: 'D', ctx_: 'F', note: 'D aparece cerca de F' },
+    ];
+    pairs.forEach((p, pi) => {
+      const y = PY + 128 + pi * 34;
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(tx, y - 12, PW - 40, 28);
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 0.5;
+      ctx.strokeRect(tx, y - 12, PW - 40, 28);
+      const inputCol = _pipeNodes[_pipeLabels.indexOf(p.input)].col;
+      ctx.beginPath(); ctx.arc(tx + 20, y, 10, 0, Math.PI*2);
+      ctx.fillStyle = inputCol; ctx.fill();
+      ctx.fillStyle = '#000'; ctx.font = 'bold 10px Inter'; ctx.textAlign = 'center';
+      ctx.fillText(p.input, tx + 20, y + 1);
+      ctx.fillStyle = '#e2e8f0'; ctx.font = '14px Inter'; ctx.textAlign = 'left';
+      ctx.fillText('\u2192', tx + 40, y + 4);
+      const ctxCol = _pipeNodes[_pipeLabels.indexOf(p.ctx_)].col;
+      ctx.beginPath(); ctx.arc(tx + 70, y, 10, 0, Math.PI*2);
+      ctx.fillStyle = ctxCol; ctx.fill();
+      ctx.fillStyle = '#000'; ctx.font = 'bold 10px Inter'; ctx.textAlign = 'center';
+      ctx.fillText(p.ctx_, tx + 70, y + 1);
+      ctx.fillStyle = '#94a3b8'; ctx.font = '12px Inter'; ctx.textAlign = 'left';
+      ctx.fillText(p.note, tx + 100, y + 4);
+    });
+    ctx.fillStyle = '#03EF62';
+    ctx.font = 'bold 13px Inter';
+    ctx.textAlign = 'left';
+    ctx.fillText('\u2714 Le diremos a la red:', tx, PY + 420);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '13px Inter';
+    ctx.fillText('   "Si te doy A, deberias predecir B y D"', tx, PY + 445);
+    ctx.fillText('   "Si te doy B, deberias predecir A, D y E"', tx, PY + 468);
+  }
+
+  // ===== PHASE 3b =====
+  if(phase === '3b'){
+    clearAll();
+    _drawPipelineGraph(ctx);
+    hlPhase(2);
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(PX, PY, PW, PH);
+    ctx.fillStyle = '#7c3aed';
+    ctx.font = 'bold 15px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText('Fase 3b: La "tabla de pesos" (el truco clave)', PX + PW/2, PY + 35);
+    const tx = PX + 20;
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '13px Inter';
+    ctx.textAlign = 'left';
+    ctx.fillText('La red tiene una tabla secreta con 3 numeros por nodo:', tx, PY + 65);
+    const tableX = tx + 10, tableY = PY + 85, rowH = 32, colW = 110;
+    const headers = ['Nodo', 'Peso 1', 'Peso 2', 'Peso 3'];
+    const initWeights = [
+      ['A', '0.12', '-0.45', '0.67'],
+      ['B', '0.34', '0.22', '-0.18'],
+      ['C', '-0.56', '0.89', '0.11'],
+      ['D', '0.78', '-0.33', '0.44'],
+      ['E', '-0.21', '0.55', '-0.72'],
+      ['F', '0.09', '0.41', '0.36'],
+    ];
+    headers.forEach((h, i) => {
+      ctx.fillStyle = '#7c3aed';
+      ctx.fillRect(tableX + i * colW, tableY, colW - 2, rowH);
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 12px Inter';
+      ctx.textAlign = 'center';
+      ctx.fillText(h, tableX + i * colW + colW/2, tableY + 20);
+    });
+    initWeights.forEach((row, rIdx) => {
+      const y = tableY + rowH + rIdx * rowH;
+      ctx.fillStyle = rIdx % 2 === 0 ? '#0f172a' : '#1a2332';
+      ctx.fillRect(tableX, y, colW * 4 - 2, rowH);
+      ctx.strokeStyle = '#334155'; ctx.lineWidth = 0.5;
+      ctx.strokeRect(tableX, y, colW * 4 - 2, rowH);
+      const nodeCol = _pipeNodes[rIdx].col;
+      ctx.beginPath(); ctx.arc(tableX + colW/2 - 10, y + 16, 8, 0, Math.PI*2);
+      ctx.fillStyle = nodeCol; ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 11px Inter'; ctx.textAlign = 'center';
+      ctx.fillText(row[0], tableX + colW/2 - 10, y + 17);
+      for(let cc = 1; cc < 4; cc++){
+        ctx.fillStyle = '#e2e8f0';
+        ctx.font = '13px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(row[cc], tableX + cc * colW + colW/2, y + 20);
+      }
+    });
+    // Highlight row A
+    ctx.strokeStyle = '#ffc107';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(tableX, tableY + rowH, colW * 4 - 2, rowH);
+    // Lookup demo
+    const demoY = tableY + rowH * 8 + 20;
+    ctx.fillStyle = '#ffc107';
+    ctx.font = 'bold 14px Inter';
+    ctx.textAlign = 'left';
+    ctx.fillText('\u2B50 Como obtiene el embedding de A:', tx, demoY);
+    ctx.fillStyle = '#4ea8de';
+    ctx.font = '14px monospace';
+    ctx.fillText('A = [1, 0, 0, 0, 0, 0]  (one-hot)', tx + 10, demoY + 30);
+    ctx.fillStyle = '#ffc107';
+    ctx.font = 'bold 13px Inter';
+    ctx.fillText('\u2193 Solo selecciona la fila de A!', tx + 10, demoY + 60);
+    ctx.fillStyle = '#03EF62';
+    ctx.font = 'bold 15px monospace';
+    ctx.fillText('Embedding(A) = [0.12, -0.45, 0.67]', tx + 10, demoY + 92);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Inter';
+    ctx.fillText('El embedding es literalmente la fila de esa tabla!', tx + 10, demoY + 125);
+    ctx.fillText('La red AJUSTA estos pesos durante el entrenamiento.', tx + 10, demoY + 148);
+  }
+
+  // ===== PHASE 3c =====
+  if(phase === '3c'){
+    clearAll();
+    _drawPipelineGraph(ctx);
+    hlPhase(2);
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(PX, PY, PW, PH);
+    ctx.fillStyle = '#7c3aed';
+    ctx.font = 'bold 15px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText('Fase 3c: La red ajusta la tabla (entrenamiento)', PX + PW/2, PY + 35);
+    const tx = PX + 20;
+    const steps = [
+      { title: 'Epoca 1: Pesos aleatorios', wA: ' 0.12, -0.45,  0.67', wB: ' 0.34,  0.22, -0.18', pred: 'Predice F \u274C', sim: 0.15, color: '#ff6b6b' },
+      { title: 'Epoca 50: Mejorando...', wA: ' 0.45, -0.12,  0.55', wB: ' 0.48, -0.08,  0.49', pred: 'Predice C (casi)', sim: 0.65, color: '#ffc107' },
+      { title: 'Epoca 200: Convergido!', wA: ' 0.82, -0.31,  0.45', wB: ' 0.79, -0.28,  0.51', pred: 'Predice B \u2714', sim: 0.95, color: '#03EF62' },
+    ];
+    steps.forEach((s, si) => {
+      const baseY = PY + 65 + si * 195;
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(tx, baseY, PW - 40, 175);
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(tx, baseY, PW - 40, 175);
+      ctx.fillStyle = s.color;
+      ctx.font = 'bold 13px Inter';
+      ctx.textAlign = 'left';
+      ctx.fillText(s.title, tx + 12, baseY + 22);
+      // Mini weights
+      ctx.fillStyle = '#94a3b8'; ctx.font = '11px Inter';
+      ctx.fillText('A: [' + s.wA + ']', tx + 12, baseY + 48);
+      ctx.fillText('B: [' + s.wB + ']', tx + 12, baseY + 68);
+      // Prediction
+      ctx.fillStyle = '#e2e8f0'; ctx.font = '12px Inter';
+      ctx.fillText('Input: A \u2192 ' + s.pred, tx + 220, baseY + 48);
+      // Similarity bar
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(tx + 12, baseY + 88, 300, 18);
+      ctx.fillStyle = s.color;
+      ctx.fillRect(tx + 12, baseY + 88, 300 * s.sim, 18);
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 10px Inter'; ctx.textAlign = 'left';
+      ctx.fillText('Similitud A\u2194B: ' + Math.round(s.sim * 100) + '%', tx + 18, baseY + 101);
+      // Insight
+      ctx.fillStyle = s.color; ctx.font = '11px Inter';
+      const insights = [
+        'Los pesos son aleatorios, A y B no se parecen',
+        'La red va acercando los pesos de A y B',
+        'A \u2248 0.82 y B \u2248 0.79  Son casi iguales!',
+      ];
+      ctx.fillText(insights[si], tx + 12, baseY + 125);
+    });
+  }
+
+  // ===== PHASE 4 =====
+  if(phase === 4){
+    clearAll();
+    _drawPipelineGraph(ctx);
+    hlPhase(3);
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(PX, PY, PW, PH);
+    ctx.fillStyle = '#03EF62';
+    ctx.font = 'bold 16px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText('Fase 4: Los embeddings finales!', PX + PW/2, PY + 40);
+    const embData = [
+      { label: 'A', col: '#ff6b6b', vals: [ 0.82, -0.31,  0.45] },
+      { label: 'B', col: '#ff6b6b', vals: [ 0.79, -0.28,  0.51] },
+      { label: 'C', col: '#4ea8de', vals: [-0.15,  0.73,  0.22] },
+      { label: 'D', col: '#4ea8de', vals: [-0.22,  0.69,  0.18] },
+      { label: 'E', col: '#4ea8de', vals: [-0.18,  0.65,  0.30] },
+      { label: 'F', col: '#03EF62', vals: [ 0.10,  0.25, -0.80] },
+    ];
+    embData.forEach((e, i) => {
+      const y = PY + 85 + i * 45;
+      ctx.beginPath();
+      ctx.arc(PX + 35, y, 12, 0, Math.PI*2);
+      ctx.fillStyle = e.col;
+      ctx.fill();
+      ctx.fillStyle = '#000';
+      ctx.font = 'bold 11px Inter';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(e.label, PX + 35, y);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '14px Inter';
+      ctx.textAlign = 'left';
+      ctx.fillText('\u2192', PX + 55, y + 3);
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '15px monospace';
+      ctx.fillText('[' + e.vals.map(v => (v >= 0 ? ' ' : '') + v.toFixed(2)).join(', ') + ']', PX + 75, y + 3);
+    });
+    // Scatter
+    const sx = PX + 35, sy = PY + 380;
+    ctx.fillStyle = '#03EF62';
+    ctx.font = 'bold 13px Inter';
+    ctx.textAlign = 'left';
+    ctx.fillText('Visualizado en 2D (UMAP):', sx, sy);
+    const ox = sx + 50, oy = sy + 90;
+    ctx.strokeStyle = '#475569'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(ox, oy + 50); ctx.lineTo(ox, oy - 60); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ox - 10, oy + 30); ctx.lineTo(ox + 160, oy + 30); ctx.stroke();
+    embData.forEach(e => {
+      const px = ox + 30 + (e.vals[0] + 0.5) * 90;
+      const py = oy + 10 - (e.vals[1] + 0.5) * 75;
+      ctx.beginPath(); ctx.arc(px, py, 12, 0, Math.PI*2);
+      ctx.fillStyle = e.col; ctx.globalAlpha = 0.85; ctx.fill(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 11px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(e.label, px, py);
+    });
+    ctx.setLineDash([5,4]); ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#ff6b6b';
+    ctx.beginPath(); ctx.ellipse(ox + 30 + (0.82 + 0.5) * 90 - 5, oy + 10 - (-0.3 + 0.5) * 75, 35, 25, 0, 0, Math.PI*2); ctx.stroke();
+    ctx.strokeStyle = '#4ea8de';
+    ctx.beginPath(); ctx.ellipse(ox + 30 + (-0.18 + 0.5) * 90, oy + 10 - (0.69 + 0.5) * 75 + 8, 40, 30, 0, 0, Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]);
+    // Conclusion
+    const ttx = PX + 380, tty = sy + 20;
+    ctx.fillStyle = '#03EF62';
+    ctx.font = 'bold 14px Inter';
+    ctx.textAlign = 'left';
+    ctx.fillText('\u2714 Resultado:', ttx, tty);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '13px Inter';
+    ctx.fillText('A y B quedan juntos (misma zona)', ttx, tty + 26);
+    ctx.fillText('C, D, E quedan juntos (otro cluster)', ttx, tty + 52);
+    ctx.fillText('F queda aparte (nodo puente)', ttx, tty + 78);
+    ctx.fillStyle = '#ffc107';
+    ctx.font = 'bold 13px Inter';
+    ctx.fillText('N2V descubrio los grupos', ttx, tty + 115);
+    ctx.fillText('SIN ver los colores!', ttx, tty + 138);
+  }
+
+  // Update step label
+  _n2vUpdateLabel(phase);
+}
+
+/* ================================================================
+   N2V STEP-BY-STEP — Previous / Next sequential navigation
+   ================================================================ */
+const _n2vPhaseOrder = [1, 2, '3a', '3b', '3c', 4];
+const _n2vPhaseNames = {
+  1:    'Fase 1 de 6: Tenemos un grafo',
+  2:    'Fase 2 de 6: El turista pasea',
+  '3a': 'Fase 3 de 6: Parejas de entrenamiento',
+  '3b': 'Fase 4 de 6: La tabla de pesos',
+  '3c': 'Fase 5 de 6: Entrenamiento',
+  4:    'Fase 6 de 6: Embeddings finales!',
+};
+let _n2vCurrentStep = -1;
+
+function _n2vUpdateLabel(phase){
+  const idx = _n2vPhaseOrder.indexOf(phase);
+  if(idx >= 0) _n2vCurrentStep = idx;
+  const lbl = document.getElementById('n2vStepLabel');
+  if(lbl && phase in _n2vPhaseNames){
+    lbl.textContent = _n2vPhaseNames[phase];
+  }
+}
+
+function n2vStepNext(){
+  if(_n2vCurrentStep < 0) _n2vCurrentStep = -1;
+  _n2vCurrentStep = Math.min(_n2vCurrentStep + 1, _n2vPhaseOrder.length - 1);
+  n2vJumpTo(_n2vPhaseOrder[_n2vCurrentStep]);
+}
+
+function n2vStepPrev(){
+  if(_n2vCurrentStep <= 0) _n2vCurrentStep = 1;
+  _n2vCurrentStep = Math.max(_n2vCurrentStep - 1, 0);
+  n2vJumpTo(_n2vPhaseOrder[_n2vCurrentStep]);
+}
+
 function animateN2VPipeline(){
+  n2vClearTimers();
+  _n2vPaused = false;
+  const pauseBtn = document.getElementById('n2vPauseBtn');
+  if(pauseBtn){ pauseBtn.style.display = 'inline-flex'; pauseBtn.innerHTML = '&#9208; Pausar'; }
   const c = document.getElementById('canvasN2VPipeline');
   if(!c) return;
   const ctx = c.getContext('2d');
@@ -608,11 +1075,11 @@ function animateN2VPipeline(){
     const phLabels = ['1. Grafo','2. Turista pasea','3. Red aprende','4. Embedding!'];
     const phColors = ['#4ea8de','#ffc107','#7c3aed','#03EF62'];
     phLabels.forEach((l,i) => {
-      const px = 120 + i * 170;
+      const px = 175 + i * 250;
       ctx.fillStyle = '#1e293b';
-      ctx.fillRect(px - 60, H - 30, 120, 22);
+      ctx.fillRect(px - 75, H - 30, 150, 22);
       ctx.fillStyle = phColors[i];
-      ctx.font = 'bold 11px Inter';
+      ctx.font = 'bold 12px Inter';
       ctx.textAlign = 'center';
       ctx.fillText(l, px, H - 14);
     });
@@ -620,10 +1087,10 @@ function animateN2VPipeline(){
 
   function highlightPhase(idx){
     const phColors = ['#4ea8de','#ffc107','#7c3aed','#03EF62'];
-    const px = 120 + idx * 170;
+    const px = 175 + idx * 250;
     ctx.strokeStyle = phColors[idx];
     ctx.lineWidth = 2;
-    ctx.strokeRect(px - 62, H - 32, 124, 26);
+    ctx.strokeRect(px - 77, H - 32, 154, 26);
   }
 
   // ========== PHASE 1: Show the graph ==========
@@ -668,7 +1135,7 @@ function animateN2VPipeline(){
     ctx.textAlign = 'center';
     ctx.fillText('\u25B6 Siguiente: mandamos un turista a pasear...', PX + PW/2, PY + PH - 20);
 
-    setTimeout(phase2, 3500);
+    _n2vDelay(phase2, 8000);
   }
 
   // ========== PHASE 2: Random walks with turista ==========
@@ -690,7 +1157,7 @@ function animateN2VPipeline(){
     function animateOneWalk(){
       if(walkIdx >= walks.length){
         // Show summary after all walks
-        setTimeout(showWalkSummary, 600);
+        _n2vDelay(showWalkSummary, 1500);
         return;
       }
 
@@ -767,14 +1234,14 @@ function animateN2VPipeline(){
         if(stepIdx < walk.length - 1){
           visitedEdges.push([walk[stepIdx], walk[stepIdx+1]]);
           stepIdx++;
-          setTimeout(stepWalk, 900);
+          _n2vDelay(stepWalk, 1800);
         } else {
           // Walk complete
           ctx.fillStyle = '#03EF62';
           ctx.font = 'bold 12px Inter';
           ctx.fillText('\u2713 Walk ' + (walkIdx+1) + ' completa!', PX + 20, PY + PH - 25);
           walkIdx++;
-          setTimeout(animateOneWalk, 1200);
+          _n2vDelay(animateOneWalk, 2500);
         }
       }
       stepWalk();
@@ -829,7 +1296,7 @@ function animateN2VPipeline(){
       ctx.textAlign = 'center';
       ctx.fillText('\u25B6 Siguiente: estas "oraciones" entrenan una red...', PX + PW/2, PY + PH - 20);
 
-      setTimeout(phase3, 4000);
+      _n2vDelay(phase3, 9000);
     }
 
     animateOneWalk();
@@ -897,7 +1364,7 @@ function animateN2VPipeline(){
         ctx.font = 'bold 13px Inter';
         ctx.textAlign = 'center';
         ctx.fillText('\u25B6 Siguiente: como calcula la red esos numeros...', PX + PW/2, PY + PH - 15);
-        setTimeout(phase3b, 4500);
+        _n2vDelay(phase3b, 9000);
         return;
       }
       const p = pairs[pIdx];
@@ -933,7 +1400,7 @@ function animateN2VPipeline(){
       ctx.fillText(p.note, tx + 95, y + 4);
 
       pIdx++;
-      setTimeout(showNextPair, 450);
+      _n2vDelay(showNextPair, 900);
     }
     showNextPair();
   }
@@ -960,7 +1427,7 @@ function animateN2VPipeline(){
 
     // Draw the weight table
     const tableX = tx + 10, tableY = PY + 75;
-    const rowH = 28, colW = 75;
+    const rowH = 28, colW = 100;
     const headers = ['Nodo', 'Peso 1', 'Peso 2', 'Peso 3'];
     const initWeights = [
       ['A', '0.12', '-0.45', '0.67'],
@@ -985,7 +1452,7 @@ function animateN2VPipeline(){
     let rIdx = 0;
     function showNextRow(){
       if(rIdx >= initWeights.length){
-        setTimeout(showLookupDemo, 800);
+        _n2vDelay(showLookupDemo, 1800);
         return;
       }
       const row = initWeights[rIdx];
@@ -1010,7 +1477,7 @@ function animateN2VPipeline(){
         ctx.fillText(row[c], tableX + c * colW + colW/2, y + 18);
       }
       rIdx++;
-      setTimeout(showNextRow, 250);
+      _n2vDelay(showNextRow, 500);
     }
 
     function showLookupDemo(){
@@ -1070,7 +1537,7 @@ function animateN2VPipeline(){
       ctx.font = 'bold 13px Inter';
       ctx.textAlign = 'center';
       ctx.fillText('\u25B6 Siguiente: como ajusta la tabla...', PX + PW/2, PY + PH - 15);
-      setTimeout(phase3c, 5500);
+      _n2vDelay(phase3c, 10000);
     }
 
     showNextRow();
@@ -1136,7 +1603,7 @@ function animateN2VPipeline(){
         return;
       }
       const s = steps[sIdx];
-      const baseY = PY + 55 + sIdx * 145;
+      const baseY = PY + 55 + sIdx * 195;
 
       // Step box
       ctx.fillStyle = '#0f172a';
@@ -1170,25 +1637,25 @@ function animateN2VPipeline(){
 
       // Task and prediction
       ctx.fillStyle = '#94a3b8'; ctx.font = '11px Inter'; ctx.textAlign = 'left';
-      ctx.fillText(s.task, tx + 200, baseY + 42);
+      ctx.fillText(s.task, tx + 250, baseY + 42);
       ctx.fillStyle = s.color; ctx.font = 'bold 11px Inter';
-      ctx.fillText(s.pred, tx + 200, baseY + 62);
+      ctx.fillText(s.pred, tx + 250, baseY + 62);
 
       // Action
       ctx.fillStyle = '#e2e8f0'; ctx.font = '11px Inter';
-      ctx.fillText(s.action, tx + 200, baseY + 85);
+      ctx.fillText(s.action, tx + 250, baseY + 85);
 
       // Similarity bar
       const simBar = [0.15, 0.65, 0.95][sIdx];
       ctx.fillStyle = '#334155';
-      ctx.fillRect(tx + 200, baseY + 96, 200, 14);
+      ctx.fillRect(tx + 250, baseY + 96, 350, 14);
       ctx.fillStyle = s.color;
-      ctx.fillRect(tx + 200, baseY + 96, 200 * simBar, 14);
+      ctx.fillRect(tx + 250, baseY + 96, 350 * simBar, 14);
       ctx.fillStyle = '#fff'; ctx.font = '9px Inter'; ctx.textAlign = 'left';
       ctx.fillText('Similitud A\u2194B: ' + Math.round(simBar * 100) + '%', tx + 205, baseY + 107);
 
       sIdx++;
-      setTimeout(showTrainingStep, 2500);
+      _n2vDelay(showTrainingStep, 5000);
     }
 
     function showTrainingSummary(){
@@ -1200,7 +1667,7 @@ function animateN2VPipeline(){
       ctx.font = '11px Inter';
       ctx.fillText('A y B caminan juntos \u2192 sus filas se vuelven parecidas', PX + PW/2, PY + PH - 18);
 
-      setTimeout(phase4, 4000);
+      _n2vDelay(phase4, 8000);
     }
 
     showTrainingStep();
@@ -1232,9 +1699,9 @@ function animateN2VPipeline(){
 
     let eIdx = 0;
     function showNextEmb(){
-      if(eIdx >= embData.length){ setTimeout(showScatterAndConclusion, 600); return; }
+      if(eIdx >= embData.length){ _n2vDelay(showScatterAndConclusion, 1500); return; }
       const e = embData[eIdx];
-      const y = PY + 75 + eIdx * 30;
+      const y = PY + 75 + eIdx * 45;
 
       // Node circle
       ctx.beginPath();
@@ -1259,12 +1726,12 @@ function animateN2VPipeline(){
       ctx.fillText('[' + e.vals.map(v => (v >= 0 ? ' ' : '') + v.toFixed(2)).join(', ') + ']', PX + 68, y);
 
       eIdx++;
-      setTimeout(showNextEmb, 350);
+      _n2vDelay(showNextEmb, 700);
     }
 
     function showScatterAndConclusion(){
       // Mini scatter plot
-      const sx = PX + 30, sy = PY + 290;
+      const sx = PX + 30, sy = PY + 370;
       ctx.fillStyle = '#03EF62';
       ctx.font = 'bold 12px Inter';
       ctx.textAlign = 'left';
@@ -1308,7 +1775,7 @@ function animateN2VPipeline(){
       ctx.setLineDash([]);
 
       // Conclusion text on the right
-      const tx = PX + 260, ty = sy + 10;
+      const tx = PX + 380, ty = sy + 10;
       ctx.fillStyle = '#03EF62';
       ctx.font = 'bold 13px Inter';
       ctx.textAlign = 'left';
@@ -1961,7 +2428,7 @@ const flashcardsData = [
   { q: 'Que es UMAP?', a: 'Tecnica de reduccion de dimensionalidad que preserva estructura local Y global. Superior a t-SNE para embeddings.' },
   { q: 'Que es Xavier Initialization?', a: 'Inicializacion de pesos con variabilidad consistente entre capas para evitar vanishing/exploding gradients.' },
   { q: 'Que tipo de capa usa SimpleGNN?', a: 'GCNConv (Graph Convolutional) de PyTorch Geometric. Cada capa hace message passing.' },
-  { q: 'Transductivo vs Inductivo?', a: 'Transductivo: solo nodos vistos (N2V). Inductivo: generaliza a nodos nuevos (GNN).' },
+  { q: 'Transductivo vs Inductivo?', a: 'Transductivo: solo nodos vistos (N2V). Inductivo: generaliza a nodos nuevos (GNN). GAT es inductivo en teoria pero necesita el grafo completo en memoria.' },
   { q: 'Que es message passing?', a: 'Cada nodo agrega info de sus vecinos, la transforma, y actualiza su embedding. 1 capa = 1 hop.' },
   { q: 'Que es end-to-end?', a: 'Proceso completo en un solo modelo: datos crudos -> embeddings -> prediccion. Sin pasos separados.' },
   { q: 'Mejor combo del capitulo?', a: 'GNN 4 capas + N2V como features: 88.99% accuracy, 89.29% F1.' },
@@ -1970,6 +2437,11 @@ const flashcardsData = [
   { q: 'Que es un "shallow method"?', a: 'Metodo sin deep learning que usa lookup tables. Ej: N2V, DeepWalk, matrix factorization.' },
   { q: 'Cuantos nodos tiene el Political Books dataset?', a: '105 libros con 441 aristas de co-compra. 3 clases: izquierda, derecha, neutral.' },
   { q: 'Que hace model.eval()?', a: 'Desactiva dropout y batch normalization para outputs deterministas en inferencia.' },
+  { q: 'Que son los coeficientes alpha en GAT?', a: 'Pesos escalares aprendidos via atencion que indican cuanta importancia darle a cada vecino en la agregacion. Suman 1 (softmax).' },
+  { q: 'Por que GAT tiene multi-cabeza?', a: 'Cada cabeza (K) tiene sus propios pesos W^k y a^k, capturando perspectivas diferentes del grafo en paralelo. Se concatenan o promedian al final.' },
+  { q: 'Por que GAT no escala a grafos enormes?', a: 'Necesita el grafo completo en GPU/RAM. K cabezas x N nodos x vecinos = demasiadas operaciones. GraphSAGE resuelve esto con muestreo.' },
+  { q: 'Que es GraphSAGE?', a: 'Arquitectura GNN que muestrea K vecinos por nodo (no usa todos) y entrena en mini-batches via NeighborLoader. Escala a millones de nodos.' },
+  { q: 'GCN vs GAT: diferencia clave?', a: 'GCN: pesos de agregacion fijos (por grado). GAT: pesos aprendidos (alpha via atencion). GAT es mas expresivo e interpretable.' },
 ];
 
 let flashcardsInited = false;
@@ -2158,6 +2630,1013 @@ function checkTF(btn, correct, chosen, explain){
     btn.style.color = '#fff';
   }
 }
+
+/* ================================================================
+   INTERACTIVE HOVER — canvasGNNMP (Message Passing graph)
+   Hover over a node to highlight its neighbors + show embedding
+   ================================================================ */
+function initGNNMPHover(){
+  const c = document.getElementById('canvasGNNMP');
+  if(!c || c._hoverInit) return;
+  c._hoverInit = true;
+
+  c.addEventListener('mousemove', function(e){
+    const rect = c.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (c.width / rect.width);
+    const my = (e.clientY - rect.top)  * (c.height / rect.height);
+    let hoveredIdx = -1;
+    gnnNodes.forEach((n, i) => {
+      if(Math.hypot(mx - n.x, my - n.y) < 30) hoveredIdx = i;
+    });
+    drawGNNGraphInteractive(hoveredIdx);
+  });
+  c.addEventListener('mouseleave', function(){ drawGNNGraphInteractive(-1); });
+}
+
+function drawGNNGraphInteractive(hoveredIdx){
+  const c = document.getElementById('canvasGNNMP');
+  if(!c) return;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+  if(gnnNodes.length === 0){ drawGNNGraph(); return; }
+
+  const neighbors = {};
+  if(hoveredIdx >= 0){
+    gnnEdges.forEach(([a,b]) => {
+      if(a === hoveredIdx){ neighbors[b] = true; }
+      if(b === hoveredIdx){ neighbors[a] = true; }
+    });
+  }
+
+  // Edges
+  gnnEdges.forEach(([a,b]) => {
+    const isActive = hoveredIdx >= 0 && (a === hoveredIdx || b === hoveredIdx);
+    ctx.strokeStyle = isActive ? '#ffc107' : (hoveredIdx >= 0 ? '#1e293b' : '#334155');
+    ctx.lineWidth = isActive ? 3 : 2;
+    ctx.globalAlpha = (hoveredIdx >= 0 && !isActive) ? 0.25 : 1;
+    ctx.beginPath();
+    ctx.moveTo(gnnNodes[a].x, gnnNodes[a].y);
+    ctx.lineTo(gnnNodes[b].x, gnnNodes[b].y);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  });
+
+  // Nodes
+  gnnNodes.forEach((n, i) => {
+    const isHovered = (i === hoveredIdx);
+    const isNeigh = neighbors[i];
+    const dimmed = hoveredIdx >= 0 && !isHovered && !isNeigh;
+    ctx.globalAlpha = dimmed ? 0.25 : 1;
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, isHovered ? 34 : 28, 0, Math.PI*2);
+    ctx.fillStyle = isHovered ? '#ffc107' : n.color;
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = isHovered ? 3 : 2;
+    ctx.stroke();
+    ctx.fillStyle = '#000';
+    ctx.font = isHovered ? 'bold 16px Inter' : 'bold 14px Inter';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(n.label, n.x, n.y);
+    // Embedding text
+    ctx.fillStyle = dimmed ? '#334155' : (isHovered ? '#ffc107' : '#94a3b8');
+    ctx.font = isHovered ? 'bold 11px monospace' : '10px Inter';
+    ctx.fillText(n.emb, n.x, n.y + (isHovered ? 48 : 42));
+    ctx.globalAlpha = 1;
+  });
+
+  // Tooltip
+  if(hoveredIdx >= 0){
+    const n = gnnNodes[hoveredIdx];
+    const neighLabels = Object.keys(neighbors).map(i => gnnNodes[i].label);
+    const tx = n.x, ty = Math.max(60, n.y - 55);
+    ctx.fillStyle = 'rgba(15,23,42,0.92)';
+    const tw = 200, th = 52;
+    ctx.fillRect(tx - tw/2, ty - th, tw, th);
+    ctx.strokeStyle = '#ffc107';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(tx - tw/2, ty - th, tw, th);
+    ctx.fillStyle = '#ffc107';
+    ctx.font = 'bold 12px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText(n.label + '  →  Vecinos: ' + neighLabels.join(', '), tx, ty - th + 18);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '11px monospace';
+    ctx.fillText('emb: ' + n.emb, tx, ty - th + 38);
+  }
+
+  // Footer
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '12px Inter';
+  ctx.textAlign = 'center';
+  ctx.fillText(hoveredIdx >= 0 ? 'Pasa sobre otro nodo para explorar su vecindario' : '🖱 Pasa el mouse sobre un nodo para ver sus vecinos y embedding', 350, 390);
+}
+
+/* ================================================================
+   INTERACTIVE HOVER — canvasAML (AML transaction network)
+   ================================================================ */
+let amlNodes = [];
+let amlEdges = [[0,3],[1,3],[2,3],[3,4],[3,5],[4,5],[2,6],[4,7],[1,8],[8,4]];
+
+function initAMLHover(){
+  const c = document.getElementById('canvasAML');
+  if(!c || c._hoverInit) return;
+  c._hoverInit = true;
+
+  c.addEventListener('mousemove', function(e){
+    const rect = c.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (c.width / rect.width);
+    const my = (e.clientY - rect.top)  * (c.height / rect.height);
+    let hIdx = -1;
+    amlNodes.forEach((n, i) => {
+      if(Math.hypot(mx - n.x, my - n.y) < 26) hIdx = i;
+    });
+    drawAMLGraphInteractive(hIdx);
+  });
+  c.addEventListener('mouseleave', function(){ drawAMLGraphInteractive(-1); });
+}
+
+function drawAMLGraphInteractive(hIdx){
+  const c = document.getElementById('canvasAML');
+  if(!c || amlNodes.length === 0) return;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+
+  const fakeEmbs = {
+    normal: '[0.8, 0.1, -0.2]',
+    mula:   '[-0.7, 0.6, 0.9]',
+    hub:    '[-0.5, 0.8, 0.4]',
+    shell:  '[-0.6, 0.7, 0.8]'
+  };
+  const typeLabels = { normal: 'Cuenta Normal', mula: 'Mula Financiera', hub: 'Hub Sospechoso', shell: 'Shell Company' };
+
+  const neighbors = {};
+  if(hIdx >= 0){
+    amlEdges.forEach(([a,b]) => {
+      if(a === hIdx) neighbors[b] = true;
+      if(b === hIdx) neighbors[a] = true;
+    });
+  }
+
+  // Edges
+  amlEdges.forEach(([a,b]) => {
+    const isActive = hIdx >= 0 && (a === hIdx || b === hIdx);
+    ctx.strokeStyle = isActive ? '#ffc107' : (hIdx >= 0 ? '#1e293b' : '#334155');
+    ctx.lineWidth = isActive ? 3 : 1.5;
+    ctx.globalAlpha = (hIdx >= 0 && !isActive) ? 0.2 : 1;
+    ctx.beginPath();
+    ctx.moveTo(amlNodes[a].x, amlNodes[a].y);
+    ctx.lineTo(amlNodes[b].x, amlNodes[b].y);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  });
+
+  // Nodes
+  amlNodes.forEach((n, i) => {
+    const isH = (i === hIdx);
+    const isN = neighbors[i];
+    const dim = hIdx >= 0 && !isH && !isN;
+    ctx.globalAlpha = dim ? 0.2 : 1;
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, isH ? 28 : 24, 0, Math.PI*2);
+    ctx.fillStyle = isH ? '#ffc107' : n.color;
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = isH ? 3 : 2;
+    ctx.stroke();
+    ctx.fillStyle = '#000';
+    ctx.font = isH ? 'bold 12px Inter' : 'bold 11px Inter';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(n.label, n.x, n.y);
+    ctx.globalAlpha = 1;
+  });
+
+  // Tooltip
+  if(hIdx >= 0){
+    const n = amlNodes[hIdx];
+    const nCount = Object.keys(neighbors).length;
+    const tx = Math.min(Math.max(n.x, 130), c.width - 130);
+    const ty = Math.max(80, n.y - 50);
+    ctx.fillStyle = 'rgba(15,23,42,0.92)';
+    const tw = 250, th = 68;
+    ctx.fillRect(tx - tw/2, ty - th, tw, th);
+    ctx.strokeStyle = '#ffc107';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(tx - tw/2, ty - th, tw, th);
+    ctx.fillStyle = '#ffc107';
+    ctx.font = 'bold 12px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText(typeLabels[n.type] || n.type, tx, ty - th + 16);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '11px Inter';
+    ctx.fillText(nCount + ' conexiones | Embedding:', tx, ty - th + 34);
+    ctx.font = '11px monospace';
+    ctx.fillStyle = '#03EF62';
+    ctx.fillText(fakeEmbs[n.type] || '[...]', tx, ty - th + 52);
+  }
+
+  // Legend
+  ctx.font = '12px Inter';
+  ctx.textAlign = 'left';
+  [['#03EF62','Normal'],['#ff6b6b','Sospechoso'],['#ffc107','Hub']].forEach(([c2,l], i) => {
+    ctx.fillStyle = c2;
+    ctx.beginPath(); ctx.arc(30, 25 + i*22, 7, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText(l, 45, 29 + i*22);
+  });
+
+  // Footer
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '12px Inter';
+  ctx.textAlign = 'center';
+  ctx.fillText(hIdx >= 0 ? 'Las mulas y shells tienden a tener embeddings similares entre si' : '🖱 Pasa el mouse sobre una cuenta para ver su tipo, conexiones y embedding', 350, 390);
+}
+
+/* ================================================================
+   REAL AML EMBEDDINGS ANIMATION — Nodes move from graph to embedding space
+   ================================================================ */
+function animateAMLEmbeddings(){
+  const c = document.getElementById('canvasAML');
+  if(!c || amlNodes.length === 0){ drawAMLGraph(); return; }
+  // Remove hover during animation
+  c._hoverInit = false;
+  const oldMM = c.onmousemove;
+  const listeners = c._hoverInit;
+
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+
+  // Target positions in "embedding space" (right half) — clustered by type
+  const clusterTargets = {
+    normal: { cx: 540, cy: 120 },
+    mula:   { cx: 580, cy: 300 },
+    hub:    { cx: 520, cy: 250 },
+    shell:  { cx: 600, cy: 280 },
+  };
+
+  // Save original positions & compute targets
+  const origPos = amlNodes.map(n => ({ x: n.x, y: n.y }));
+  const targets = amlNodes.map(n => {
+    const ct = clusterTargets[n.type];
+    return { x: ct.cx + (Math.random() - 0.5) * 50, y: ct.cy + (Math.random() - 0.5) * 40 };
+  });
+
+  let t = 0;
+  const duration = 90; // frames
+
+  function frame(){
+    t++;
+    const p = Math.min(t / duration, 1);
+    const ease = p < 0.5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2) / 2; // easeInOutQuad
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Divider
+    if(p > 0.1){
+      ctx.strokeStyle = '#475569';
+      ctx.setLineDash([5,5]);
+      ctx.globalAlpha = Math.min((p - 0.1) * 3, 0.6);
+      ctx.beginPath();
+      ctx.moveTo(350, 20);
+      ctx.lineTo(350, H - 20);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+    }
+
+    // Labels
+    if(p > 0.2){
+      ctx.globalAlpha = Math.min((p - 0.2) * 2, 1);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = 'bold 12px Inter';
+      ctx.textAlign = 'center';
+      ctx.fillText('Grafo Original', 175, 18);
+      ctx.fillStyle = '#03EF62';
+      ctx.fillText('Embedding Space', 530, 18);
+      ctx.globalAlpha = 1;
+    }
+
+    // Draw fading edges in original space
+    ctx.globalAlpha = Math.max(1 - p * 1.5, 0.1);
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    amlEdges.forEach(([a,b]) => {
+      const ax = origPos[a].x * (1 - ease) + (origPos[a].x * 0.5) * ease;
+      const bx = origPos[b].x * (1 - ease) + (origPos[b].x * 0.5) * ease;
+      ctx.beginPath();
+      ctx.moveTo(ax, origPos[a].y);
+      ctx.lineTo(bx, origPos[b].y);
+      ctx.stroke();
+    });
+    ctx.globalAlpha = 1;
+
+    // Animated nodes — interpolate position
+    amlNodes.forEach((n, i) => {
+      const cx = origPos[i].x + (targets[i].x - origPos[i].x) * ease;
+      const cy = origPos[i].y + (targets[i].y - origPos[i].y) * ease;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 20, 0, Math.PI*2);
+      ctx.fillStyle = n.color;
+      ctx.globalAlpha = 0.9;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = '#000';
+      ctx.font = 'bold 10px Inter';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(n.label, cx, cy);
+    });
+
+    // Cluster circles when settled
+    if(p > 0.8){
+      ctx.globalAlpha = (p - 0.8) * 5;
+      ctx.setLineDash([5,4]);
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = '#03EF62';
+      ctx.beginPath(); ctx.ellipse(540, 120, 60, 40, 0, 0, Math.PI*2); ctx.stroke();
+      ctx.strokeStyle = '#ff6b6b';
+      ctx.beginPath(); ctx.ellipse(570, 280, 70, 50, 0, 0, Math.PI*2); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+
+      // Labels
+      ctx.fillStyle = '#03EF62';
+      ctx.font = 'bold 11px Inter';
+      ctx.textAlign = 'center';
+      ctx.fillText('Normales', 540, 170);
+      ctx.fillStyle = '#ff6b6b';
+      ctx.fillText('Sospechosos', 570, 340);
+    }
+
+    if(t < duration){
+      requestAnimationFrame(frame);
+    } else {
+      // Final text
+      ctx.fillStyle = '#ffc107';
+      ctx.font = 'bold 13px Inter';
+      ctx.textAlign = 'center';
+      ctx.fillText('Las cuentas similares quedan juntas en el embedding space', W/2, H - 15);
+      // Re-enable hover after a delay
+      setTimeout(() => { c._hoverInit = false; initAMLHover(); }, 500);
+    }
+  }
+
+  requestAnimationFrame(frame);
+}
+
+/* ================================================================
+   INTERACTIVE HOVER — canvasBFSDFS (BFS vs DFS)
+   Hover over a node to animate traversal from it
+   ================================================================ */
+let bfsNodes = [];
+let bfsDFSNodes_right = [];
+const _bfsEdgesAll = [[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[1,3],[2,6],[4,5]];
+
+function initBFSDFSHover(){
+  const c = document.getElementById('canvasBFSDFS');
+  if(!c || c._hoverInit) return;
+  c._hoverInit = true;
+
+  bfsNodes = [
+    { x: 175, y: 175, label: 'A', color: '#03EF62' },
+    { x: 100, y: 80,  label: 'B', color: '#4ea8de' },
+    { x: 250, y: 80,  label: 'C', color: '#4ea8de' },
+    { x: 50,  y: 175, label: 'D', color: '#4ea8de' },
+    { x: 100, y: 270, label: 'E', color: '#4ea8de' },
+    { x: 250, y: 270, label: 'F', color: '#4ea8de' },
+    { x: 300, y: 175, label: 'G', color: '#4ea8de' },
+  ];
+  bfsDFSNodes_right = bfsNodes.map(n => ({...n, x: n.x + 350}));
+
+  const adjList = {0:[1,2,3,4,5,6], 1:[0,3], 2:[0,6], 3:[0,1], 4:[0,5], 5:[0,4], 6:[0,2]};
+
+  c.addEventListener('mousemove', function(e){
+    const rect = c.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (c.width / rect.width);
+    const my = (e.clientY - rect.top)  * (c.height / rect.height);
+
+    let hIdx = -1, side = 'bfs';
+    bfsNodes.forEach((n, i) => { if(Math.hypot(mx - n.x, my - n.y) < 24) hIdx = i; });
+    if(hIdx < 0){
+      bfsDFSNodes_right.forEach((n, i) => { if(Math.hypot(mx - n.x, my - n.y) < 24){ hIdx = i; side = 'dfs'; } });
+    }
+    drawBFSDFSInteractive(hIdx, side, adjList);
+  });
+  c.addEventListener('mouseleave', function(){ drawBFSDFSInteractive(-1, 'bfs', {0:[1,2,3,4,5,6], 1:[0,3], 2:[0,6], 3:[0,1], 4:[0,5], 5:[0,4], 6:[0,2]}); });
+}
+
+function drawBFSDFSInteractive(hIdx, side, adjList){
+  const c = document.getElementById('canvasBFSDFS');
+  if(!c) return;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+
+  // Compute BFS order from hIdx
+  let bfsOrder = [], dfsOrder = [];
+  if(hIdx >= 0){
+    // BFS
+    const visited = new Set();
+    const queue = [hIdx];
+    visited.add(hIdx);
+    while(queue.length > 0){
+      const curr = queue.shift();
+      bfsOrder.push(curr);
+      (adjList[curr]||[]).forEach(nb => { if(!visited.has(nb)){ visited.add(nb); queue.push(nb); } });
+    }
+    // DFS
+    const vis2 = new Set();
+    const stack = [hIdx];
+    while(stack.length > 0){
+      const curr = stack.pop();
+      if(vis2.has(curr)) continue;
+      vis2.add(curr);
+      dfsOrder.push(curr);
+      (adjList[curr]||[]).reverse().forEach(nb => { if(!vis2.has(nb)) stack.push(nb); });
+    }
+  }
+
+  // Draw both sides
+  [bfsNodes, bfsDFSNodes_right].forEach((nodes, sideIdx) => {
+    const isBFS = (sideIdx === 0);
+    const order = isBFS ? bfsOrder : dfsOrder;
+
+    // Edges
+    _bfsEdgesAll.forEach(([a,b]) => {
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(nodes[a].x, nodes[a].y);
+      ctx.lineTo(nodes[b].x, nodes[b].y);
+      ctx.stroke();
+    });
+
+    // Traversal arrows
+    if(order.length > 1){
+      const color = isBFS ? '#03EF62' : '#ffc107';
+      for(let i = 0; i < order.length - 1; i++){
+        const a = order[i], b = order[i+1];
+        ctx.globalAlpha = 1 - i * 0.1;
+        drawArrow(ctx, nodes[a].x, nodes[a].y, nodes[b].x, nodes[b].y, color);
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    // Nodes
+    nodes.forEach((n, i) => {
+      const orderIdx = order.indexOf(i);
+      const isInOrder = orderIdx >= 0;
+      const isStart = (i === hIdx);
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, isStart ? 26 : 22, 0, Math.PI*2);
+      ctx.fillStyle = isStart ? '#ffc107' : (isInOrder ? (isBFS ? '#03EF62' : '#ffc107') : '#4ea8de');
+      ctx.globalAlpha = (hIdx >= 0 && !isInOrder) ? 0.35 : 1;
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = '#000';
+      ctx.font = 'bold 14px Inter';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(n.label, n.x, n.y);
+      // Order number
+      if(isInOrder && orderIdx > 0){
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.beginPath(); ctx.arc(n.x + 16, n.y - 16, 10, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 10px Inter';
+        ctx.fillText(orderIdx + 1, n.x + 16, n.y - 16);
+      }
+      ctx.globalAlpha = 1;
+    });
+  });
+
+  // Labels
+  ctx.fillStyle = '#03EF62';
+  ctx.font = 'bold 16px Inter';
+  ctx.textAlign = 'center';
+  ctx.fillText('BFS (q > 1)', 175, 325);
+  ctx.fillStyle = '#ffc107';
+  ctx.fillText('DFS (q < 1)', 525, 325);
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '11px Inter';
+  ctx.fillText(hIdx >= 0 ? 'Numeros = orden de visita desde ' + bfsNodes[hIdx].label : '🖱 Pasa el mouse sobre un nodo para ver BFS vs DFS desde ese nodo', 350, 345);
+}
+
+/* ================================================================
+   ADJACENCY MATRIX ↔ GRAPH — Interactive bidirectional visualization
+   ================================================================ */
+const _adjGraphNodes = [
+  { x: 90,  y: 80,  label: 'A', color: '#ff6b6b', group: 'l' },
+  { x: 50,  y: 160, label: 'B', color: '#ff6b6b', group: 'l' },
+  { x: 130, y: 160, label: 'C', color: '#4ea8de', group: 'c' },
+  { x: 50,  y: 240, label: 'D', color: '#4ea8de', group: 'c' },
+  { x: 130, y: 240, label: 'E', color: '#03EF62', group: 'n' },
+  { x: 200, y: 160, label: 'F', color: '#4ea8de', group: 'c' },
+  { x: 170, y: 80,  label: 'G', color: '#ff6b6b', group: 'l' },
+];
+const _adjGraphEdges = [[0,1],[0,2],[0,6],[1,2],[1,3],[2,5],[3,4],[4,5],[5,6]];
+
+function initAdjMatrixCanvas(){
+  const c = document.getElementById('canvasAdjMatrix');
+  if(!c || c._init) return;
+  c._init = true;
+  drawAdjMatrix(-1, -1);
+
+  c.addEventListener('mousemove', function(e){
+    const rect = c.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (c.width / rect.width);
+    const my = (e.clientY - rect.top)  * (c.height / rect.height);
+    const N = _adjGraphNodes.length;
+
+    // Check if hovering graph node
+    let hNode = -1;
+    _adjGraphNodes.forEach((n, i) => {
+      if(Math.hypot(mx - n.x, my - n.y) < 18) hNode = i;
+    });
+
+    // Check if hovering graph edge
+    let hEdge = -1;
+    if(hNode < 0){
+      _adjGraphEdges.forEach(([a,b], ei) => {
+        const na = _adjGraphNodes[a], nb = _adjGraphNodes[b];
+        const dx = nb.x - na.x, dy = nb.y - na.y;
+        const len = Math.hypot(dx, dy);
+        const t = Math.max(0, Math.min(1, ((mx - na.x)*dx + (my - na.y)*dy) / (len*len)));
+        const px = na.x + t*dx, py = na.y + t*dy;
+        if(Math.hypot(mx - px, my - py) < 8) hEdge = ei;
+      });
+    }
+
+    // Check if hovering matrix cell
+    let hRow = -1, hCol = -1;
+    const matOX = 290, matOY = 60, cellS = 32;
+    if(mx >= matOX && my >= matOY && mx < matOX + N*cellS && my < matOY + N*cellS){
+      hCol = Math.floor((mx - matOX) / cellS);
+      hRow = Math.floor((my - matOY) / cellS);
+    }
+
+    drawAdjMatrix(hNode, hEdge, hRow, hCol);
+  });
+  c.addEventListener('mouseleave', function(){ drawAdjMatrix(-1, -1); });
+}
+
+function drawAdjMatrix(hNode, hEdge, hRow, hCol){
+  const c = document.getElementById('canvasAdjMatrix');
+  if(!c) return;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+  const N = _adjGraphNodes.length;
+
+  // Build adjacency matrix
+  const adj = Array.from({length: N}, () => Array(N).fill(0));
+  _adjGraphEdges.forEach(([a,b]) => { adj[a][b] = 1; adj[b][a] = 1; });
+
+  // Determine which edge is highlighted
+  let hlEdgeA = -1, hlEdgeB = -1;
+  if(hNode >= 0){
+    hlEdgeA = hNode; // highlight all edges from this node
+  } else if(hEdge >= 0){
+    hlEdgeA = _adjGraphEdges[hEdge][0];
+    hlEdgeB = _adjGraphEdges[hEdge][1];
+  } else if(hRow >= 0 && hCol >= 0 && adj[hRow][hCol]){
+    hlEdgeA = hRow;
+    hlEdgeB = hCol;
+  }
+
+  // --- GRAPH (left side) ---
+  // Edges
+  _adjGraphEdges.forEach(([a,b], ei) => {
+    const isHL = (hlEdgeA === a && (hlEdgeB < 0 || hlEdgeB === b)) ||
+                 (hlEdgeA === b && (hlEdgeB < 0 || hlEdgeB === a)) ||
+                 (hlEdgeB === a && hlEdgeA === b);
+    ctx.strokeStyle = isHL ? '#ffc107' : '#475569';
+    ctx.lineWidth = isHL ? 3 : 1.5;
+    ctx.globalAlpha = (hlEdgeA >= 0 && !isHL) ? 0.2 : 1;
+    ctx.beginPath();
+    ctx.moveTo(_adjGraphNodes[a].x, _adjGraphNodes[a].y);
+    ctx.lineTo(_adjGraphNodes[b].x, _adjGraphNodes[b].y);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  });
+  // Nodes
+  _adjGraphNodes.forEach((n, i) => {
+    const isHL = (i === hNode) || (i === hlEdgeA) || (i === hlEdgeB) || (hRow >= 0 && (i === hRow || i === hCol));
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, isHL ? 20 : 16, 0, Math.PI*2);
+    ctx.fillStyle = isHL ? '#ffc107' : n.color;
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#000';
+    ctx.font = isHL ? 'bold 14px Inter' : 'bold 12px Inter';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(n.label, n.x, n.y);
+  });
+
+  // Title
+  ctx.fillStyle = '#4ea8de';
+  ctx.font = 'bold 12px Inter';
+  ctx.textAlign = 'center';
+  ctx.fillText('Grafo (7 libros)', 120, 290);
+
+  // --- MATRIX (right side) ---
+  const matOX = 290, matOY = 60, cellS = 32;
+
+  // Column headers
+  _adjGraphNodes.forEach((n, i) => {
+    ctx.fillStyle = (i === hCol || i === hlEdgeA || i === hlEdgeB) ? '#ffc107' : n.color;
+    ctx.font = 'bold 11px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText(n.label, matOX + i*cellS + cellS/2, matOY - 8);
+  });
+  // Row headers
+  _adjGraphNodes.forEach((n, i) => {
+    ctx.fillStyle = (i === hRow || i === hlEdgeA || i === hlEdgeB) ? '#ffc107' : n.color;
+    ctx.font = 'bold 11px Inter';
+    ctx.textAlign = 'right';
+    ctx.fillText(n.label, matOX - 6, matOY + i*cellS + cellS/2 + 4);
+  });
+
+  // Cells
+  for(let r = 0; r < N; r++){
+    for(let col = 0; col < N; col++){
+      const x = matOX + col*cellS, y = matOY + r*cellS;
+      const isEdge = adj[r][col] === 1;
+      const isHLCell = (hlEdgeA >= 0 && ((r === hlEdgeA && (hlEdgeB < 0 || col === hlEdgeB)) || (col === hlEdgeA && (hlEdgeB < 0 || r === hlEdgeB)))) ||
+                        (hRow === r && hCol === col);
+      const isHLRow = (r === hRow || r === hlEdgeA || r === hlEdgeB);
+      const isHLCol = (col === hCol || col === hlEdgeA || col === hlEdgeB);
+
+      // Background
+      if(isHLCell && isEdge){
+        ctx.fillStyle = '#ffc107';
+      } else if(isEdge){
+        ctx.fillStyle = (isHLRow || isHLCol) ? 'rgba(255,199,7,0.3)' : '#1e4a2e';
+      } else {
+        ctx.fillStyle = (isHLRow || isHLCol) ? 'rgba(255,255,255,0.05)' : '#0f172a';
+      }
+      ctx.fillRect(x, y, cellS, cellS);
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 0.5;
+      ctx.strokeRect(x, y, cellS, cellS);
+
+      // Value
+      ctx.fillStyle = isEdge ? (isHLCell ? '#000' : '#03EF62') : '#334155';
+      ctx.font = isHLCell ? 'bold 14px monospace' : '12px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(isEdge ? '1' : '0', x + cellS/2, y + cellS/2);
+    }
+  }
+
+  // Matrix title
+  ctx.fillStyle = '#4ea8de';
+  ctx.font = 'bold 12px Inter';
+  ctx.textAlign = 'center';
+  ctx.fillText('Matriz de Adyacencia', matOX + N*cellS/2, matOY + N*cellS + 22);
+
+  // Footer
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '11px Inter';
+  ctx.textAlign = 'center';
+  const footTxt = (hNode >= 0) ? 'Nodo ' + _adjGraphNodes[hNode].label + ': fila y columna resaltadas en la matriz' :
+                  (hEdge >= 0) ? 'Arista ' + _adjGraphNodes[_adjGraphEdges[hEdge][0]].label + '↔' + _adjGraphNodes[_adjGraphEdges[hEdge][1]].label + ' = celda amarilla en la matriz' :
+                  (hRow >= 0 && hCol >= 0) ? 'Celda [' + _adjGraphNodes[hRow].label + ',' + _adjGraphNodes[hCol].label + '] ' + (adj[hRow][hCol] ? '= arista conectada (1)' : '= sin conexion (0)') :
+                  '🖱 Pasa sobre un nodo, arista o celda para ver la correspondencia';
+  ctx.fillText(footTxt, c.width/2, c.height - 10);
+
+  // Legend
+  ctx.font = '9px Inter';
+  ctx.textAlign = 'left';
+  [['#ff6b6b','Izquierda'],['#4ea8de','Derecha'],['#03EF62','Neutral']].forEach(([cl,l],i) => {
+    ctx.fillStyle = cl;
+    ctx.beginPath(); ctx.arc(20, 310 + i*14, 4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText(l, 28, 313 + i*14);
+  });
+}
+
+/* ================================================================
+   PARAMETER PLAYGROUND — Interactive model comparison
+   ================================================================ */
+const _playgroundData = [
+  { model: 'RF',  n2v: false, layers: 0, acc: 83.33, f1: 82.01 },
+  { model: 'RF',  n2v: true,  layers: 0, acc: 84.52, f1: 80.72 },
+  { model: 'GNN', n2v: false, layers: 2, acc: 82.27, f1: 82.14 },
+  { model: 'GNN', n2v: true,  layers: 2, acc: 87.79, f1: 88.10 },
+  { model: 'GNN', n2v: false, layers: 4, acc: 86.58, f1: 86.90 },
+  { model: 'GNN', n2v: true,  layers: 4, acc: 88.99, f1: 89.29 },
+];
+let _pgModel = 'GNN', _pgN2V = true, _pgLayers = 4;
+
+function initPlayground(){
+  const c = document.getElementById('canvasPlayground');
+  if(!c || c._init) return;
+  c._init = true;
+  drawPlayground();
+}
+
+function pgSetModel(val){ _pgModel = val; drawPlayground(); }
+function pgSetN2V(val){ _pgN2V = (val === 'true' || val === true); drawPlayground(); }
+function pgSetLayers(val){ _pgLayers = parseInt(val); drawPlayground(); }
+
+function drawPlayground(){
+  const c = document.getElementById('canvasPlayground');
+  if(!c) return;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // Find selected config
+  let selected = _playgroundData.find(d =>
+    d.model === _pgModel &&
+    d.n2v === _pgN2V &&
+    (_pgModel === 'RF' || d.layers === _pgLayers)
+  );
+  if(!selected) selected = _playgroundData[5]; // fallback
+
+  // Background for chart area
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, W, H);
+
+  // Draw all bars (muted) + highlight selected
+  const barW = 80, gap = 18, baseY = H - 50, minY = 50, maxVal = 95, minVal = 75;
+  const scaleY = (baseY - minY) / (maxVal - minVal);
+
+  _playgroundData.forEach((d, i) => {
+    const x = 40 + i * (barW + gap);
+    const isSel = (d === selected);
+
+    // Accuracy bar
+    const hAcc = (d.acc - minVal) * scaleY;
+    ctx.fillStyle = isSel ? '#03EF62' : '#1e293b';
+    ctx.fillRect(x, baseY - hAcc, barW/2 - 2, hAcc);
+    ctx.strokeStyle = isSel ? '#03EF62' : '#334155';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x, baseY - hAcc, barW/2 - 2, hAcc);
+
+    // F1 bar
+    const hF1 = (d.f1 - minVal) * scaleY;
+    ctx.fillStyle = isSel ? '#ffc107' : '#1e293b';
+    ctx.fillRect(x + barW/2, baseY - hF1, barW/2 - 2, hF1);
+    ctx.strokeStyle = isSel ? '#ffc107' : '#334155';
+    ctx.strokeRect(x + barW/2, baseY - hF1, barW/2 - 2, hF1);
+
+    // Values on top
+    ctx.fillStyle = isSel ? '#e2e8f0' : '#475569';
+    ctx.font = isSel ? 'bold 11px Inter' : '10px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText(d.acc.toFixed(1), x + barW/4, baseY - hAcc - 5);
+    ctx.fillText(d.f1.toFixed(1), x + 3*barW/4, baseY - hF1 - 5);
+
+    // Label
+    const lbl = (d.model === 'RF' ? 'RF' : 'GNN ' + d.layers + 'L') + (d.n2v ? '+N2V' : '');
+    ctx.fillStyle = isSel ? '#e2e8f0' : '#475569';
+    ctx.font = '9px Inter';
+    ctx.fillText(lbl, x + barW/2, baseY + 14);
+  });
+
+  // Y axis labels
+  for(let v = 75; v <= 95; v += 5){
+    const y = baseY - (v - minVal) * scaleY;
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath(); ctx.moveTo(35, y); ctx.lineTo(W - 10, y); ctx.stroke();
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '10px Inter';
+    ctx.textAlign = 'right';
+    ctx.fillText(v + '%', 32, y + 4);
+  }
+
+  // Selected highlight box
+  ctx.fillStyle = 'rgba(3,239,98,0.08)';
+  ctx.fillRect(W - 175, 10, 170, 90);
+  ctx.strokeStyle = '#03EF62';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(W - 175, 10, 170, 90);
+  ctx.fillStyle = '#03EF62';
+  ctx.font = 'bold 13px Inter';
+  ctx.textAlign = 'center';
+  ctx.fillText('Seleccionado:', W - 90, 30);
+  ctx.fillStyle = '#e2e8f0';
+  ctx.font = '12px Inter';
+  ctx.fillText('Acc: ' + selected.acc.toFixed(2) + '%', W - 90, 52);
+  ctx.fillText('F1:  ' + selected.f1.toFixed(2) + '%', W - 90, 72);
+  ctx.fillStyle = '#ffc107';
+  ctx.font = 'bold 11px Inter';
+  const selLabel = (_pgModel === 'RF' ? 'Random Forest' : 'GNN ' + _pgLayers + ' capas') + (_pgN2V ? ' + N2V' : '');
+  ctx.fillText(selLabel, W - 90, 92);
+
+  // Legend
+  ctx.fillStyle = '#03EF62';
+  ctx.fillRect(W - 175, H - 30, 12, 12);
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '10px Inter';
+  ctx.textAlign = 'left';
+  ctx.fillText('Accuracy', W - 160, H - 20);
+  ctx.fillStyle = '#ffc107';
+  ctx.fillRect(W - 100, H - 30, 12, 12);
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('F1 Score', W - 85, H - 20);
+}
+
+/* ================================================================
+   GNN PIPELINE STEP CONTROLS — Phase-by-phase navigation
+   ================================================================ */
+let _gnnPipeStep = 0;
+const _gnnPipePhases = ['base', 'layer1', 'layer2', 'embedding'];
+
+function gnnPipeGoto(step){
+  _gnnPipeStep = Math.max(0, Math.min(3, step));
+  const c = document.getElementById('canvasGNNPipeline');
+  if(!c) return;
+  const ctx = c.getContext('2d');
+
+  // Update button states
+  document.querySelectorAll('.gnn-pipe-step-btn').forEach(b => b.classList.remove('active'));
+  const activeBtn = document.querySelector('.gnn-pipe-step-btn[data-step="' + _gnnPipeStep + '"]');
+  if(activeBtn) activeBtn.classList.add('active');
+
+  if(_gnnPipeStep === 0){
+    drawGNNPipelineBase();
+  } else {
+    // Draw a static version of each phase
+    drawGNNPipelineBase();
+    if(_gnnPipeStep >= 1) drawGNNPipePhase2Static(ctx, c.width, c.height);
+    if(_gnnPipeStep >= 2) drawGNNPipePhase3Static(ctx, c.width, c.height);
+    if(_gnnPipeStep >= 3) drawGNNPipePhase4Static(ctx, c.width, c.height);
+  }
+
+  // Update step label
+  const lbl = document.getElementById('gnnPipeStepLabel');
+  if(lbl) lbl.textContent = ['1. Grafo + Features', '2. Capa 1: Mensajes llegan', '3. Capa 2: Info a 2 hops', '4. Embedding final'][_gnnPipeStep];
+}
+function gnnPipeNext(){ gnnPipeGoto(_gnnPipeStep + 1); }
+function gnnPipePrev(){ gnnPipeGoto(_gnnPipeStep - 1); }
+
+function drawGNNPipePhase2Static(ctx, W, H){
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(196, 40, 198, H - 55);
+  const centerX = 300, centerY = 200;
+  // Central node
+  ctx.beginPath(); ctx.arc(centerX, centerY, 22, 0, Math.PI*2);
+  ctx.fillStyle = '#03EF62'; ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = '#000'; ctx.font = 'bold 14px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('v', centerX, centerY);
+  // Neighbors
+  const senders = [
+    { label: 'u1', col: '#4ea8de', angle: -2.3 },
+    { label: 'u2', col: '#4ea8de', angle: -0.8 },
+    { label: 'u3', col: '#ff6b6b', angle: 2.3 },
+    { label: 'u4', col: '#ff6b6b', angle: 0.8 },
+  ];
+  senders.forEach(s => {
+    const sx = centerX + Math.cos(s.angle) * 85;
+    const sy = centerY + Math.sin(s.angle) * 85;
+    // Arrow line
+    ctx.strokeStyle = s.col; ctx.lineWidth = 2; ctx.globalAlpha = 0.5;
+    ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(centerX, centerY); ctx.stroke();
+    ctx.globalAlpha = 1;
+    // Node
+    ctx.beginPath(); ctx.arc(sx, sy, 16, 0, Math.PI*2);
+    ctx.fillStyle = s.col; ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = '#000'; ctx.font = 'bold 11px Inter';
+    ctx.fillText(s.label, sx, sy);
+  });
+  // Aggregation formula
+  ctx.fillStyle = '#ffc107'; ctx.font = 'bold 11px Inter'; ctx.textAlign = 'center';
+  ctx.fillText('AGREGA (promedia):', centerX, 330);
+  ctx.fillStyle = '#e2e8f0'; ctx.font = '11px monospace';
+  ctx.fillText('h_v = σ(W · AVG(msgs) + b)', centerX, 350);
+  ctx.fillStyle = '#ffc107'; ctx.font = 'bold 11px Inter';
+  ctx.fillText("v' = [0.4, 0.5]", centerX, 375);
+  // Glow
+  ctx.beginPath(); ctx.arc(centerX, centerY, 28, 0, Math.PI*2);
+  ctx.strokeStyle = '#ffc107'; ctx.lineWidth = 3; ctx.setLineDash([4,3]); ctx.stroke(); ctx.setLineDash([]);
+}
+
+function drawGNNPipePhase3Static(ctx, W, H){
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(396, 40, 198, H - 55);
+  const centerX = 510, centerY = 140;
+  ctx.fillStyle = '#7c3aed'; ctx.font = 'bold 12px Inter'; ctx.textAlign = 'center';
+  ctx.fillText('Capa 2: "chisme" a 2 hops', centerX, 60);
+  // Center node
+  ctx.beginPath(); ctx.arc(centerX, centerY, 20, 0, Math.PI*2);
+  ctx.fillStyle = '#03EF62'; ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = '#000'; ctx.font = 'bold 12px Inter'; ctx.textBaseline = 'middle';
+  ctx.fillText('v', centerX, centerY);
+  // Level 1 neighbors
+  const l1 = [
+    { x: centerX - 60, y: 220, label: "u1'", col: '#4ea8de' },
+    { x: centerX - 20, y: 220, label: "u2'", col: '#4ea8de' },
+    { x: centerX + 20, y: 220, label: "u3'", col: '#ff6b6b' },
+    { x: centerX + 60, y: 220, label: "u4'", col: '#ff6b6b' },
+  ];
+  l1.forEach(n => {
+    ctx.strokeStyle = '#475569'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(centerX, 160); ctx.lineTo(n.x, n.y - 14); ctx.stroke();
+    ctx.beginPath(); ctx.arc(n.x, n.y, 14, 0, Math.PI*2);
+    ctx.fillStyle = n.col; ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = '#000'; ctx.font = 'bold 9px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(n.label, n.x, n.y);
+  });
+  ctx.fillStyle = '#7c3aed'; ctx.font = '10px Inter'; ctx.textAlign = 'center';
+  ctx.fillText("u1' ya tiene info de", centerX, 265);
+  ctx.fillText("SUS vecinos (2-hop de v)", centerX, 280);
+  // Glow + result
+  ctx.beginPath(); ctx.arc(centerX, centerY, 26, 0, Math.PI*2);
+  ctx.strokeStyle = '#7c3aed'; ctx.lineWidth = 3; ctx.setLineDash([4,3]); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = '#7c3aed'; ctx.font = 'bold 12px Inter'; ctx.textAlign = 'center';
+  ctx.fillText("v'' = [0.35, 0.62]", centerX, 320);
+  ctx.fillStyle = '#e2e8f0'; ctx.font = '11px Inter';
+  ctx.fillText('v ahora "conoce" a', centerX, 350);
+  ctx.fillText('vecinos a 2 saltos', centerX, 366);
+}
+
+function drawGNNPipePhase4Static(ctx, W, H){
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(610, 40, 140, H - 55);
+  const cx = 680;
+  ctx.fillStyle = '#03EF62'; ctx.font = 'bold 12px Inter'; ctx.textAlign = 'center';
+  ctx.fillText('Embedding de v', cx, 65);
+  const finalVals = [0.35, 0.62, -0.18, 0.44];
+  finalVals.forEach((v, i) => {
+    const y = 100 + i * 35;
+    ctx.fillStyle = '#1e293b'; ctx.fillRect(cx - 55, y - 12, 110, 28);
+    ctx.strokeStyle = '#03EF62'; ctx.lineWidth = 1; ctx.strokeRect(cx - 55, y - 12, 110, 28);
+    ctx.fillStyle = '#94a3b8'; ctx.font = '10px Inter'; ctx.textAlign = 'left';
+    ctx.fillText('dim ' + (i+1) + ':', cx - 48, y + 4);
+    ctx.fillStyle = '#03EF62'; ctx.font = 'bold 14px monospace'; ctx.textAlign = 'right';
+    ctx.fillText(v.toFixed(2), cx + 48, y + 5);
+    const barW = Math.abs(v) * 60;
+    ctx.fillStyle = v >= 0 ? '#03EF62' : '#ff6b6b'; ctx.globalAlpha = 0.3;
+    ctx.fillRect(cx - 5, y - 6, barW * (v >= 0 ? 1 : -1), 16);
+    ctx.globalAlpha = 1;
+  });
+  ctx.fillStyle = '#ffc107'; ctx.font = 'bold 11px Inter'; ctx.textAlign = 'center';
+  ctx.fillText('vs N2V:', cx, 280);
+  ctx.fillStyle = '#e2e8f0'; ctx.font = '10px Inter';
+  ctx.fillText('N2V: camina + Word2Vec', cx, 300);
+  ctx.fillText('GNN: chisme + agrega', cx, 316);
+  ctx.fillStyle = '#03EF62'; ctx.font = 'bold 10px Inter';
+  ctx.fillText('GNN = end-to-end', cx, 340);
+}
+
+/* ================================================================
+   PATCHED drawAMLGraph — stores nodes in amlNodes for hover
+   ================================================================ */
+const _origDrawAMLGraph = drawAMLGraph;
+drawAMLGraph = function(){
+  _origDrawAMLGraph();
+  amlNodes = [
+    { x: 200, y: 100, label: 'Cuenta A', color: '#03EF62', type: 'normal' },
+    { x: 400, y: 80,  label: 'Cuenta B', color: '#03EF62', type: 'normal' },
+    { x: 100, y: 250, label: 'Mula 1',  color: '#ff6b6b', type: 'mula' },
+    { x: 300, y: 200, label: 'Hub',     color: '#ffc107', type: 'hub' },
+    { x: 500, y: 250, label: 'Mula 2',  color: '#ff6b6b', type: 'mula' },
+    { x: 350, y: 330, label: 'Shell Co', color: '#ff6b6b', type: 'shell' },
+    { x: 150, y: 350, label: 'Cuenta C', color: '#03EF62', type: 'normal' },
+    { x: 550, y: 350, label: 'Cuenta D', color: '#03EF62', type: 'normal' },
+    { x: 600, y: 150, label: 'Cuenta E', color: '#03EF62', type: 'normal' },
+  ];
+  initAMLHover();
+};
+
+/* ================================================================
+   PATCHED showSection — init hover handlers when sections become visible
+   ================================================================ */
+const _origShowSection = showSection;
+showSection = function(id){
+  _origShowSection(id);
+  if(id === 'n2v'){
+    setTimeout(initBFSDFSHover, 300);
+  }
+  if(id === 'gnn_emb'){
+    setTimeout(() => { initGNNMPHover(); }, 300);
+  }
+  if(id === 'aml'){
+    setTimeout(initAMLHover, 300);
+  }
+  if(id === 'intro'){
+    setTimeout(initAdjMatrixCanvas, 300);
+  }
+  if(id === 'semi_supervised'){
+    setTimeout(initPlayground, 300);
+  }
+};
 
 /* ================================================================
    INITIALIZATION

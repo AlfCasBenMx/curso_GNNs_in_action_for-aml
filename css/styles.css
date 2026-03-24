@@ -113,6 +113,8 @@ tr:nth-child(even) td { background: var(--dc-gray-50); }
 .btn-danger { background: var(--dc-red); color: var(--dc-white); }
 .btn-warning { background: var(--dc-orange); color: var(--dc-dark); }
 .btn-info { background: var(--dc-blue); color: var(--dc-white); }
+.btn-secondary { background: #334155; color: var(--dc-white); }
+.btn-secondary:hover, .btn-secondary.active { background: var(--dc-blue); color: var(--dc-white); box-shadow: 0 0 8px rgba(78,168,222,0.5); }
 .btn-group { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 15px 0; }
 
 /* ===== FLOW DIAGRAM ===== */

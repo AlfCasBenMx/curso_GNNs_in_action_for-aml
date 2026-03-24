@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capitulo 2.5: De la Teoria a la Practica &mdash; IA como Herramienta Analitica para AML</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        /* ===== ESTILOS ESPECIFICOS CAP 2.5 ===== */
+        .prompt-template {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            padding: 24px;
+            border-radius: var(--dc-radius-lg);
+            border: 2px solid var(--dc-green);
+            margin: 20px 0;
+            line-height: 1.8;
+            position: relative;
+        }
+        .prompt-template::before {
+            content: 'PLANTILLA DE SOLICITUD';
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--dc-green);
+            color: var(--dc-dark);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.75em;
+            font-weight: 700;
+            padding: 2px 12px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+        }
+        .prompt-field {
+            color: #03EF62;
+            font-weight: bold;
+        }
+        .prompt-placeholder {
+            color: #ff9f43;
+            font-style: italic;
+        }
+        .rubric-table td.score-high { background: #059669; color: white; font-weight: 600; }
+        .rubric-table td.score-mid { background: #f59e0b; color: white; font-weight: 600; }
+        .rubric-table td.score-low { background: #ef4444; color: white; font-weight: 600; }
+        .example-good {
+            border-left: 4px solid #059669;
+            background: #ecfdf5;
+            padding: 16px 20px;
+            border-radius: var(--dc-radius);
+            margin: 12px 0;
+        }
+        .example-bad {
+            border-left: 4px solid #ef4444;
+            background: #fef2f2;
+            padding: 16px 20px;
+            border-radius: var(--dc-radius);
+            margin: 12px 0;
+        }
+        .example-good::before { content: '✅ BUENA SOLICITUD'; display: block; font-weight: 700; color: #059669; font-size: 0.8em; margin-bottom: 8px; letter-spacing: 1px; }
+        .example-bad::before { content: '❌ SOLICITUD DEFICIENTE'; display: block; font-weight: 700; color: #ef4444; font-size: 0.8em; margin-bottom: 8px; letter-spacing: 1px; }
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background: var(--dc-dark);
+            color: var(--dc-green);
+            border-radius: 50%;
+            font-weight: 800;
+            font-size: 1em;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        .step-row {
+            display: flex;
+            align-items: flex-start;
+            margin: 16px 0;
+            gap: 12px;
+        }
+        .aml-mapping-row:nth-child(odd) td { background: #faf5ff; }
+        .mini-case-box {
+            background: linear-gradient(135deg, #0a2540, #05192D);
+            color: var(--dc-white);
+            padding: 28px;
+            border-radius: var(--dc-radius-lg);
+            margin: 20px 0;
+            border: 1px solid rgba(3,239,98,0.3);
+        }
+        .mini-case-box h4 { color: var(--dc-green); }
+        .mini-case-box p, .mini-case-box li { color: var(--dc-gray-300); }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Capitulo 2.5: De la Teoria a la Practica</h1>
+        <p class="subtitle">IA como Herramienta Analitica para AML &mdash; Aprendiendo a Formular Solicitudes Tecnicas</p>
+        <p class="book-info">Guia Conceptual Interactiva | Enfoque Banca &amp; AML | Capitulo Puente entre Teoria y Aplicacion</p>
+        <p style="margin-top:10px; color: var(--dc-green); font-weight:600; font-size: 0.9em; letter-spacing: 0.5px;">DATASET REAL &nbsp;|&nbsp; DICCIONARIO GRAFO&rarr;AML &nbsp;|&nbsp; PLANTILLA DE SOLICITUD &nbsp;|&nbsp; RUBRICA &nbsp;|&nbsp; MINI-CASO &nbsp;|&nbsp; ETICA</p>
+    </header>
+
+    <div class="global-progress" id="globalProgress">
+        <span class="global-progress-label">Progreso del Capitulo</span>
+        <div class="global-progress-bar"><div class="global-progress-fill" id="globalFill"></div></div>
+        <span class="global-progress-pct" id="globalPct">0%</span>
+    </div>
+
+    <nav id="mainNav">
+        <button data-section="intro" onclick="navClick('intro',this)" class="active">Intro<span class="lock-icon"></span></button>
+        <button data-section="dataset" onclick="navClick('dataset',this)">Dataset<span class="lock-icon"></span></button>
+        <button data-section="diccionario" onclick="navClick('diccionario',this)">Diccionario<span class="lock-icon"></span></button>
+        <button data-section="interpretacion" onclick="navClick('interpretacion',this)">Interpretacion<span class="lock-icon"></span></button>
+        <button data-section="plantilla" onclick="navClick('plantilla',this)">Plantilla<span class="lock-icon"></span></button>
+        <button data-section="rubrica" onclick="navClick('rubrica',this)">Rubrica<span class="lock-icon"></span></button>
+        <button data-section="minicaso" onclick="navClick('minicaso',this)">Mini-Caso<span class="lock-icon"></span></button>
+        <button data-section="etica" onclick="navClick('etica',this)">Etica<span class="lock-icon"></span></button>
+        <button data-section="ejercicios" onclick="navClick('ejercicios',this)">Ejercicios<span class="lock-icon"></span></button>
+        <button data-section="resumen" onclick="navClick('resumen',this)">Resumen<span class="lock-icon"></span></button>
+    </nav>
+
+    <!-- ====================== SECCION: INTRODUCCION ====================== -->
+    <div id="intro" class="section active">
+        <h2>Por Que Este Capitulo Existe</h2>
+
+        <div class="stat-cards">
+            <div class="stat-card"><div class="number">6</div><div class="label">Puntos de una solicitud tecnica completa</div></div>
+            <div class="stat-card"><div class="number">12</div><div class="label">Criterios de evaluacion (rubrica)</div></div>
+            <div class="stat-card"><div class="number" style="font-size:1.4em;">&#129302;&rarr;&#128200;</div><div class="label">De prompt vago a analisis profesional</div></div>
+        </div>
+
+        <h3>El problema: saber teoria no es suficiente</h3>
+        <p>En los capitulos 1 y 2 aprendiste <strong>que</strong> son las GNNs, <strong>como</strong> funcionan GCN, GAT y los embeddings, y <strong>por que</strong> son utiles para AML. Pero hay una brecha critica:</p>
+
+        <div class="danger-box">
+            <h4>&#9888; La brecha entre saber y hacer</h4>
+            <p>Un analista AML que entiende GNNs pero no sabe <strong>formular una solicitud tecnica precisa</strong> a una herramienta de IA es como un medico que conoce la anatomia pero no sabe pedir los estudios de laboratorio correctos.</p>
+            <p style="margin-top:10px;">El resultado: obtiene respuestas genericas, pierde tiempo iterando, y peor aun &mdash; puede tomar decisiones basadas en analisis incompletos.</p>
+        </div>
+
+        <div class="highlight">
+            <h4>Al terminar este capitulo seras capaz de:</h4>
+            <ul>
+                <li><strong>Contextualizar un dataset real</strong> como caso de estudio de analisis de grafos aplicado a investigacion</li>
+                <li><strong>Traducir conceptos de grafos a lenguaje AML</strong> usando un diccionario tecnico bidireccional</li>
+                <li><strong>Interpretar resultados</strong> de analisis de grafos en terminos de riesgo y cumplimiento</li>
+                <li><strong>Formular solicitudes tecnicas de 6 puntos</strong> a herramientas de IA para obtener analisis profesionales</li>
+                <li><strong>Evaluar la calidad</strong> de tus propias solicitudes y de las de tus colegas con una rubrica de 12 criterios</li>
+                <li><strong>Aplicar el framework completo</strong> en un mini-caso integrador estilo AML</li>
+            </ul>
+        </div>
+
+        <h3>Filosofia pedagogica</h3>
+        <div class="info-box">
+            <h4>El modelo de este curso</h4>
+            <p>En este curso, la <strong>teoria la ensena el instructor</strong> (capitulos 1-2 y notebooks). Pero la <strong>implementacion tecnica se delega a la IA</strong> &mdash; no porque codificar no sea importante, sino porque la habilidad diferenciadora del analista AML del futuro es saber <em>que pedir</em>, <em>como pedirlo</em> y <em>como validar lo que recibe</em>.</p>
+            <table class="comparison-table" style="margin:15px 0;">
+                <tr><th>Rol</th><th>Responsabilidad</th><th>Ejemplo</th></tr>
+                <tr><td><strong>Instructor</strong></td><td>Teoria, conceptos, intuicion</td><td>"Asi funciona message passing"</td></tr>
+                <tr><td><strong>Estudiante</strong></td><td>Formular solicitudes, interpretar, validar</td><td>"Necesito un GAT de 3 capas para detectar..."</td></tr>
+                <tr><td><strong>IA (Copilot, etc.)</strong></td><td>Implementar, codificar, visualizar</td><td>Genera el codigo, entrena el modelo, produce graficas</td></tr>
+            </table>
+        </div>
+
+        <div class="success-box">
+            <h4>&#128279; Conexion con lo anterior</h4>
+            <p><strong>Capitulo 1:</strong> GCN &mdash; aprendimos los fundamentos de message passing y clasificacion en grafos.</p>
+            <p><strong>Capitulo 2:</strong> Embeddings &mdash; aprendimos N2V, GNN embeddings, transductivo vs inductivo, semi-supervised learning.</p>
+            <p style="margin-top:8px;"><strong>Ahora (2.5):</strong> Vamos a aprender a <em>utilizar</em> todo eso formulando solicitudes tecnicas precisas. Es el puente entre "entiendo la teoria" y "puedo dirigir un analisis real".</p>
+        </div>
+
+        <div class="checkpoint" id="cp-intro">
+            <h4>&#9881; Checkpoint &mdash; Desbloquea la siguiente seccion</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">Cual es la habilidad diferenciadora que este capitulo busca desarrollar?</p>
+            <div class="cp-option" onclick="checkCP('intro',this,false)">Aprender a programar modelos GNN desde cero en PyTorch</div>
+            <div class="cp-option" onclick="checkCP('intro',this,true)">Saber formular solicitudes tecnicas precisas a herramientas de IA para obtener analisis profesionales</div>
+            <div class="cp-option" onclick="checkCP('intro',this,false)">Memorizar las formulas matematicas de GCN y GAT</div>
+            <div class="cp-feedback" id="cpFb-intro"></div>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: DATASET ====================== -->
+    <div id="dataset" class="section">
+        <h2>M1: Caso de Estudio &mdash; Analisis de Grafos en Investigaciones Reales</h2>
+
+        <div class="purple-box">
+            <h4>&#128218; Por que un caso real?</h4>
+            <p>Para que la plantilla de solicitud tecnica no sea un ejercicio abstracto, la anclamos en un <strong>caso real de analisis documental y de redes</strong> que usa exactamente las tecnicas que has aprendido: grafos, comunidades, centralidad, y visualizacion de relaciones.</p>
+        </div>
+
+        <h3>El Proyecto Epstein Document Explorer</h3>
+        <div class="info-box">
+            <h4>Contexto del dataset</h4>
+            <p>En 2024, miles de documentos judiciales del caso Jeffrey Epstein fueron desclasificados por orden de un tribunal federal de EE.UU. Varios equipos de investigacion aplicaron tecnicas de <strong>analisis de grafos y NLP</strong> para extraer y visualizar las relaciones entre personas, organizaciones y lugares mencionados en los documentos.</p>
+            <p style="margin-top:10px;">Dos proyectos destacan por su relevancia pedagogica:</p>
+        </div>
+
+        <div class="concepts-grid">
+            <div class="concept-card">
+                <h4>Bunka Lab &mdash; epstein-files</h4>
+                <p>Analisis tematico con topic modeling (BERTopic). Construye un mapa de topicos a partir de los documentos. Ideal para entender <strong>estructura tematica</strong> de un corpus.</p>
+                <p style="margin-top:8px; color: var(--dc-green); font-size:0.85em;">github.com/Bunka-lab/epstein-files</p>
+            </div>
+            <div class="concept-card" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                <h4>Epstein Doc Explorer</h4>
+                <p>Aplicacion web interactiva que permite buscar documentos, ver entidades extraidas (NER), y <strong>explorar un grafo de relaciones</strong> entre personas. Tiene un demo funcional.</p>
+                <p style="margin-top:8px; color: #e6fdf0; font-size:0.85em;">github.com/maxandrews/Epstein-doc-explorer</p>
+            </div>
+        </div>
+
+        <h3>Lo que estos proyectos nos ensenan</h3>
+        <div class="highlight">
+            <h4>Tecnicas de grafos aplicadas a investigacion documental</h4>
+            <table class="comparison-table" style="margin:15px 0;">
+                <tr><th>Tecnica de Grafos</th><th>Como se usa en estos proyectos</th><th>Equivalente AML</th></tr>
+                <tr><td><strong>NER &rarr; Nodos</strong></td><td>Extraer personas/organizaciones de documentos</td><td>Extraer entidades de SARs y transacciones</td></tr>
+                <tr><td><strong>Co-ocurrencia &rarr; Aristas</strong></td><td>Dos personas mencionadas en el mismo documento = arista</td><td>Dos cuentas en la misma transaccion = arista</td></tr>
+                <tr><td><strong>Centralidad</strong></td><td>PageRank para identificar personas mas conectadas</td><td>Degree centrality para mulas financieras</td></tr>
+                <tr><td><strong>Deteccion de comunidades</strong></td><td>Louvain para encontrar grupos de personas relacionadas</td><td>Identificar redes de lavado organizadas</td></tr>
+                <tr><td><strong>Visualizacion force-directed</strong></td><td>Grafo interactivo con force-graph / D3.js</td><td>Dashboard de investigacion para compliance officers</td></tr>
+            </table>
+        </div>
+
+        <h3>El Pipeline: De Documentos a Grafo</h3>
+        <div class="flow-diagram">
+            <div class="flow-step" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">1. INGESTA<br><small>PDFs desclasificados &rarr; texto plano (OCR + extraccion)</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step">2. NER (Named Entity Recognition)<br><small>spaCy / transformers &rarr; personas, organizaciones, lugares</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step green">3. CONSTRUCCION DEL GRAFO<br><small>Nodos = entidades, Aristas = co-ocurrencia en documentos</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step orange">4. ANALISIS DE RED<br><small>Centralidad, comunidades, embeddings (N2V / GNN)</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step" style="background: linear-gradient(135deg, #059669, #10b981);">5. VISUALIZACION + INTERPRETACION<br><small>Force-graph interactivo, reportes, alertas</small></div>
+        </div>
+
+        <div class="success-box">
+            <h4>&#128161; Insight clave</h4>
+            <p>Este pipeline es <strong>identico</strong> al que usaria un equipo de compliance para analizar redes transaccionales sospechosas. La unica diferencia es la fuente de datos: documentos judiciales vs. registros de transacciones financieras.</p>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                &#128187; Demo interactivo: Epstein Doc Explorer en accion
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <div class="info-box">
+                    <p>El proyecto Epstein Doc Explorer tiene un demo funcional desplegado en Render que puedes explorar:</p>
+                    <p style="margin-top:8px;"><strong>URL:</strong> <a href="https://epstein-doc-explorer-1.onrender.com/" target="_blank" style="color:var(--dc-blue);">epstein-doc-explorer-1.onrender.com</a></p>
+                    <p style="margin-top:10px;"><strong>Que veras:</strong></p>
+                    <ul>
+                        <li><strong>Barra de busqueda:</strong> Busca por nombre de persona o termino clave</li>
+                        <li><strong>Lista de documentos:</strong> PDFs con entidades extraidas resaltadas</li>
+                        <li><strong>Grafo de relaciones:</strong> Visualizacion force-directed donde puedes ver como las personas estan conectadas a traves de documentos compartidos</li>
+                    </ul>
+                    <p style="margin-top:10px; color: var(--dc-gray-500); font-size:0.85em;"><em>Nota: el servidor puede tardar ~30 segundos en arrancar si ha estado inactivo (free tier de Render).</em></p>
+                </div>
+                <div class="highlight">
+                    <h4>Ejercicio de exploracion</h4>
+                    <p>Abre el demo y responde:</p>
+                    <ol>
+                        <li>Quien tiene mas conexiones en el grafo? Que significa eso?</li>
+                        <li>Puedes identificar "clusters" o comunidades de personas?</li>
+                        <li>Si esto fuera una red transaccional AML, que nodos investigarias primero y por que?</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <div class="checkpoint" id="cp-dataset">
+            <h4>&#9881; Checkpoint</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">En el pipeline de analisis documental, como se crean las aristas del grafo?</p>
+            <div class="cp-option" onclick="checkCP('dataset',this,false)">Conectando todos los documentos entre si aleatoriamente</div>
+            <div class="cp-option" onclick="checkCP('dataset',this,true)">Cuando dos entidades (personas/organizaciones) aparecen mencionadas en el mismo documento</div>
+            <div class="cp-option" onclick="checkCP('dataset',this,false)">Usando un algoritmo de deep learning para predecir conexiones</div>
+            <div class="cp-feedback" id="cpFb-dataset"></div>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: DICCIONARIO ====================== -->
+    <div id="diccionario" class="section">
+        <h2>M2: Diccionario Grafo &rarr; AML/FT</h2>
+
+        <div class="purple-box">
+            <h4>&#128214; Por que necesitas este diccionario?</h4>
+            <p>Los conceptos de teoria de grafos que aprendiste en los capitulos 1 y 2 tienen <strong>equivalentes directos</strong> en el mundo de AML/FT. Este diccionario te permite <em>pensar en grafos</em> cuando ves una red transaccional, y <em>pensar en AML</em> cuando ves un grafo.</p>
+        </div>
+
+        <h3>Tabla de Traduccion Bidireccional</h3>
+        <table class="comparison-table" style="width:100%;">
+            <tr>
+                <th style="width:18%;">Concepto de Grafo</th>
+                <th style="width:20%;">Definicion Tecnica</th>
+                <th style="width:22%;">Equivalente AML/FT</th>
+                <th style="width:22%;">Ejemplo Concreto</th>
+                <th style="width:18%;">Capitulo Donde se Aprendio</th>
+            </tr>
+            <tr class="aml-mapping-row">
+                <td><strong>Nodo</strong></td>
+                <td>Entidad del grafo</td>
+                <td>Cuenta, cliente, empresa, beneficiario</td>
+                <td>Cuenta #4521 de Juan Perez en BBVA</td>
+                <td>Cap. 1 (GCN)</td>
+            </tr>
+            <tr class="aml-mapping-row">
+                <td><strong>Arista</strong></td>
+                <td>Conexion entre nodos</td>
+                <td>Transaccion, transferencia, relacion comercial</td>
+                <td>Transferencia de $50K de cuenta A a cuenta B</td>
+                <td>Cap. 1 (GCN)</td>
+            </tr>
+            <tr class="aml-mapping-row">
+                <td><strong>Features de nodo</strong></td>
+                <td>Vector de atributos x<sub>i</sub></td>
+                <td>Perfil del cliente: monto promedio, antiguedad, sector, pais</td>
+                <td>[monto_avg=15K, antiguedad=3a, sector=retail, pais=MX]</td>
+                <td>Cap. 1 (GCN)</td>
+            </tr>
+            <tr class="aml-mapping-row">
+                <td><strong>Etiqueta (label)</strong></td>
+                <td>Clase del nodo (y<sub>i</sub>)</td>
+                <td>SAR presentado, cuenta bloqueada, "sin hallazgo"</td>
+                <td>Label = 1 (SAR confirmado)</td>
+                <td>Cap. 2 (Semi-supervised)</td>
+            </tr>
+            <tr class="aml-mapping-row">
+                <td><strong>Grado (degree)</strong></td>
+                <td>Numero de aristas de un nodo</td>
+                <td>Numero de contrapartes unicas</td>
+                <td>Cuenta con degree=47 (47 contrapartes distintas)</td>
+                <td>Cap. 1</td>
+            </tr>
+            <tr class="aml-mapping-row">
+                <td><strong>Embedding</strong></td>
+                <td>Vector de baja dimension que resume al nodo</td>
+                <td>"Huella digital" del patron transaccional de un cliente</td>
+                <td>Vector de 64 dims que captura comportamiento de la cuenta</td>
+                <td>Cap. 2 (N2V, GNN)</td>
+            </tr>
+            <tr class="aml-mapping-row">
+                <td><strong>Comunidad</strong></td>
+                <td>Cluster de nodos densamente conectados</td>
+                <td>Red organizada, grupo de empresas fachada, celula de lavado</td>
+                <td>7 empresas que solo se transfieren entre si</td>
+                <td>Cap. 2 (Louvain)</td>
+            </tr>
+            <tr class="aml-mapping-row">
+                <td><strong>Centralidad (PageRank)</strong></td>
+                <td>Importancia de un nodo en la red</td>
+                <td>Cuenta "hub" o posible nodo de consolidacion</td>
+                <td>Cuenta que recibe de 30 fuentes y envia a 2 destinos</td>
+                <td>Cap. 2 (Under the Hood)</td>
+            </tr>
+            <tr class="aml-mapping-row">
+                <td><strong>Message passing</strong></td>
+                <td>Agregar info de vecinos: AGGREGATE &rarr; TRANSFORM &rarr; UPDATE</td>
+                <td>"Dime con quien transaccionas y te dire quien eres"</td>
+                <td>El modelo aprende que las cuentas vecinas de SARs tambien son riesgosas</td>
+                <td>Cap. 2 (Under the Hood)</td>
+            </tr>
+            <tr class="aml-mapping-row">
+                <td><strong>Atencion (&alpha;<sub>ij</sub>)</strong></td>
+                <td>Peso aprendido de importancia entre vecinos (GAT)</td>
+                <td>No todas las contrapartes son igual de relevantes para el riesgo</td>
+                <td>&alpha;=0.72 para transferencia sospechosa vs &alpha;=0.03 para pago de nomina</td>
+                <td>Cap. 2 (GAT Recap)</td>
+            </tr>
+            <tr class="aml-mapping-row">
+                <td><strong>Semi-supervised</strong></td>
+                <td>Entrenar con pocos labels, predecir muchos</td>
+                <td>Pocas cuentas confirmadas como SAR, miles sin etiquetar</td>
+                <td>20% etiquetado &rarr; predecir el riesgo del 80% restante</td>
+                <td>Cap. 2 (Semi-supervised)</td>
+            </tr>
+            <tr class="aml-mapping-row">
+                <td><strong>Inductivo</strong></td>
+                <td>Modelo que generaliza a nodos nuevos</td>
+                <td>Sistema que evalua cuentas nuevas sin reentrenar</td>
+                <td>Cliente nuevo abre cuenta &rarr; modelo asigna score de riesgo inmediatamente</td>
+                <td>Cap. 2 (Trans. vs Ind.)</td>
+            </tr>
+        </table>
+
+        <div class="success-box">
+            <h4>&#128161; Como usar este diccionario</h4>
+            <p>Cada vez que formules una solicitud tecnica (la plantilla del modulo M4), <strong>traduce tus necesidades AML a conceptos de grafos</strong>. Ejemplo:</p>
+            <p style="margin-top:8px;"><em>"Necesito identificar redes de lavado organizadas"</em> &rarr; <strong>"Necesito deteccion de comunidades con Louvain en el grafo transaccional"</strong></p>
+            <p style="margin-top:4px;"><em>"Necesito saber que cuentas investigar primero"</em> &rarr; <strong>"Necesito calcular PageRank y degree centrality para priorizar nodos"</strong></p>
+        </div>
+
+        <div class="checkpoint" id="cp-diccionario">
+            <h4>&#9881; Checkpoint</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">En terminos de grafos, que representa un "nodo de consolidacion" en AML?</p>
+            <div class="cp-option" onclick="checkCP('diccionario',this,false)">Un nodo con grado = 0 (sin conexiones)</div>
+            <div class="cp-option" onclick="checkCP('diccionario',this,false)">Un nodo que pertenece a dos comunidades simultaneamente</div>
+            <div class="cp-option" onclick="checkCP('diccionario',this,true)">Un nodo con alta centralidad que recibe de muchas fuentes y envia a pocos destinos</div>
+            <div class="cp-feedback" id="cpFb-diccionario"></div>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: INTERPRETACION ====================== -->
+    <div id="interpretacion" class="section">
+        <h2>M3: Ejercicios de Interpretacion</h2>
+
+        <div class="info-box">
+            <h4>&#127919; Objetivo</h4>
+            <p>Antes de aprender a formular solicitudes, debes practicar <strong>interpretar resultados</strong> de analisis de grafos en terminos de AML. Un modelo te da numeros &mdash; tu trabajo es convertirlos en <strong>decisiones de negocio</strong>.</p>
+        </div>
+
+        <h3>Escenario 1: Embeddings y Clustering</h3>
+        <div class="graph-card">
+            <p>Un modelo GCN genera embeddings de 64 dimensiones para 10,000 cuentas bancarias. Despues de aplicar UMAP para reducir a 2D, observas esto:</p>
+            <div class="highlight">
+                <ul>
+                    <li><strong>Cluster A:</strong> 8,500 cuentas agrupadas densamente (color azul)</li>
+                    <li><strong>Cluster B:</strong> 120 cuentas en un grupo separado (color rojo) &mdash; de estas, 15 tienen SAR confirmado</li>
+                    <li><strong>Puntos dispersos:</strong> ~1,380 cuentas que no pertenecen claramente a ningun cluster</li>
+                </ul>
+            </div>
+            <div class="quiz-question">
+                <h4>Pregunta 1: Que accion recomendarias?</h4>
+                <div class="option" onclick="checkQuiz(this, true, 'int1')">Investigar todas las 120 cuentas del Cluster B. Si 15 ya tienen SAR, las restantes 105 tienen alta probabilidad de ser sospechosas por tener embeddings similares.</div>
+                <div class="option" onclick="checkQuiz(this, false, 'int1')">Ignorar el Cluster B porque solo son 120 cuentas de 10,000 (1.2%)</div>
+                <div class="option" onclick="checkQuiz(this, false, 'int1')">Reentrenar el modelo porque los puntos dispersos indican que no funciona bien</div>
+                <div class="feedback" id="fb-int1"></div>
+            </div>
+        </div>
+
+        <h3>Escenario 2: Coeficientes de Atencion GAT</h3>
+        <div class="graph-card">
+            <p>Un modelo GAT entrenado para detectar fraude te muestra los coeficientes de atencion &alpha;<sub>ij</sub> para la cuenta #7823 (flagged como sospechosa):</p>
+            <table class="comparison-table" style="margin:15px auto;">
+                <tr><th>Contraparte</th><th>&alpha;<sub>ij</sub></th><th>Tipo de Relacion</th><th>Monto Mensual</th></tr>
+                <tr><td>Empresa XYZ Ltd (offshore)</td><td><strong>0.61</strong></td><td>Transferencia internacional</td><td>$480,000</td></tr>
+                <tr><td>Nomina Corp SA</td><td>0.04</td><td>Pago de nomina</td><td>$25,000</td></tr>
+                <tr><td>Servicios ABC</td><td><strong>0.28</strong></td><td>Pago servicios (nueva relacion)</td><td>$120,000</td></tr>
+                <tr><td>CFE (electric utility)</td><td>0.02</td><td>Pago servicios basicos</td><td>$3,500</td></tr>
+                <tr><td>SAT (tax authority)</td><td>0.05</td><td>Pago impuestos</td><td>$45,000</td></tr>
+            </table>
+            <div class="quiz-question">
+                <h4>Pregunta 2: Que te dicen los coeficientes &alpha;<sub>ij</sub>?</h4>
+                <div class="option" onclick="checkQuiz(this, false, 'int2')">Que la cuenta #7823 hace mas transacciones con Empresa XYZ que con las demas</div>
+                <div class="option" onclick="checkQuiz(this, true, 'int2')">Que el modelo aprendio que las relaciones con XYZ (offshore, alto monto) y Servicios ABC (nueva, monto inusual) son las mas relevantes para explicar por que esta cuenta es sospechosa</div>
+                <div class="option" onclick="checkQuiz(this, false, 'int2')">Que los coeficientes son aleatorios y no tienen interpretacion util</div>
+                <div class="feedback" id="fb-int2"></div>
+            </div>
+        </div>
+
+        <h3>Escenario 3: Deteccion de Comunidades</h3>
+        <div class="graph-card">
+            <p>Aplicas el algoritmo Louvain al grafo transaccional y encuentras una comunidad de 7 nodos con estas caracteristicas:</p>
+            <div class="danger-box">
+                <ul>
+                    <li>Las 7 cuentas fueron abiertas en un periodo de 3 semanas</li>
+                    <li>Solo transaccionan entre si (0 aristas hacia el exterior de la comunidad)</li>
+                    <li>Los montos siguen un patron circular: A&rarr;B&rarr;C&rarr;D&rarr;E&rarr;F&rarr;G&rarr;A</li>
+                    <li>El monto total circulante es ~$2.1M mensuales</li>
+                    <li>Ninguna cuenta tiene un beneficiario final identificable</li>
+                </ul>
+            </div>
+            <div class="quiz-question">
+                <h4>Pregunta 3: Que patron AML reconoces?</h4>
+                <div class="option" onclick="checkQuiz(this, false, 'int3')">Operaciones normales de un grupo empresarial</div>
+                <div class="option" onclick="checkQuiz(this, false, 'int3')">Un error en el algoritmo porque las comunidades reales siempre tienen aristas externas</div>
+                <div class="option" onclick="checkQuiz(this, true, 'int3')">Un esquema de layering clasico: cuentas shell que circulan dinero entre si para oscurecer el origen, sin beneficiario final identificable y con apertura casi simultanea</div>
+                <div class="feedback" id="fb-int3"></div>
+            </div>
+        </div>
+
+        <div class="checkpoint" id="cp-interpretacion">
+            <h4>&#9881; Checkpoint</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">Por que los coeficientes &alpha;<sub>ij</sub> de GAT son especialmente valiosos para AML?</p>
+            <div class="cp-option" onclick="checkCP('interpretacion',this,false)">Porque hacen que el modelo sea mas rapido</div>
+            <div class="cp-option" onclick="checkCP('interpretacion',this,true)">Porque proporcionan explicabilidad: muestran CUALES relaciones el modelo considera mas relevantes para la clasificacion, lo cual es necesario para auditorias y reguladores</div>
+            <div class="cp-option" onclick="checkCP('interpretacion',this,false)">Porque garantizan 100% de precision en la deteccion</div>
+            <div class="cp-feedback" id="cpFb-interpretacion"></div>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: PLANTILLA ====================== -->
+    <div id="plantilla" class="section">
+        <h2>M4: La Plantilla de Solicitud Tecnica de 6 Puntos</h2>
+
+        <div class="danger-box">
+            <h4>&#9888; El error mas comun</h4>
+            <p>La diferencia entre obtener un analisis profesional y obtener basura generica de una IA no es la IA &mdash; es <strong>la calidad de tu solicitud</strong>.</p>
+        </div>
+
+        <h3>Contraste: Solicitud Vaga vs. Solicitud Profesional</h3>
+
+        <div class="example-bad">
+            <p><em>"Hazme un modelo de grafos para detectar lavado de dinero"</em></p>
+            <p style="margin-top:8px; color: #991b1b; font-size:0.9em;">Problema: No especifica dataset, metricas, tipo de modelo, restricciones, ni formato de salida. La IA inventara todo.</p>
+        </div>
+
+        <div class="example-good">
+            <p><em>"Usando PyTorch Geometric, implementa un GAT de 2 capas con 8 cabezas de atencion sobre un grafo transaccional de 50K nodos. El grafo tiene features de nodo: [monto_avg, num_transacciones, antiguedad_dias, pais_riesgo]. Entrena con semi-supervised learning usando 500 cuentas con SAR confirmado como labels positivos. Reporta F1-score, precision, recall, y genera una visualizacion UMAP de los embeddings coloreados por clase predicha. Exporta los &alpha;<sub>ij</sub> de las 100 cuentas con mayor score de riesgo."</em></p>
+        </div>
+
+        <h3>Los 6 Puntos de una Solicitud Completa</h3>
+
+        <div class="step-row">
+            <span class="step-number">1</span>
+            <div>
+                <h4>CONTEXTO &mdash; Que problema resuelvo?</h4>
+                <p>Define el dominio, el objetivo de negocio, y el marco regulatorio. <em>"Soy analista AML en un banco mexicano. Necesito identificar redes de empresas fachada en transacciones internacionales para cumplir con la Ley Federal de PLD."</em></p>
+            </div>
+        </div>
+
+        <div class="step-row">
+            <span class="step-number">2</span>
+            <div>
+                <h4>DATOS &mdash; Que datos tengo?</h4>
+                <p>Describe el dataset: tamano, formato, features, labels disponibles, calidad. <em>"Grafo de 50K nodos (cuentas), 320K aristas (transacciones). Features: [monto_avg, freq, antiguedad, pais, sector]. Labels: 500 SARs confirmados, 200 descartados, resto sin etiquetar."</em></p>
+            </div>
+        </div>
+
+        <div class="step-row">
+            <span class="step-number">3</span>
+            <div>
+                <h4>METODO &mdash; Que tecnica quiero usar?</h4>
+                <p>Especifica la arquitectura, hiperparametros clave, y justifica tu eleccion. <em>"GAT de 2 capas con 8 cabezas, porque necesito explicabilidad (&alpha;<sub>ij</sub>) para auditoria regulatoria. Alternativa: GraphSAGE si el grafo no cabe en memoria."</em></p>
+            </div>
+        </div>
+
+        <div class="step-row">
+            <span class="step-number">4</span>
+            <div>
+                <h4>METRICAS &mdash; Como mido el exito?</h4>
+                <p>Define metricas especificas y umbrales aceptables. <em>"F1-score &ge; 0.75, Recall &ge; 0.85 (es critico no perder SARs reales), Precision &ge; 0.60 (acepto algunos falsos positivos). Matriz de confusion obligatoria."</em></p>
+            </div>
+        </div>
+
+        <div class="step-row">
+            <span class="step-number">5</span>
+            <div>
+                <h4>SALIDA &mdash; En que formato quiero el resultado?</h4>
+                <p>Especifica entregables concretos. <em>"(a) Codigo Python comentado en Jupyter notebook, (b) Visualizacion UMAP de embeddings, (c) CSV con top-100 cuentas de mayor riesgo + sus &alpha;<sub>ij</sub>, (d) Resumen ejecutivo de 1 pagina para presentar a compliance."</em></p>
+            </div>
+        </div>
+
+        <div class="step-row">
+            <span class="step-number">6</span>
+            <div>
+                <h4>RESTRICCIONES &mdash; Que limitaciones debo respetar?</h4>
+                <p>Define constraints tecnicos, eticos y de negocio. <em>"No usar datos PII en outputs. Tiempo de ejecucion &lt; 30 min en GPU T4. Compatible con Python 3.10+ y PyG 2.4. No usar librerias no auditadas."</em></p>
+            </div>
+        </div>
+
+        <h3>La Plantilla Completa</h3>
+        <div class="prompt-template">
+            <span class="prompt-field">[1. CONTEXTO]</span><br>
+            Soy <span class="prompt-placeholder">[rol]</span> en <span class="prompt-placeholder">[organizacion/sector]</span>.<br>
+            Objetivo: <span class="prompt-placeholder">[problema de negocio especifico]</span>.<br>
+            Marco regulatorio: <span class="prompt-placeholder">[ley/regulacion aplicable]</span>.<br><br>
+
+            <span class="prompt-field">[2. DATOS]</span><br>
+            Dataset: <span class="prompt-placeholder">[tamano, formato, fuente]</span>.<br>
+            Nodos: <span class="prompt-placeholder">[que representan + cantidad]</span>. Features: <span class="prompt-placeholder">[lista de features]</span>.<br>
+            Aristas: <span class="prompt-placeholder">[que representan + cantidad]</span>. Atributos: <span class="prompt-placeholder">[peso, tipo, etc.]</span>.<br>
+            Labels: <span class="prompt-placeholder">[cuantos etiquetados, cuantos sin etiquetar, distribucion de clases]</span>.<br><br>
+
+            <span class="prompt-field">[3. METODO]</span><br>
+            Arquitectura: <span class="prompt-placeholder">[GCN/GAT/GraphSAGE + capas + cabezas + dims]</span>.<br>
+            Justificacion: <span class="prompt-placeholder">[por que esta arquitectura y no otra]</span>.<br>
+            Framework: <span class="prompt-placeholder">[PyTorch Geometric / DGL / otro]</span>.<br><br>
+
+            <span class="prompt-field">[4. METRICAS]</span><br>
+            Metricas requeridas: <span class="prompt-placeholder">[F1, Precision, Recall, AUC-ROC, etc.]</span>.<br>
+            Umbrales minimos: <span class="prompt-placeholder">[e.g., Recall &ge; 0.85]</span>.<br>
+            Visualizaciones: <span class="prompt-placeholder">[UMAP, matriz de confusion, curvas ROC, etc.]</span>.<br><br>
+
+            <span class="prompt-field">[5. SALIDA]</span><br>
+            Entregables: <span class="prompt-placeholder">[codigo, notebook, CSV, reporte, dashboard]</span>.<br>
+            Formato: <span class="prompt-placeholder">[comentado, modular, con docstrings, etc.]</span>.<br><br>
+
+            <span class="prompt-field">[6. RESTRICCIONES]</span><br>
+            Tecnicas: <span class="prompt-placeholder">[memoria, tiempo, hardware, versiones]</span>.<br>
+            Eticas: <span class="prompt-placeholder">[privacidad, datos sensibles, sesgo]</span>.<br>
+            Negocio: <span class="prompt-placeholder">[plazos, aprobaciones, integracion con sistemas existentes]</span>.
+        </div>
+
+        <div class="info-box">
+            <h4>&#128736; Consejo practico</h4>
+            <p>No necesitas llenar los 6 puntos con la misma profundidad siempre. Para una consulta rapida, los puntos 1 (contexto) y 3 (metodo) son los minimos. Para un proyecto formal, los 6 son obligatorios.</p>
+            <table class="comparison-table" style="margin:15px 0;">
+                <tr><th>Tipo de Solicitud</th><th>Puntos Minimos</th><th>Ejemplo</th></tr>
+                <tr><td>Consulta rapida</td><td>1, 3</td><td>"En AML, cuando uso GAT vs GraphSAGE?"</td></tr>
+                <tr><td>Prototipo / POC</td><td>1, 2, 3, 5</td><td>"Implementa un GCN con este dataset y muestra embeddings"</td></tr>
+                <tr><td>Proyecto formal</td><td>1-6 completos</td><td>La plantilla completa de arriba</td></tr>
+            </table>
+        </div>
+
+        <div class="checkpoint" id="cp-plantilla">
+            <h4>&#9881; Checkpoint</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">Cual es el punto mas critico para AML que muchos analistas olvidan incluir en su solicitud?</p>
+            <div class="cp-option" onclick="checkCP('plantilla',this,false)">El nombre del modelo (GCN vs GAT)</div>
+            <div class="cp-option" onclick="checkCP('plantilla',this,false)">El framework de programacion (PyTorch vs TensorFlow)</div>
+            <div class="cp-option" onclick="checkCP('plantilla',this,true)">Las restricciones eticas y regulatorias (punto 6): no usar PII, cumplir con regulaciones locales, evitar sesgo</div>
+            <div class="cp-feedback" id="cpFb-plantilla"></div>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: RUBRICA ====================== -->
+    <div id="rubrica" class="section">
+        <h2>M5: Rubrica de Evaluacion (12 Criterios)</h2>
+
+        <div class="purple-box">
+            <h4>&#128203; Para que sirve esta rubrica?</h4>
+            <p>Usa esta rubrica para <strong>autoevaluar tus solicitudes</strong> antes de enviarlas, y para <strong>evaluar solicitudes de colegas</strong> en sesiones de revision. Una solicitud con score &lt; 7/12 probablemente producira resultados insuficientes.</p>
+        </div>
+
+        <h3>Los 12 Criterios</h3>
+        <table class="comparison-table rubric-table" style="width:100%;">
+            <tr>
+                <th style="width:5%;">#</th>
+                <th style="width:20%;">Criterio</th>
+                <th style="width:25%;">Punto de la Plantilla</th>
+                <th style="width:25%;">&#10004; Cumple (1 pt)</th>
+                <th style="width:25%;">&#10008; No cumple (0 pt)</th>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td><strong>Problema definido</strong></td>
+                <td>1. Contexto</td>
+                <td>Objetivo de negocio claro y especifico</td>
+                <td>"Detectar fraude" sin mas detalle</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td><strong>Rol y dominio</strong></td>
+                <td>1. Contexto</td>
+                <td>Especifica el sector y marco regulatorio</td>
+                <td>No menciona el contexto de negocio</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td><strong>Dataset descrito</strong></td>
+                <td>2. Datos</td>
+                <td>Tamano, formato, features listados</td>
+                <td>"Tengo datos de transacciones"</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td><strong>Labels clarificados</strong></td>
+                <td>2. Datos</td>
+                <td>Cantidad de etiquetados, distribucion de clases</td>
+                <td>No menciona si hay labels o cuantos</td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td><strong>Arquitectura especifica</strong></td>
+                <td>3. Metodo</td>
+                <td>Nombre del modelo + hiperparametros clave</td>
+                <td>"Usa deep learning" o "un modelo de grafos"</td>
+            </tr>
+            <tr>
+                <td>6</td>
+                <td><strong>Justificacion tecnica</strong></td>
+                <td>3. Metodo</td>
+                <td>Explica por que esa arquitectura y no otra</td>
+                <td>Elige modelo sin justificacion</td>
+            </tr>
+            <tr>
+                <td>7</td>
+                <td><strong>Metricas definidas</strong></td>
+                <td>4. Metricas</td>
+                <td>Al menos 2 metricas con umbrales</td>
+                <td>"Que sea bueno" o "alta precision"</td>
+            </tr>
+            <tr>
+                <td>8</td>
+                <td><strong>Recall priorizado</strong></td>
+                <td>4. Metricas</td>
+                <td>Reconoce que en AML el recall es critico</td>
+                <td>Solo pide accuracy o precision</td>
+            </tr>
+            <tr>
+                <td>9</td>
+                <td><strong>Entregables concretos</strong></td>
+                <td>5. Salida</td>
+                <td>Lista especifica: codigo, CSV, grafica, reporte</td>
+                <td>"Dame el resultado" sin especificar formato</td>
+            </tr>
+            <tr>
+                <td>10</td>
+                <td><strong>Formato de codigo</strong></td>
+                <td>5. Salida</td>
+                <td>Especifica lenguaje, framework, estilo</td>
+                <td>No indica lenguaje ni framework</td>
+            </tr>
+            <tr>
+                <td>11</td>
+                <td><strong>Restricciones tecnicas</strong></td>
+                <td>6. Restricciones</td>
+                <td>Hardware, tiempo, compatibilidad</td>
+                <td>No considera limitaciones practicas</td>
+            </tr>
+            <tr>
+                <td>12</td>
+                <td><strong>Restricciones eticas</strong></td>
+                <td>6. Restricciones</td>
+                <td>Privacidad, sesgo, cumplimiento regulatorio</td>
+                <td>Ignora implicaciones eticas</td>
+            </tr>
+        </table>
+
+        <h3>Escala de Evaluacion</h3>
+        <div class="concepts-grid">
+            <div class="concept-card" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                <h4>0&ndash;4 puntos: Insuficiente</h4>
+                <p>La solicitud es demasiado vaga. La IA inventara detalles criticos. Alto riesgo de obtener resultados inutiles o daninos.</p>
+            </div>
+            <div class="concept-card" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                <h4>5&ndash;7 puntos: Aceptable</h4>
+                <p>Solicitud funcional pero con gaps. La IA podra trabajar pero habra idas y vueltas para clarificar. Resultado parcialmente util.</p>
+            </div>
+            <div class="concept-card" style="background: linear-gradient(135deg, #059669, #10b981);">
+                <h4>8&ndash;10 puntos: Buena</h4>
+                <p>Solicitud solida. La IA producira resultados utiles en primera iteracion. Pocos ajustes necesarios.</p>
+            </div>
+            <div class="concept-card">
+                <h4>11&ndash;12 puntos: Excelente</h4>
+                <p>Solicitud de nivel profesional. Resultado listo para produccion o presentacion a reguladores. Minimas iteraciones.</p>
+            </div>
+        </div>
+
+        <h3>Ejercicio: Evalua esta solicitud</h3>
+        <div class="graph-card">
+            <div class="example-bad">
+                <p><em>"Quiero un modelo de inteligencia artificial que analice transacciones bancarias y me diga cuales son sospechosas. Usa grafos y que sea bueno."</em></p>
+            </div>
+            <div class="quiz-question">
+                <h4>Cuantos puntos le darias en la rubrica? (Pista: revisa los 12 criterios arriba)</h4>
+                <div class="option" onclick="checkQuiz(this, false, 'rub1')">8/12 &mdash; Es bastante clara</div>
+                <div class="option" onclick="checkQuiz(this, true, 'rub1')">1/12 &mdash; Solo tiene un problema vagamente definido (criterio 1 parcial). No tiene datos, metodo, metricas, formato, ni restricciones.</div>
+                <div class="option" onclick="checkQuiz(this, false, 'rub1')">5/12 &mdash; Tiene lo esencial</div>
+                <div class="feedback" id="fb-rub1"></div>
+            </div>
+        </div>
+
+        <div class="checkpoint" id="cp-rubrica">
+            <h4>&#9881; Checkpoint</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">Por que en AML es mas importante priorizar Recall que Precision?</p>
+            <div class="cp-option" onclick="checkCP('rubrica',this,false)">Porque Recall es mas facil de calcular</div>
+            <div class="cp-option" onclick="checkCP('rubrica',this,true)">Porque un falso negativo (no detectar un SAR real) tiene consecuencias legales y de riesgo mucho mayores que un falso positivo (investigar una cuenta legitima)</div>
+            <div class="cp-option" onclick="checkCP('rubrica',this,false)">Porque los reguladores solo evaluan Recall</div>
+            <div class="cp-feedback" id="cpFb-rubrica"></div>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: MINI-CASO ====================== -->
+    <div id="minicaso" class="section">
+        <h2>M6: Mini-Caso Integrador &mdash; Red de Remesas Sospechosas</h2>
+
+        <div class="mini-case-box">
+            <h4>&#128270; Escenario</h4>
+            <p>Eres analista senior de AML en un banco regional mexicano. El area de monitoreo ha detectado un incremento del 340% en remesas internacionales entrantes hacia una zona geografica especifica en los ultimos 90 dias. Tu jefe te pide: <em>"Usa las herramientas de IA para investigar si hay una red organizada detras de esto."</em></p>
+            <p style="margin-top:12px;"><strong>Datos disponibles:</strong></p>
+            <ul style="margin-top:8px;">
+                <li>12,400 cuentas receptoras de remesas en la zona</li>
+                <li>87,600 transacciones de remesas en 90 dias</li>
+                <li>Features por cuenta: monto_promedio, frecuencia, pais_origen, tipo_identificacion, antiguedad_cuenta</li>
+                <li>42 cuentas con SAR previo por structuring</li>
+                <li>El grafo ya esta construido: nodos = cuentas, aristas = remesas entre la misma red de beneficiarios</li>
+            </ul>
+        </div>
+
+        <h3>Tu tarea: Escribe la solicitud completa de 6 puntos</h3>
+        <div class="info-box">
+            <h4>&#9997; Instrucciones</h4>
+            <p>Usando la plantilla de M4 y el diccionario de M2, redacta una solicitud tecnica completa para analizar esta red de remesas. Antes de ver la solucion, intenta escribirla tu mismo en un documento aparte.</p>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                &#128161; Solucion de referencia (abrir despues de intentarlo)
+                <span class="accordion-icon">&#9660;</span>
+            </div>
+            <div class="accordion-body">
+                <div class="prompt-template">
+                    <span class="prompt-field">[1. CONTEXTO]</span><br>
+                    Soy analista senior AML en un banco regional mexicano.<br>
+                    Objetivo: Identificar si existe una red organizada de lavado detras del<br>
+                    incremento del 340% en remesas internacionales entrantes en los ultimos 90 dias.<br>
+                    Marco regulatorio: Ley Federal de PLD/FT, Disposiciones de Caracter General<br>
+                    de la CNBV, umbrales de reporte de operaciones inusuales ($50K MXN).<br><br>
+
+                    <span class="prompt-field">[2. DATOS]</span><br>
+                    Grafo transaccional: 12,400 nodos (cuentas receptoras), ~87,600 aristas (remesas).<br>
+                    Features de nodo: [monto_promedio, frecuencia_mensual, pais_origen,<br>
+                    tipo_identificacion, antiguedad_cuenta_dias].<br>
+                    Features de arista: [monto, fecha, tipo_remesa].<br>
+                    Labels: 42 cuentas con SAR previo por structuring (positivos), ~200 cuentas<br>
+                    investigadas sin hallazgo (negativos), 12,158 sin etiquetar.<br><br>
+
+                    <span class="prompt-field">[3. METODO]</span><br>
+                    Fase 1: Deteccion de comunidades con Louvain para identificar clusters.<br>
+                    Fase 2: GAT de 2 capas, 4 cabezas, hidden_dim=64, semi-supervised.<br>
+                    Justificacion: GAT porque necesito coeficientes de atencion alpha_ij para<br>
+                    explicar a reguladores CUALES relaciones son relevantes. Semi-supervised<br>
+                    porque solo tengo 42 labels positivos de 12,400 cuentas.<br>
+                    Alternativa: Si el grafo no cabe en GPU (16GB), usar GraphSAGE con<br>
+                    NeighborLoader (batch_size=512, num_neighbors=[10,5]).<br>
+                    Framework: PyTorch Geometric 2.4+.<br><br>
+
+                    <span class="prompt-field">[4. METRICAS]</span><br>
+                    Recall &ge; 0.85 (critico: no puedo perder SARs reales).<br>
+                    Precision &ge; 0.50 (acepto investigar 1 falso positivo por cada verdadero).<br>
+                    F1-score &ge; 0.65.<br>
+                    AUC-ROC para evaluar la capacidad discriminativa general.<br>
+                    Visualizaciones: UMAP de embeddings coloreados por clase, matriz de<br>
+                    confusion, distribucion de scores de riesgo.<br><br>
+
+                    <span class="prompt-field">[5. SALIDA]</span><br>
+                    (a) Jupyter notebook con codigo comentado y modular.<br>
+                    (b) CSV: top-200 cuentas con mayor score de riesgo + alpha_ij de sus<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;3 conexiones mas relevantes + comunidad asignada.<br>
+                    (c) Visualizacion del grafo de las comunidades detectadas (NetworkX o Sigma.js).<br>
+                    (d) Resumen ejecutivo (1 pagina) con hallazgos principales para presentar<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;al Comite de Comunicacion y Control.<br><br>
+
+                    <span class="prompt-field">[6. RESTRICCIONES]</span><br>
+                    Tecnicas: GPU T4 (16GB), tiempo de entrenamiento &lt; 45 min, Python 3.10+.<br>
+                    Eticas: No incluir nombres ni datos PII en el notebook/CSV de salida &mdash;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;usar solo IDs anonimizados. No compartir el modelo fuera del area de compliance.<br>
+                    Negocio: Resultados necesarios en 5 dias habiles para el reporte trimestral.<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;El CSV debe ser compatible con el sistema de alertas existente (formato UTF-8).
+                </div>
+
+                <div class="success-box">
+                    <h4>&#127942; Evaluacion con la rubrica</h4>
+                    <p>Esta solicitud obtiene <strong>12/12</strong> en la rubrica:</p>
+                    <ol>
+                        <li>&#10004; Problema definido (incremento 340%, red organizada)</li>
+                        <li>&#10004; Rol y dominio (banco mexicano, PLD/FT)</li>
+                        <li>&#10004; Dataset descrito (12.4K nodos, 87.6K aristas, features listados)</li>
+                        <li>&#10004; Labels clarificados (42 positivos, ~200 negativos, 12.1K sin etiquetar)</li>
+                        <li>&#10004; Arquitectura especifica (GAT 2 capas, 4 cabezas, 64 dims)</li>
+                        <li>&#10004; Justificacion tecnica (explicabilidad via &alpha;<sub>ij</sub>, semi-supervised por pocos labels)</li>
+                        <li>&#10004; Metricas definidas (4 metricas con umbrales)</li>
+                        <li>&#10004; Recall priorizado (&ge; 0.85)</li>
+                        <li>&#10004; Entregables concretos (notebook, CSV, visualizacion, resumen)</li>
+                        <li>&#10004; Formato de codigo (PyG 2.4+, Python, comentado, modular)</li>
+                        <li>&#10004; Restricciones tecnicas (GPU T4, 45 min, Python 3.10+)</li>
+                        <li>&#10004; Restricciones eticas (IDs anonimizados, no PII, no compartir fuera de compliance)</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <h3>Ejercicio de Variacion</h3>
+        <div class="graph-card">
+            <h4>Modifica la solicitud para estos escenarios:</h4>
+            <ol style="line-height:2.2;">
+                <li><strong>Escala masiva:</strong> En vez de 12K cuentas tienes 2 millones. Que cambias en el punto 3 (Metodo)?</li>
+                <li><strong>Sin labels:</strong> No tienes ningun SAR previo. Que cambias en los puntos 3 y 4?</li>
+                <li><strong>Para regulador:</strong> El output no es para tu equipo sino para la CNBV. Que cambias en el punto 5?</li>
+            </ol>
+        </div>
+
+        <div class="checkpoint" id="cp-minicaso">
+            <h4>&#9881; Checkpoint</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">En la solucion de referencia, por que se especifica una alternativa (GraphSAGE) ademas del metodo principal (GAT)?</p>
+            <div class="cp-option" onclick="checkCP('minicaso',this,false)">Porque GraphSAGE siempre es mejor que GAT</div>
+            <div class="cp-option" onclick="checkCP('minicaso',this,true)">Porque si el grafo de 12.4K nodos no cabe en los 16GB de la GPU, necesitas un plan B con muestreo de vecinos (GraphSAGE + NeighborLoader)</div>
+            <div class="cp-option" onclick="checkCP('minicaso',this,false)">Porque el regulador exige usar dos modelos diferentes</div>
+            <div class="cp-feedback" id="cpFb-minicaso"></div>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: ETICA ====================== -->
+    <div id="etica" class="section">
+        <h2>M7: Etica, Sesgo y Responsabilidad en IA para AML</h2>
+
+        <div class="danger-box">
+            <h4>&#9888; Este modulo no es opcional</h4>
+            <p>Usar GNNs para AML implica tomar decisiones que afectan a personas reales: bloquear cuentas, reportar a autoridades, congelar fondos. Un modelo sesgado o mal validado puede arruinar la vida financiera de personas inocentes.</p>
+        </div>
+
+        <h3>Los 5 Riesgos Eticos de IA en AML</h3>
+
+        <div class="concepts-grid">
+            <div class="concept-card" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                <h4>1. Sesgo Geografico</h4>
+                <p>Si tus labels de entrenamiento sobre-representan SARs de ciertos paises, el modelo aprendera que "pais X = sospechoso", perpetuando discriminacion.</p>
+            </div>
+            <div class="concept-card" style="background: linear-gradient(135deg, #ef4444, #b91c1c);">
+                <h4>2. Falsos Positivos Sistematicos</h4>
+                <p>Un modelo con bajo recall genera pocas alertas, pero las que genera pueden afectar desproporcionadamente a comunidades especificas (de-risking).</p>
+            </div>
+            <div class="concept-card" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                <h4>3. Opacidad del Modelo</h4>
+                <p>Si usas un GCN sin explicabilidad (&alpha;<sub>ij</sub>), no puedes explicar al regulador ni al cliente POR QUE su cuenta fue bloqueada.</p>
+            </div>
+            <div class="concept-card" style="background: linear-gradient(135deg, #f59e0b, #b45309);">
+                <h4>4. Privacidad y Datos</h4>
+                <p>Los embeddings pueden filtrar PII. Un ataque de inversion puede reconstruir features originales a partir de los vectores de embedding.</p>
+            </div>
+            <div class="concept-card" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">
+                <h4>5. Automatizacion sin Supervision</h4>
+                <p>Usar scores de riesgo del modelo para bloquear cuentas automaticamente, sin revision humana, viola principios de due process.</p>
+            </div>
+        </div>
+
+        <h3>Principios para Solicitudes Eticas</h3>
+        <div class="success-box">
+            <h4>Checklist etico para incluir en el Punto 6 de tu solicitud</h4>
+            <ol style="line-height:2.2;">
+                <li><strong>Anonimizacion:</strong> Todos los outputs deben usar IDs internos, nunca nombres ni datos PII</li>
+                <li><strong>Auditabilidad:</strong> Usar modelos con explicabilidad (GAT con &alpha;<sub>ij</sub>) cuando el resultado alimenta decisiones regulatorias</li>
+                <li><strong>Revision humana:</strong> Ningun modelo debe tomar decisiones autonomas &mdash; siempre hay un analista que revisa y aprueba</li>
+                <li><strong>Evaluacion de sesgo:</strong> Medir si el modelo tiene diferente rendimiento (F1, FPR) por segmento geografico, etnico, o economico</li>
+                <li><strong>Reentrenamiento periodico:</strong> Los patrones de lavado evolucionan. Un modelo de hace 6 meses puede estar obsoleto</li>
+                <li><strong>Documentacion:</strong> Registrar cada decision: que datos se usaron, que modelo, que umbrales, quien aprobo su uso</li>
+            </ol>
+        </div>
+
+        <h3>Caso de Reflexion</h3>
+        <div class="graph-card">
+            <div class="highlight">
+                <h4>Dilema etico</h4>
+                <p>Tu modelo GAT asigna scores de riesgo altos (&gt;0.85) a 340 cuentas en una zona rural. Al investigar, descubres que muchas son cuentas de <strong>trabajadores agricolas migrantes</strong> que reciben remesas legitimas de familiares en EE.UU. El patron de remesas (montos similares, frecuencia regular, mismos paises de origen) es genuinamente similar al patron de structuring.</p>
+            </div>
+            <div class="quiz-question">
+                <h4>Que haces?</h4>
+                <div class="option" onclick="checkQuiz(this, false, 'eth1')">Reportar las 340 cuentas como SARs &mdash; el modelo dice que son sospechosas</div>
+                <div class="option" onclick="checkQuiz(this, false, 'eth1')">Ignorar las alertas &mdash; son trabajadores agricolas legitimos</div>
+                <div class="option" onclick="checkQuiz(this, true, 'eth1')">Revisar los alpha_ij para entender QUE features activan la alerta, agregar features que distingan patrones legitimos (e.g., relacion familiar verificada, historial de empleo), y ajustar el modelo para reducir falsos positivos en este segmento sin perder recall en SARs reales</div>
+                <div class="feedback" id="fb-eth1"></div>
+            </div>
+        </div>
+
+        <div class="checkpoint" id="cp-etica">
+            <h4>&#9881; Checkpoint</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">Por que es peligroso automatizar completamente las decisiones de AML basandose en scores de un modelo GNN?</p>
+            <div class="cp-option" onclick="checkCP('etica',this,false)">Porque los modelos GNN son demasiado lentos para tiempo real</div>
+            <div class="cp-option" onclick="checkCP('etica',this,true)">Porque los modelos pueden tener sesgos, los patrones evolucionan, y bloquear cuentas sin revision humana viola principios de due process y puede afectar desproporcionadamente a poblaciones vulnerables</div>
+            <div class="cp-option" onclick="checkCP('etica',this,false)">Porque los reguladores prohiben el uso de cualquier tipo de IA</div>
+            <div class="cp-feedback" id="cpFb-etica"></div>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: EJERCICIOS ====================== -->
+    <div id="ejercicios" class="section">
+        <h2>Ejercicios Integradores</h2>
+
+        <div class="info-box">
+            <h4>&#127919; Objetivo</h4>
+            <p>Estos ejercicios combinan todo lo aprendido en el capitulo: diccionario, interpretacion, plantilla de 6 puntos, rubrica y etica.</p>
+        </div>
+
+        <h3>Ejercicio 1: Traduce al Lenguaje de Grafos</h3>
+        <div class="graph-card">
+            <p>Tu jefe de compliance dice las siguientes frases. Traduce cada una a conceptos de grafos usando el diccionario de M2:</p>
+            <ol style="line-height:2.4;">
+                <li><em>"Necesito saber cuales cuentas son el centro de la red"</em><br>
+                    <strong>Traduccion:</strong> &#8594; <span style="color: var(--dc-gray-500);">Calcular centralidad (PageRank / degree centrality) para identificar nodos hub</span></li>
+                <li><em>"Estas 5 empresas solo se mandan dinero entre ellas"</em><br>
+                    <strong>Traduccion:</strong> &#8594; <span style="color: var(--dc-gray-500);">Deteccion de comunidades (Louvain) &mdash; cluster con 0 aristas externas</span></li>
+                <li><em>"Quiero que el sistema detecte nuevas cuentas sospechosas sin tener que reentrenarlo"</em><br>
+                    <strong>Traduccion:</strong> &#8594; <span style="color: var(--dc-gray-500);">Modelo inductivo (GraphSAGE) que generaliza a nodos nuevos</span></li>
+                <li><em>"Necesito explicarle al regulador POR QUE esta cuenta fue flagged"</em><br>
+                    <strong>Traduccion:</strong> &#8594; <span style="color: var(--dc-gray-500);">GAT con coeficientes de atencion &alpha;<sub>ij</sub> para explicabilidad</span></li>
+            </ol>
+        </div>
+
+        <h3>Ejercicio 2: Evalua con la Rubrica</h3>
+        <div class="graph-card">
+            <p>Evalua la siguiente solicitud usando los 12 criterios de la rubrica. Asigna 1 o 0 a cada criterio y calcula el score total.</p>
+            <div class="example-bad">
+                <p><em>"Soy analista AML. Tengo un dataset de transacciones con 100K cuentas. Usa PyTorch Geometric para construir un modelo GNN que detecte fraude. Quiero un Jupyter notebook con el codigo y una grafica de los resultados. Que tenga buena precision."</em></p>
+            </div>
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    &#128161; Ver evaluacion de referencia
+                    <span class="accordion-icon">&#9660;</span>
+                </div>
+                <div class="accordion-body">
+                    <table class="comparison-table" style="width:100%;">
+                        <tr><th>#</th><th>Criterio</th><th>Puntaje</th><th>Comentario</th></tr>
+                        <tr><td>1</td><td>Problema definido</td><td class="score-mid">0.5</td><td>"Detecte fraude" es vago</td></tr>
+                        <tr><td>2</td><td>Rol y dominio</td><td class="score-high">1</td><td>Dice "analista AML"</td></tr>
+                        <tr><td>3</td><td>Dataset descrito</td><td class="score-mid">0.5</td><td>Dice 100K pero no features</td></tr>
+                        <tr><td>4</td><td>Labels clarificados</td><td class="score-low">0</td><td>No menciona labels</td></tr>
+                        <tr><td>5</td><td>Arquitectura especifica</td><td class="score-low">0</td><td>Solo dice "GNN" sin especificar</td></tr>
+                        <tr><td>6</td><td>Justificacion tecnica</td><td class="score-low">0</td><td>No justifica la eleccion</td></tr>
+                        <tr><td>7</td><td>Metricas definidas</td><td class="score-low">0</td><td>"Buena precision" no es una metrica</td></tr>
+                        <tr><td>8</td><td>Recall priorizado</td><td class="score-low">0</td><td>No menciona recall</td></tr>
+                        <tr><td>9</td><td>Entregables concretos</td><td class="score-high">1</td><td>Notebook + grafica</td></tr>
+                        <tr><td>10</td><td>Formato de codigo</td><td class="score-high">1</td><td>Especifica PyG</td></tr>
+                        <tr><td>11</td><td>Restricciones tecnicas</td><td class="score-low">0</td><td>No menciona</td></tr>
+                        <tr><td>12</td><td>Restricciones eticas</td><td class="score-low">0</td><td>No menciona</td></tr>
+                    </table>
+                    <div class="highlight" style="margin-top:12px;">
+                        <p><strong>Score total: 4/12 &mdash; Insuficiente.</strong> Esta solicitud necesita agregar: features del dataset, cantidad de labels, tipo de GNN especifico con justificacion, metricas con umbrales (priorizando recall), y restricciones tecnicas y eticas.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h3>Ejercicio 3: Escribe Tu Propia Solicitud</h3>
+        <div class="graph-card">
+            <h4>Elige uno de estos escenarios y escribe una solicitud completa de 6 puntos:</h4>
+            <div class="concepts-grid">
+                <div class="concept-card" style="cursor:default;">
+                    <h4>Escenario A: Trade Finance</h4>
+                    <p>Un banco tiene 5,000 cartas de credito (L/Cs) emitidas en 6 meses. Sospecha que algunas son ficticias (trade-based money laundering). Grafo: nodos = empresas, aristas = L/Cs.</p>
+                </div>
+                <div class="concept-card" style="cursor:default; background: linear-gradient(135deg, #28a745, #20c997);">
+                    <h4>Escenario B: Crypto</h4>
+                    <p>Exchange de criptomonedas con 500K wallets. 200 wallets vinculadas a ransomware conocido. Grafo: nodos = wallets, aristas = transacciones on-chain.</p>
+                </div>
+                <div class="concept-card" style="cursor:default; background: linear-gradient(135deg, #f59e0b, #d97706);">
+                    <h4>Escenario C: Corresponsalia</h4>
+                    <p>Banco corresponsal procesa pagos internacionales. 15,000 bancos respondents, 2M transacciones/mes. 80 bancos en lista de riesgo. Grafo: nodos = bancos, aristas = SWIFT messages.</p>
+                </div>
+            </div>
+            <div class="info-box" style="margin-top:12px;">
+                <p><strong>Criterio de exito:</strong> Tu solicitud debe obtener al menos <strong>10/12</strong> en la rubrica. Pidele a un companero que la evalue, o usa la rubrica tu mismo.</p>
+            </div>
+        </div>
+
+        <h3>Ejercicio 4: Del Grafo al Reporte</h3>
+        <div class="graph-card">
+            <p>El demo de Epstein Doc Explorer (<a href="https://epstein-doc-explorer-1.onrender.com/" target="_blank" style="color:var(--dc-blue);">enlace</a>) muestra un grafo de relaciones. Imagina que es una red transaccional AML. Escribe:</p>
+            <ol style="line-height:2.2;">
+                <li>Un parrafo describiendo lo que observas en el grafo (usa el vocabulario del diccionario M2)</li>
+                <li>3 preguntas que le harias a la IA para profundizar el analisis (usando la plantilla de M4, al menos puntos 1 y 3)</li>
+                <li>1 riesgo etico que identificas en automatizar este tipo de analisis (usando M7)</li>
+            </ol>
+        </div>
+
+        <div style="text-align:center; margin-top:20px;">
+            <button class="btn btn-primary" onclick="completeSection('ejercicios')" id="btnCompleteEjercicios" style="font-size:1.1em; padding:16px 40px;">&#10003; He completado los ejercicios &mdash; Ver Resumen</button>
+        </div>
+    </div>
+
+    <!-- ====================== SECCION: RESUMEN ====================== -->
+    <div id="resumen" class="section">
+        <h2>Resumen Final del Capitulo 2.5</h2>
+
+        <div class="stat-cards">
+            <div class="stat-card"><div class="number">6</div><div class="label">Puntos de la plantilla dominados</div></div>
+            <div class="stat-card"><div class="number">12</div><div class="label">Criterios de la rubrica</div></div>
+            <div class="stat-card"><div class="number">5</div><div class="label">Riesgos eticos identificados</div></div>
+            <div class="stat-card"><div class="number">&#10003;</div><div class="label">Listo para solicitar analisis profesionales</div></div>
+        </div>
+
+        <div class="highlight">
+            <h3>Los 8 Puntos Clave de este Capitulo</h3>
+            <ol style="line-height: 2.2; font-size: 1.05em;">
+                <li><strong>Saber teoria no es suficiente</strong> &mdash; la habilidad diferenciadora es formular solicitudes tecnicas precisas.</li>
+                <li>El <strong>pipeline de analisis de grafos</strong> es identico para investigacion documental y para AML: ingesta &rarr; NER &rarr; grafo &rarr; analisis &rarr; visualizacion.</li>
+                <li>El <strong>diccionario Grafo&rarr;AML</strong> traduce 12 conceptos tecnicos a lenguaje de compliance y viceversa.</li>
+                <li><strong>Interpretar resultados</strong> requiere entender que significan los numeros en contexto de negocio: embeddings &rarr; clusters, &alpha;<sub>ij</sub> &rarr; relevancia de relaciones, comunidades &rarr; redes organizadas.</li>
+                <li>La <strong>plantilla de 6 puntos</strong> (Contexto, Datos, Metodo, Metricas, Salida, Restricciones) es tu herramienta principal para obtener analisis profesionales de cualquier IA.</li>
+                <li>La <strong>rubrica de 12 criterios</strong> te permite autoevaluar y mejorar tus solicitudes antes de enviarlas.</li>
+                <li>En AML, <strong>Recall &gt; Precision</strong> &mdash; un falso negativo (no detectar un SAR) es mucho mas costoso que un falso positivo.</li>
+                <li>La <strong>etica no es opcional</strong>: anonimizacion, explicabilidad, revision humana, evaluacion de sesgo, y documentacion son requisitos para cualquier sistema de IA en produccion.</li>
+            </ol>
+        </div>
+
+        <h3>Framework Completo: De Teoria a Analisis</h3>
+        <div class="flow-diagram">
+            <div class="flow-step" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">TEORIA (Cap 1-2)<br><small>GCN, GAT, embeddings, message passing, semi-supervised</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step">DICCIONARIO (Cap 2.5, M2)<br><small>Grafo &harr; AML: 12 conceptos traducidos</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step green">INTERPRETACION (Cap 2.5, M3)<br><small>Numeros &rarr; decisiones de negocio</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step orange">SOLICITUD (Cap 2.5, M4-M5)<br><small>Plantilla 6 puntos + rubrica 12 criterios</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step" style="background: linear-gradient(135deg, #059669, #10b981);">ETICA (Cap 2.5, M7)<br><small>Sesgo, privacidad, revision humana, documentacion</small></div>
+            <div class="flow-arrow">&#8595;</div>
+            <div class="flow-step blue">IMPLEMENTACION (Cap 3+)<br><small>GraphSAGE, GIN, y aplicaciones en escala real</small></div>
+        </div>
+
+        <div class="success-box">
+            <h3>Siguiente: Capitulo 3 &mdash; GraphSAGE (Escalabilidad)</h3>
+            <p>Ya sabes <strong>que tecnica elegir</strong> (Cap 1-2), <strong>como pedirla</strong> (Cap 2.5), y <strong>que riesgos considerar</strong> (Cap 2.5 M7). En el siguiente capitulo aprenderemos GraphSAGE: la arquitectura que permite escalar GNNs a grafos de millones de nodos &mdash; exactamente lo que necesitas para AML en produccion.</p>
+            <div class="highlight" style="margin-top:15px;">
+                <p><strong>La progresion completa:</strong> GCN (fundamentos) &rarr; GAT (atencion) &rarr; Embeddings (representacion) &rarr; <strong>Solicitudes (este capitulo)</strong> &rarr; GraphSAGE (escalabilidad)</p>
+            </div>
+        </div>
+
+        <div class="concepts-grid">
+            <div class="concept-card" style="cursor:default">
+                <h4>Herramientas Dominadas</h4>
+                <p>Diccionario Grafo&harr;AML, Plantilla de 6 puntos, Rubrica de 12 criterios, Interpretacion de embeddings/&alpha;<sub>ij</sub>/comunidades, Checklist etico</p>
+            </div>
+            <div class="concept-card" style="cursor:default; background: linear-gradient(135deg, #28a745, #20c997);">
+                <h4>Casos Practicados</h4>
+                <p>Epstein Doc Explorer, clustering de cuentas, atencion GAT en transacciones, layering con comunidades, remesas sospechosas</p>
+            </div>
+            <div class="concept-card" style="cursor:default; background: linear-gradient(135deg, #fd7e14, #ffc107);">
+                <h4>Proximos Pasos</h4>
+                <p>Capitulo 3: GraphSAGE / NeighborLoader / Mini-batching / Escalabilidad a millones de nodos</p>
+            </div>
+        </div>
+
+        <div class="purple-box">
+            <h4>&#128279; Recursos de Referencia</h4>
+            <ul style="line-height:2;">
+                <li><strong>Caso de estudio (metodologia):</strong> <a href="https://github.com/Bunka-lab/epstein-files" target="_blank" style="color:var(--dc-green);">Bunka-lab/epstein-files</a> &mdash; Topic modeling + analisis de grafos</li>
+                <li><strong>Demo interactivo (grafo de relaciones):</strong> <a href="https://epstein-doc-explorer-1.onrender.com/" target="_blank" style="color:var(--dc-green);">Epstein Doc Explorer</a></li>
+                <li><strong>Nuestro repo de estudio AML:</strong> <a href="https://github.com/AlfCasBenMx/curso_GNNs_in_action_for-aml" target="_blank" style="color:var(--dc-green);">github.com/AlfCasBenMx/curso_GNNs_in_action_for-aml</a></li>
+                <li><strong>Repo oficial del libro:</strong> <a href="https://github.com/keitabroadwater/gnns_in_action" target="_blank" style="color:var(--dc-green);">github.com/keitabroadwater/gnns_in_action</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ============================================================
+   Capitulo 2.5 — JavaScript (Navigation, Checkpoints, Quizzes)
+   ============================================================ */
+
+// Section order for navigation
+const sectionOrder = ['intro','dataset','diccionario','interpretacion','plantilla','rubrica','minicaso','etica','ejercicios','resumen'];
+const unlockedSections = new Set(['intro']);
+const completedSections = new Set();
+
+function navClick(sectionId, btn) {
+    if (!unlockedSections.has(sectionId)) return;
+    // Hide all sections
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    // Show target
+    document.getElementById(sectionId).classList.add('active');
+    btn.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function unlockNext(currentSection) {
+    const idx = sectionOrder.indexOf(currentSection);
+    if (idx < sectionOrder.length - 1) {
+        const next = sectionOrder[idx + 1];
+        unlockedSections.add(next);
+        const btn = document.querySelector(`nav button[data-section="${next}"]`);
+        if (btn) {
+            const lock = btn.querySelector('.lock-icon');
+            if (lock) lock.textContent = '';
+            btn.style.opacity = '1';
+        }
+    }
+    completedSections.add(currentSection);
+    updateProgress();
+}
+
+function updateProgress() {
+    const pct = Math.round((completedSections.size / sectionOrder.length) * 100);
+    const fill = document.getElementById('globalFill');
+    const pctEl = document.getElementById('globalPct');
+    if (fill) fill.style.width = pct + '%';
+    if (pctEl) pctEl.textContent = pct + '%';
+}
+
+// Checkpoints
+function checkCP(section, el, correct) {
+    const fb = document.getElementById('cpFb-' + section);
+    if (!fb) return;
+    const options = el.parentElement.querySelectorAll('.cp-option');
+    options.forEach(o => {
+        o.style.pointerEvents = 'none';
+        o.style.opacity = '0.6';
+    });
+    if (correct) {
+        el.style.background = '#059669';
+        el.style.color = 'white';
+        el.style.opacity = '1';
+        fb.textContent = '✅ Correcto! Seccion siguiente desbloqueada.';
+        fb.style.color = '#059669';
+        fb.style.display = 'block';
+        unlockNext(section);
+    } else {
+        el.style.background = '#ef4444';
+        el.style.color = 'white';
+        el.style.opacity = '1';
+        fb.textContent = '❌ Incorrecto. Revisa el contenido e intenta de nuevo.';
+        fb.style.color = '#ef4444';
+        fb.style.display = 'block';
+        // Re-enable after delay
+        setTimeout(() => {
+            options.forEach(o => {
+                o.style.pointerEvents = 'auto';
+                o.style.opacity = '1';
+                o.style.background = '';
+                o.style.color = '';
+            });
+            fb.style.display = 'none';
+        }, 2500);
+    }
+}
+
+// Quiz questions
+function checkQuiz(el, correct, qid) {
+    const fb = document.getElementById('fb-' + qid);
+    if (!fb) return;
+    const parent = el.closest('.quiz-question');
+    const options = parent.querySelectorAll('.option');
+    options.forEach(o => {
+        o.style.pointerEvents = 'none';
+        o.style.opacity = '0.6';
+    });
+    if (correct) {
+        el.classList.add('correct');
+        el.style.opacity = '1';
+        fb.className = 'feedback show correct-fb';
+        fb.textContent = '✅ Correcto! Excelente interpretacion.';
+    } else {
+        el.classList.add('incorrect');
+        el.style.opacity = '1';
+        fb.className = 'feedback show incorrect-fb';
+        fb.textContent = '❌ Incorrecto. Revisa la explicacion en el contenido de esta seccion.';
+        setTimeout(() => {
+            options.forEach(o => {
+                o.style.pointerEvents = 'auto';
+                o.style.opacity = '1';
+                o.classList.remove('correct', 'incorrect');
+            });
+            fb.className = 'feedback';
+        }, 3000);
+    }
+}
+
+// Accordion
+function toggleAccordion(header) {
+    const body = header.nextElementSibling;
+    const icon = header.querySelector('.accordion-icon');
+    if (body.style.maxHeight) {
+        body.style.maxHeight = null;
+        body.style.padding = '0 20px';
+        if (icon) icon.style.transform = 'rotate(0deg)';
+    } else {
+        body.style.maxHeight = body.scrollHeight + 40 + 'px';
+        body.style.padding = '20px';
+        if (icon) icon.style.transform = 'rotate(180deg)';
+    }
+}
+
+// Complete section button (for exercises)
+function completeSection(section) {
+    unlockNext(section);
+    const idx = sectionOrder.indexOf(section);
+    if (idx < sectionOrder.length - 1) {
+        const next = sectionOrder[idx + 1];
+        const btn = document.querySelector(`nav button[data-section="${next}"]`);
+        if (btn) navClick(next, btn);
+    }
+}
+
+// Initialize: lock all buttons except intro
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('nav button').forEach(btn => {
+        const section = btn.getAttribute('data-section');
+        if (!unlockedSections.has(section)) {
+            btn.style.opacity = '0.5';
+            const lock = btn.querySelector('.lock-icon');
+            if (lock) lock.textContent = ' 🔒';
+        }
+    });
+});
+</script>
+</body>
+</html>
