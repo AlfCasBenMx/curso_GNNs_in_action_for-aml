@@ -1,0 +1,605 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECCIÓN 2.6: FRONTERA DE DECISIÓN
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-number" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">2.6</div>
+    <div class="section-title">
+      <h2>La Frontera de Decisión</h2>
+      <p>¿Cuándo funciona una línea recta?</p>
+    </div>
+  </div>
+
+  <div style="background: #020617; padding: 14px 16px; border-radius: 12px; margin: 16px 0; border: 1px solid #1f2937;">
+    <h3 style="color: #e5e7eb; margin: 0 0 6px; font-size: 0.98em;">✅ Al terminar esta sección deberías poder:</h3>
+    <ul style="color: #9ca3af; font-size: 0.9em; margin: 0 0 0 18px; line-height: 1.6;">
+      <li>Visualizar la frontera de decisión de una neurona en 2D.</li>
+      <li>Relacionar la ecuación z = 0 con una recta (o plano) en el espacio.</li>
+      <li>Entender cómo cambian las fronteras al modificar pesos y bias.</li>
+    </ul>
+  </div>
+
+  <p>Una neurona con Sigmoid puede clasificar datos que son <strong>linealmente separables</strong>: cuando puedes dibujar una línea recta que los divide perfectamente.</p>
+
+  <div class="highlight" style="margin-top: 18px;">
+    <div class="icon">🧠</div>
+    <div>
+      <p style="margin-top: 0; margin-bottom: 6px;">
+        <strong>¿Cómo pasamos de regresión a clasificación?</strong>
+      </p>
+      <ul style="margin-top: 4px; margin-bottom: 8px; padding-left: 18px;">
+        <li>
+          Primero, la neurona hace una <strong>combinación lineal</strong> de las entradas:
+          <span style="color:#93c5fd;">z = w₁·x₁ + w₂·x₂ + b</span>.
+        </li>
+        <li>
+          Luego aplica la <strong>Sigmoid</strong> y produce un valor entre 0 y 1:
+          <span style="color:#a5b4fc;">σ(z)</span>.
+          Si interpretamos σ(z) como "probabilidad de ser clase 1", tenemos un
+          <strong>modelo de clasificación</strong>.
+        </li>
+        <li>
+          Con un umbral (por ejemplo <span style="color:#fbbf24;">0.5</span>) decidimos la clase:
+          si σ(z) ≥ 0.5 → <span style="color:#22c55e;">Clase 1</span>, si σ(z) &lt; 0.5 →
+          <span style="color:#f97373;">Clase 0</span>.
+        </li>
+      </ul>
+      <p style="margin-top: 4px; margin-bottom: 0;">
+        El lugar donde la neurona está "justo en el límite" es cuando
+        σ(z) = 0.5, lo que equivale a <span style="color:#93c5fd;">z = 0</span>.
+        Esa ecuación <strong>w₁·x₁ + w₂·x₂ + b = 0</strong> describe una
+        <strong>línea recta</strong> en 2D (o un plano en 3D), y es precisamente la
+        <strong>frontera de decisión</strong>: a un lado la neurona asigna una
+        categoría, al otro lado, la otra.
+      </p>
+    </div>
+  </div>
+
+  <div style="background: linear-gradient(135deg, #0f172a, #1e293b); border-radius: 16px; padding: 20px; margin: 25px 0; border: 2px solid #3b82f6; color: #e5e7eb;">
+    <h4 style="margin: 0 0 12px; display: flex; align-items: center; gap: 10px; color: #bfdbfe;">
+      <span style="font-size: 1.4em;">🧩</span>
+      <span>Diagrama interactivo: 1 neurona con Sigmoid</span>
+    </h4>
+    <p style="margin: 0 0 8px; font-size: 0.9em; color: #cbd5f5;">
+      Es el mismo esquema que en <strong>regresión lineal</strong> (suma ponderada <code>z = w·x + b</code>), pero ahora la
+      <strong>función de activación</strong> es <strong>Sigmoid</strong> y la salida se interpreta como
+      <strong>probabilidad de que la casa sea "cara"</strong>.
+    </p>
+    <p style="margin: 0 0 14px; font-size: 0.85em; color: #9ca3af;">
+      En un modelo ya entrenado, es muy común que las entradas se hayan <strong>normalizado</strong> (re-escalado) antes de
+      aprender los pesos. Aquí tú introduces los <strong>valores crudos</strong> (m², habitaciones, etc.) y la neurona los
+      transforma internamente a una escala normalizada antes de combinarlos y pasar por la Sigmoid.
+    </p>
+
+    <!-- Controles para añadir/quitar entradas -->
+    <div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 18px;">
+      <span style="color: #93c5fd; font-weight: bold;">Entradas (features):</span>
+      <button onclick="clfRemoveInput()" style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid #ef4444; background: #450a0a; color: #fecaca; font-size: 18px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#450a0a'">−</button>
+      <span id="clf-input-count" style="color: #e5e7eb; font-size: 1.1em; font-weight: bold; min-width: 28px; text-align: center;">1</span>
+      <button onclick="clfAddInput()" style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid #22c55e; background: #022c22; color: #bbf7d0; font-size: 18px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#16a34a'" onmouseout="this.style.background='#022c22'">+</button>
+      <span style="color: #9ca3af; font-size: 0.8em; margin-left: 6px;">(máx 5)</span>
+    </div>
+
+    <!-- Red SVG dinámica (con Sigmoid) -->
+    <svg id="clf-network-svg" viewBox="0 0 600 200" style="width: 100%; max-width: 600px; display: block; margin: 0 auto 14px auto;">
+      <!-- Se genera dinámicamente -->
+    </svg>
+
+    <!-- Controles de características (modelo fijo) -->
+    <div id="clf-weights-panel" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 10px; padding: 12px; background: #020617; border-radius: 10px; border: 1px solid #1f2933;">
+      <!-- Se genera dinámicamente -->
+    </div>
+
+    <!-- Fórmulas y resultados -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 14px;">
+      <div style="padding: 10px; border-radius: 10px; background: #020617; border: 1px solid #1f2937; text-align: center;">
+        <div style="color: #93c5fd; font-weight: bold; margin-bottom: 6px;">📐 Fórmula interna</div>
+        <div id="clf-formula-z" style="font-size: 0.95em; color: #60a5fa; font-family: 'Courier New', monospace;">z = w₁x₁ + b</div>
+        <div id="clf-formula-y" style="font-size: 0.9em; color: #a5b4fc; font-family: 'Courier New', monospace; margin-top: 4px;">ŷ = σ(z)</div>
+      </div>
+
+      <div style="padding: 10px; border-radius: 10px; background: #020617; border: 1px solid #1f2937;">
+        <div style="color: #a5b4fc; font-weight: bold; margin-bottom: 6px; text-align: center;">🧮 Cálculo actual</div>
+        <div id="clf-calculation" style="font-size: 0.85em; color: #e5e7eb; font-family: 'Courier New', monospace; min-height: 1.2em; text-align: center;"></div>
+        <div id="clf-result-z" style="font-size: 0.9em; color: #fbbf24; font-weight: bold; margin-top: 6px; text-align: center;"></div>
+        <div id="clf-result-y" style="font-size: 1.05em; color: #4ade80; font-weight: bold; margin-top: 4px; text-align: center;"></div>
+      </div>
+    </div>
+
+    <!-- Gráfica dinámica de la función Sigmoid -->
+    <div style="margin-top: 14px; padding: 10px; border-radius: 10px; background: #020617; border: 1px solid #1f2937;">
+      <div style="font-size: 0.9em; color: #c4b5fd; margin-bottom: 6px; text-align: center; font-weight: 500;">
+        📉 Cómo el z actual pasa por la función Sigmoid
+      </div>
+      <div style="max-width: 430px; margin: 0 auto;">
+        <svg id="clf-sigmoid-svg" viewBox="0 0 320 150" style="width: 100%; display: block;">
+          <!-- Ejes -->
+          <line x1="40" y1="115" x2="290" y2="115" stroke="#4b5563" stroke-width="1.5"/>
+          <line x1="165" y1="25" x2="165" y2="120" stroke="#4b5563" stroke-width="1"/>
+          <!-- Referencias horizontales -->
+          <line x1="40" y1="35" x2="290" y2="35" stroke="#1f2937" stroke-dasharray="4,4"/>
+          <line x1="40" y1="65" x2="290" y2="65" stroke="#1f2937" stroke-dasharray="4,4"/>
+          <!-- Etiquetas Y -->
+          <text x="32" y="39" font-size="10" fill="#9ca3af" text-anchor="end">1</text>
+          <text x="32" y="69" font-size="10" fill="#9ca3af" text-anchor="end">0.5</text>
+          <text x="32" y="119" font-size="10" fill="#9ca3af" text-anchor="end">0</text>
+          <!-- Etiquetas X -->
+          <text x="40" y="132" font-size="10" fill="#9ca3af" text-anchor="middle">-6</text>
+          <text x="165" y="132" font-size="10" fill="#9ca3af" text-anchor="middle">0</text>
+          <text x="290" y="132" font-size="10" fill="#9ca3af" text-anchor="middle">+6</text>
+          <text x="300" y="119" font-size="10" fill="#9ca3af">z</text>
+          <!-- Curva Sigmoid -->
+          <path id="clf-sigmoid-curve" d="" fill="none" stroke="#c084fc" stroke-width="2.5" stroke-linecap="round"/>
+          <!-- Punto actual -->
+          <circle id="clf-sigmoid-dot" cx="165" cy="65" r="6" fill="#f97316" stroke="#020617" stroke-width="2"/>
+          <text id="clf-sigmoid-text" x="165" y="52" font-size="10" fill="#e5e7eb" text-anchor="middle">z=0.00, σ=0.50</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Barra de probabilidad de clase "cara" -->
+    <div style="margin-top: 14px; padding: 10px; border-radius: 10px; background: rgba(15,23,42,0.8); border: 1px solid rgba(148,163,184,0.4);">
+      <div style="font-size: 0.9em; color: #c4b5fd; margin-bottom: 6px; text-align: center; font-weight: 500;">
+        📊 Probabilidad de que la casa sea <span style="color:#f97316; font-weight:bold;">cara</span> (umbral 0.5)
+      </div>
+      <div style="position: relative; max-width: 430px; margin: 0 auto;">
+        <svg viewBox="0 0 320 55" style="width: 100%; display: block;">
+          <defs>
+            <linearGradient id="clf-prob-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#f97373;stop-opacity:0.35"/>
+              <stop offset="50%" style="stop-color:#fbbf24;stop-opacity:0.35"/>
+              <stop offset="100%" style="stop-color:#4ade80;stop-opacity:0.35"/>
+            </linearGradient>
+          </defs>
+          <rect x="30" y="22" width="260" height="16" rx="8" fill="url(#clf-prob-gradient)" stroke="#475569" stroke-width="1"/>
+          <line x1="30" y1="30" x2="290" y2="30" stroke="#94a3b8" stroke-width="2"/>
+          <!-- Umbral 0.5 -->
+          <line x1="160" y1="15" x2="160" y2="45" stroke="#fbbf24" stroke-width="2" stroke-dasharray="4,3"/>
+          <text x="160" y="11" text-anchor="middle" font-size="9" fill="#fbbf24" font-weight="bold">umbral 0.5</text>
+          <!-- Etiquetas extremos -->
+          <text x="30" y="50" font-size="9" fill="#f97373" font-weight="bold">0 (barata)</text>
+          <text x="290" y="50" font-size="9" fill="#4ade80" text-anchor="end" font-weight="bold">1 (cara)</text>
+          <!-- Punto -->
+          <circle id="clf-prob-dot" cx="160" cy="30" r="9" fill="#c084fc" stroke="#0f172a" stroke-width="2"/>
+          <text id="clf-prob-text" x="160" y="33" text-anchor="middle" font-size="9" fill="white" font-weight="bold">0.50</text>
+        </svg>
+      </div>
+      <div id="clf-decision" style="margin-top: 6px; text-align: center; font-size: 0.85em; color:#e5e7eb; font-weight: 500;">
+        Decisión del modelo: <span style="color:#f97373; font-weight:bold;">barata</span> (σ(z) &lt; 0.5)
+      </div>
+    </div>
+
+    <!-- Rangos usados para normalizar (modelo ya "entrenado") -->
+    <div style="margin-top: 12px; padding: 10px; border-radius: 10px; background: #020617; border: 1px dashed #374151; font-size: 0.8em; color: #9ca3af;">
+      <div style="font-weight: 600; color: #e5e7eb; margin-bottom: 4px;">📏 Rangos simulados de entrenamiento (min, max):</div>
+      <ul style="margin: 0; padding-left: 18px; line-height: 1.6;">
+        <li><strong>m² (x1):</strong> 40 &rarr; 160</li>
+        <li><strong>Habitaciones (x2):</strong> 1 &rarr; 5</li>
+        <li><strong>Baños (x3):</strong> 1 &rarr; 3</li>
+        <li><strong>Antigüedad (x4):</strong> 0 &rarr; 40 años</li>
+        <li><strong>Piso (x5):</strong> 1 &rarr; 20</li>
+      </ul>
+      <div style="margin-top: 4px; font-size: 0.75em;">
+        Estos rangos son los que el modelo habría visto al entrenarse, y son los que usamos para convertir tus valores crudos en
+        <strong>x_norm</strong> entre 0 y 1 antes de aplicar los pesos y la Sigmoid.
+      </div>
+      <div style="margin-top: 6px; font-size: 0.75em; color: #e5e7eb;">
+        💡 <strong>Importante:</strong> en el <em>modelo de regresión</em> los parámetros \(w, b\) se entrenan para predecir directamente un <strong>precio</strong> (por ejemplo, miles de euros) a partir de las características.
+        En cambio, en este <em>modelo con Sigmoid</em> los mismos tipos de entradas se usan para predecir la <strong>probabilidad de que la casa sea "cara"</strong> (etiqueta 1) frente a "barata" (etiqueta 0).
+        Aquí los parámetros ya no significan "euros por m²", sino cuánto empuja cada característica a que \(z\) suba o baje, y por tanto a que \(\sigma(z)\) se acerque más a 1 (cara) o a 0 (barata).
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // Estado de la neurona con Sigmoid (clasificador)
+  var clfState = {
+    inputs: [
+      { name: 'x1', label: 'm2', value: 80, w: 1.2, min: 40, max: 160 }
+    ],
+    bias: -3.0,
+    maxInputs: 5
+  };
+
+  var clfInputConfigs = [
+    // Rango típico simulado (para normalizar a [0,1])
+    { name: 'x1', label: 'm2',          defaultVal: 80, defaultW: 1.2, min: 40, max: 160 },
+    { name: 'x2', label: 'habitaciones', defaultVal: 3,  defaultW: 0.8, min: 1,  max: 5   },
+    { name: 'x3', label: 'baños',        defaultVal: 2,  defaultW: 0.8, min: 1,  max: 3   },
+    { name: 'x4', label: 'antigüedad',   defaultVal: 10, defaultW: -0.5, min: 0,  max: 40  },
+    { name: 'x5', label: 'piso',         defaultVal: 5,  defaultW: 0.4, min: 1,  max: 20  }
+  ];
+
+  function clfSigmoid(z) {
+    var zz = Math.max(-60, Math.min(60, z));
+    return 1 / (1 + Math.exp(-zz));
+  }
+
+  // Construye la curva Sigmoid del gráfico dinámico (z en [-6, 6])
+  function clfBuildSigmoidGraph() {
+    var path = document.getElementById('clf-sigmoid-curve');
+    if (!path) return;
+
+    var d = '';
+    for (var i = 0; i <= 60; i++) {
+      var z = -6 + (12 * i / 60);
+      var y = clfSigmoid(z);
+      var xCoord = 40 + ((z + 6) / 12) * (290 - 40);
+      var yCoord = 115 - y * 80;
+      d += (i === 0 ? 'M' : 'L') + xCoord.toFixed(2) + ' ' + yCoord.toFixed(2) + ' ';
+    }
+    path.setAttribute('d', d.trim());
+  }
+
+  function clfAddInput() {
+    if (clfState.inputs.length >= clfState.maxInputs) return;
+    var idx = clfState.inputs.length;
+    var cfg = clfInputConfigs[idx];
+    clfState.inputs.push({
+      name: cfg.name,
+      label: cfg.label,
+      value: cfg.defaultVal,
+      w: cfg.defaultW,
+      min: cfg.min,
+      max: cfg.max
+    });
+    clfRender();
+  }
+
+  function clfRemoveInput() {
+    if (clfState.inputs.length <= 1) return;
+    clfState.inputs.pop();
+    clfRender();
+  }
+
+  function clfUpdateWeight(idx, val) {
+    clfState.inputs[idx].w = parseFloat(val) || 0;
+    clfUpdateCalculation();
+  }
+
+  function clfUpdateValue(idx, val) {
+    clfState.inputs[idx].value = parseFloat(val) || 0;
+    clfUpdateCalculation();
+  }
+
+  function clfUpdateBias(val) {
+    clfState.bias = parseFloat(val) || 0;
+    clfUpdateCalculation();
+  }
+
+  function clfRender() {
+    var n = clfState.inputs.length;
+    var countEl = document.getElementById('clf-input-count');
+    if (countEl) countEl.textContent = n;
+
+    // Render SVG
+    var svg = document.getElementById('clf-network-svg');
+    if (!svg) return;
+
+    var height = Math.max(150, n * 50 + 50);
+    svg.setAttribute('viewBox', '0 0 600 ' + height);
+
+    var svgHTML = '';
+    var neuronX = 340;
+    var neuronY = height / 2;
+    var actX = 440;
+    var outputX = 545;
+
+    // Entradas y conexiones
+    for (var i = 0; i < clfState.inputs.length; i++) {
+      var inp = clfState.inputs[i];
+      var y = (i + 1) * height / (n + 1);
+      var inputX = 90;
+
+      svgHTML += '<line x1="' + (inputX + 35) + '" y1="' + y + '" x2="' + (neuronX - 50) + '" y2="' + neuronY + '" stroke="#a855f7" stroke-width="3" opacity="0.8"/>';
+
+      var midX = (inputX + 35 + neuronX - 50) / 2;
+      var midY = (y + neuronY) / 2;
+      svgHTML += '<text x="' + midX + '" y="' + (midY - 4) + '" text-anchor="middle" font-size="9" fill="#e9d5ff" font-weight="bold">w' + (i+1) + '</text>';
+
+      svgHTML += '<circle cx="' + inputX + '" cy="' + y + '" r="30" fill="#e0f2fe" stroke="#3b82f6" stroke-width="3"/>';
+      svgHTML += '<text x="' + inputX + '" y="' + (y - 3) + '" text-anchor="middle" font-size="12" fill="#1e40af" font-weight="bold">' + inp.name + '</text>';
+      svgHTML += '<text x="' + inputX + '" y="' + (y + 12) + '" text-anchor="middle" font-size="9" fill="#3b82f6">(' + inp.label + ')</text>';
+    }
+
+    // Neurona suma (z)
+    svgHTML += '<circle cx="' + neuronX + '" cy="' + neuronY + '" r="40" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>';
+    svgHTML += '<text x="' + neuronX + '" y="' + (neuronY - 2) + '" text-anchor="middle" font-size="11" fill="#92400e" font-weight="bold">∑ wᵢxᵢ + b</text>';
+    svgHTML += '<text x="' + neuronX + '" y="' + (neuronY + 14) + '" text-anchor="middle" font-size="9" fill="#b45309">z (logit)</text>';
+
+    // Flecha a Sigmoid
+    svgHTML += '<line x1="' + (neuronX + 40) + '" y1="' + neuronY + '" x2="' + (actX - 40) + '" y2="' + neuronY + '" stroke="#6366f1" stroke-width="3"/>';
+
+    // Nodo Sigmoid
+    svgHTML += '<circle cx="' + actX + '" cy="' + neuronY + '" r="34" fill="#e0e7ff" stroke="#6366f1" stroke-width="3"/>';
+    svgHTML += '<text x="' + actX + '" y="' + (neuronY - 2) + '" text-anchor="middle" font-size="14" fill="#312e81" font-weight="bold">σ</text>';
+    svgHTML += '<text x="' + actX + '" y="' + (neuronY + 13) + '" text-anchor="middle" font-size="9" fill="#4f46e5">σ(z)</text>';
+
+    // Flecha a salida
+    svgHTML += '<line x1="' + (actX + 34) + '" y1="' + neuronY + '" x2="' + (outputX - 35) + '" y2="' + neuronY + '" stroke="#10b981" stroke-width="4"/>';
+
+    // Nodo salida (probabilidad)
+    svgHTML += '<circle cx="' + outputX + '" cy="' + neuronY + '" r="32" fill="#10b981" stroke="#059669" stroke-width="3"/>';
+    svgHTML += '<text x="' + outputX + '" y="' + (neuronY - 2) + '" text-anchor="middle" font-size="13" fill="white" font-weight="bold">ŷ</text>';
+    svgHTML += '<text x="' + outputX + '" y="' + (neuronY + 13) + '" text-anchor="middle" font-size="9" fill="#bbf7d0">prob(cara)</text>';
+
+    svg.innerHTML = svgHTML;
+
+    // Panel de características (modelo con pesos fijos)
+    var panel = document.getElementById('clf-weights-panel');
+    if (!panel) return;
+
+    var panelHTML = '';
+    for (var j = 0; j < clfState.inputs.length; j++) {
+      var input = clfState.inputs[j];
+      panelHTML += '<div style="background: #020617; padding: 10px; border-radius: 8px; border: 1px solid #1f2937;">';
+      panelHTML += '<div style="color: #93c5fd; font-size: 0.8em; margin-bottom: 2px;">' + input.name + ' (' + input.label + ')</div>';
+      panelHTML += '<div style="display: flex; gap: 8px; align-items: center;">';
+      panelHTML += '<div style="flex: 1;">';
+      panelHTML += '<label for="clf-val-' + j + '" style="color: #9ca3af; font-size: 0.75em;">Valor de la característica:</label>';
+      panelHTML += '<input type="number" id="clf-val-' + j + '" value="' + input.value + '" onchange="clfUpdateValue(' + j + ', this.value)" style="width: 100%; padding: 4px; border-radius: 4px; border: 1px solid #22c55e; background: #020617; color: #e5e7eb; font-size: 0.85em;">';
+      panelHTML += '</div>';
+      panelHTML += '<div style="flex: 1; font-size: 0.75em; color: #c4b5fd;">';
+      panelHTML += 'Peso w' + (j+1) + ' (fijo): <span style="font-family: \'Courier New\', monospace; color:#a855f7;">' + input.w.toFixed(2) + '</span>';
+      panelHTML += '</div>';
+      panelHTML += '</div>';
+      panelHTML += '<div id="clf-xnorm-' + j + '" style="margin-top: 2px; font-size: 0.72em; color: #9ca3af;">x' + (j+1) + '_norm = ? (valor normalizado)</div>';
+      panelHTML += '<div style="margin-top: 2px; font-size: 0.7em; color: #6b7280;">Se muestra cómo el valor crudo se re-escala antes de entrar a la neurona.</div>';
+      panelHTML += '</div>';
+    }
+
+    panelHTML += '<div style="background: #020617; padding: 10px; border-radius: 8px; border: 1px solid #1f2937; font-size: 0.8em; color:#7dd3fc;">';
+    panelHTML += 'b (bias / umbral, fijo): <span style="font-family: \'Courier New\', monospace; color:#0ea5e9;">' + clfState.bias.toFixed(2) + '</span>';
+    panelHTML += '<div style="margin-top:4px; font-size:0.75em; color:#9ca3af;">Piensa en él como el punto donde la neurona cambia de "barata" a "cara".</div>';
+    panelHTML += '</div>';
+
+    panel.innerHTML = panelHTML;
+
+    clfUpdateCalculation();
+  }
+
+  function clfUpdateCalculation() {
+    var n = clfState.inputs.length;
+
+    // Fórmula simbólica (usando x_norm = valor normalizado)
+    var formulaZ = 'z = ';
+    for (var i = 0; i < clfState.inputs.length; i++) {
+      if (i > 0) formulaZ += ' + ';
+      formulaZ += 'w' + (i+1) + '*x' + (i+1) + '_norm';
+    }
+    formulaZ += ' + b';
+    var fz = document.getElementById('clf-formula-z');
+    if (fz) fz.textContent = formulaZ;
+
+    var fy = document.getElementById('clf-formula-y');
+    if (fy) fy.textContent = 'ŷ = σ(z)';
+
+    // Cálculo numérico de z con normalización simple a [0,1]
+    var calc = '';
+    var z = clfState.bias;
+    for (var j = 0; j < clfState.inputs.length; j++) {
+      var inp = clfState.inputs[j];
+      var min = (typeof inp.min === 'number') ? inp.min : inp.value;
+      var max = (typeof inp.max === 'number') ? inp.max : (inp.value + 1);
+      var denom = (max - min) || 1;
+      var xnorm = (inp.value - min) / denom;
+      if (j > 0) calc += ' + ';
+      calc += inp.w.toFixed(2) + '×' + xnorm.toFixed(2) + '  (a partir de ' + inp.value + ')';
+      z += inp.w * xnorm;
+
+      // Actualizar visualización de x_norm para cada input
+      var xnormEl = document.getElementById('clf-xnorm-' + j);
+      if (xnormEl) {
+        xnormEl.textContent = 'x' + (j+1) + '_norm = ' + xnorm.toFixed(2) + '  (min=' + min + ', max=' + max + ')';
+      }
+    }
+    calc += ' + ' + clfState.bias.toFixed(2);
+
+    var calcEl = document.getElementById('clf-calculation');
+    if (calcEl) calcEl.textContent = calc;
+
+    var zEl = document.getElementById('clf-result-z');
+    if (zEl) zEl.textContent = 'z = ' + z.toFixed(3);
+
+    var y = clfSigmoid(z);
+    var yEl = document.getElementById('clf-result-y');
+    if (yEl) yEl.textContent = 'ŷ = σ(z) = ' + y.toFixed(3);
+
+    // Actualizar barra de probabilidad
+    var dot = document.getElementById('clf-prob-dot');
+    var txt = document.getElementById('clf-prob-text');
+    if (dot && txt) {
+      var x = 30 + Math.max(0, Math.min(1, y)) * 260;
+      dot.setAttribute('cx', x.toFixed(1));
+      txt.setAttribute('x', x.toFixed(1));
+      txt.textContent = y.toFixed(2);
+    }
+
+    // Actualizar texto de decisión (cara / barata) usando el umbral 0.5
+    var decEl = document.getElementById('clf-decision');
+    if (decEl) {
+      if (y >= 0.5) {
+        decEl.innerHTML = 'Decisión del modelo: <span style="color:#4ade80; font-weight:bold;">cara</span> (σ(z) = ' + y.toFixed(2) + ' ≥ 0.5)';
+      } else {
+        decEl.innerHTML = 'Decisión del modelo: <span style="color:#f97373; font-weight:bold;">barata</span> (σ(z) = ' + y.toFixed(2) + ' &lt; 0.5)';
+      }
+    }
+
+    // Actualizar punto en la gráfica Sigmoid dinámica
+    var sDot = document.getElementById('clf-sigmoid-dot');
+    var sText = document.getElementById('clf-sigmoid-text');
+    if (sDot && sText) {
+      var zClamped = Math.max(-6, Math.min(6, z));
+      var xDot = 40 + ((zClamped + 6) / 12) * (290 - 40);
+      var yDot = 115 - y * 80;
+      sDot.setAttribute('cx', xDot.toFixed(2));
+      sDot.setAttribute('cy', yDot.toFixed(2));
+      sText.setAttribute('x', xDot.toFixed(2));
+      sText.setAttribute('y', (yDot - 10).toFixed(2));
+      sText.textContent = 'z = ' + z.toFixed(2) + ', σ(z) = ' + y.toFixed(3);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+      clfBuildSigmoidGraph();
+      clfRender();
+    });
+  } else {
+    clfBuildSigmoidGraph();
+    clfRender();
+  }
+  </script>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin: 25px 0;">
+    <!-- Linealmente Separable -->
+    <div style="background: linear-gradient(135deg, #14532d, #166534); padding: 20px; border-radius: 16px; border: 3px solid #10b981; color: #dcfce7;">
+      <h4 style="color: #86efac; margin: 0 0 15px; text-align: center;">✅ Linealmente Separable</h4>
+      <svg viewBox="0 0 160 160" style="width: 100%; max-width: 140px; display: block; margin: 0 auto;">
+        <rect width="160" height="160" fill="#14532d"/>
+        <!-- Puntos clase 0 (azul) - lado izquierdo -->
+        <circle cx="30" cy="40" r="8" fill="#3b82f6"/>
+        <circle cx="45" cy="70" r="8" fill="#3b82f6"/>
+        <circle cx="35" cy="100" r="8" fill="#3b82f6"/>
+        <circle cx="50" cy="130" r="8" fill="#3b82f6"/>
+        <circle cx="55" cy="55" r="8" fill="#3b82f6"/>
+        <!-- Puntos clase 1 (rojo) - lado derecho -->
+        <circle cx="110" cy="35" r="8" fill="#ef4444"/>
+        <circle cx="125" cy="65" r="8" fill="#ef4444"/>
+        <circle cx="115" cy="95" r="8" fill="#ef4444"/>
+        <circle cx="130" cy="125" r="8" fill="#ef4444"/>
+        <circle cx="105" cy="80" r="8" fill="#ef4444"/>
+        <!-- Línea divisoria -->
+        <line x1="80" y1="10" x2="80" y2="150" stroke="#4ade80" stroke-width="3"/>
+      </svg>
+      <p style="text-align: center; color: #86efac; font-size: 0.85em; margin-top: 12px; font-weight: 500;">
+        <strong>¡Una neurona basta!</strong><br>
+        Aprende la línea divisoria
+      </p>
+      <div style="background: #059669; padding: 8px; border-radius: 6px; margin-top: 10px; text-align: center; font-size: 0.8em; color: white;">
+        <strong>Ejemplos:</strong> AND, OR lógico, Spam simple
+      </div>
+    </div>
+
+    <!-- NO Linealmente Separable -->
+    <div style="background: linear-gradient(135deg, #7f1d1d, #991b1b); padding: 20px; border-radius: 16px; border: 3px solid #ef4444; color: #fecaca;">
+      <h4 style="color: #fca5a5; margin: 0 0 15px; text-align: center;">❌ NO Linealmente Separable</h4>
+      <svg viewBox="0 0 160 160" style="width: 100%; max-width: 140px; display: block; margin: 0 auto;">
+        <rect width="160" height="160" fill="#7f1d1d"/>
+        <!-- Puntos clase 0 (azul) - diagonal 1 -->
+        <circle cx="35" cy="35" r="8" fill="#3b82f6"/>
+        <circle cx="45" cy="45" r="8" fill="#3b82f6"/>
+        <circle cx="125" cy="125" r="8" fill="#3b82f6"/>
+        <circle cx="115" cy="115" r="8" fill="#3b82f6"/>
+        <!-- Puntos clase 1 (rojo) - diagonal 2 -->
+        <circle cx="35" cy="125" r="8" fill="#fbbf24"/>
+        <circle cx="45" cy="115" r="8" fill="#fbbf24"/>
+        <circle cx="125" cy="35" r="8" fill="#fbbf24"/>
+        <circle cx="115" cy="45" r="8" fill="#fbbf24"/>
+        <!-- Líneas intentando separar (fracasan) -->
+        <line x1="10" y1="80" x2="150" y2="80" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5,3"/>
+        <line x1="80" y1="10" x2="80" y2="150" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5,3"/>
+      </svg>
+      <p style="text-align: center; color: #fca5a5; font-size: 0.85em; margin-top: 12px; font-weight: 500;">
+        <strong>¡Imposible con una línea!</strong><br>
+        No hay línea que funcione
+      </p>
+      <div style="background: #dc2626; padding: 8px; border-radius: 6px; margin-top: 10px; text-align: center; font-size: 0.8em; color: white;">
+        <strong>Ejemplos:</strong> XOR, Círculos, Espirales
+      </div>
+    </div>
+  </div>
+
+  <!-- Explicación clara de la gráfica de puntos y la frontera -->
+  <div style="margin-top: 10px; padding: 12px 14px; border-radius: 10px; background: #0b1120; border: 1px solid #1e293b; font-size: 0.85em; color: #e5e7eb;">
+    <strong>Cómo leer estos dibujos:</strong>
+    <ul style="margin: 6px 0 0 18px; padding: 0; line-height: 1.5;">
+      <li>Cada <span style="color:#60a5fa; font-weight:600;">punto</span> es una casa, dibujada según <em>dos características</em> (por ejemplo, m² en el eje horizontal y alguna medida de calidad en el vertical).</li>
+      <li>La <span style="color:#4ade80; font-weight:600;">línea verde</span> en el caso linealmente separable es la <strong>frontera de decisión</strong> del modelo: justo sobre la línea el valor interno es <span style="font-family:'Courier New',monospace;">z = 0</span>.</li>
+      <li>Un poco a la <em>izquierda</em> de la línea, el modelo tiene <span style="font-family:'Courier New',monospace;">z &lt; 0</span> y por tanto <span style="font-family:'Courier New',monospace;">σ(z) &lt; 0.5</span> → la neurona decide "<strong>barata</strong>" (clase 0).</li>
+      <li>Un poco a la <em>derecha</em> de la línea, el modelo tiene <span style="font-family:'Courier New',monospace;">z &gt; 0</span> y por tanto <span style="font-family:'Courier New',monospace;">σ(z) &gt; 0.5</span> → la neurona decide "<strong>cara</strong>" (clase 1).</li>
+      <li>La gráfica de la <strong>Sigmoid</strong> que viste antes solo muestra, para cada posible valor de <span style="font-family:'Courier New',monospace;">z</span>, qué probabilidad <span style="font-family:'Courier New',monospace;">σ(z)</span> usa el modelo para tomar esa decisión a un lado u otro de la línea.</li>
+    </ul>
+  </div>
+
+  <div class="highlight success">
+    <div class="icon">🎯</div>
+    <div>
+      <strong>¡Este es el punto clave!</strong> Para problemas NO linealmente separables (círculos, XOR, espirales), necesitamos <strong>capas ocultas</strong> con <strong>funciones de activación no lineales</strong>. Eso es lo que convierte a una neurona simple en una <strong>red neuronal poderosa</strong>.
+    </div>
+  </div>
+    <div style="background: #020617; padding: 18px 20px; border-radius: 12px; margin: 20px 0; border: 1px solid #1f2937;">
+      <h4 style="color: #e5e7eb; margin: 0 0 8px;">📋 Código para copiar y pegar: frontera de decisión en 2D</h4>
+      <p style="color: #9ca3af; font-size: 0.9em; margin: 0 0 8px;">
+        Partiendo de los imports del <strong>Paso 0</strong>, este ejemplo genera un dataset <strong>linealmente separable</strong> en 2D,
+        entrena una neurona con activación Sigmoid y dibuja la <strong>frontera de decisión</strong> donde <code>z = 0</code>, es decir,
+        donde <code>σ(z) = 0.5</code>.
+      </p>
+        <div style="background: #0b1120; border-radius: 10px; padding: 10px 12px; border: 1px solid #1e293b; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.8em; color: #e5e7eb; overflow-x: auto;">
+        <pre style="margin: 0;"><code>import torch
+    import torch.nn as nn
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    np.random.seed(42)
+    torch.manual_seed(42)
+
+    # Dataset 2D linealmente separable
+    n = 100
+    x1 = np.random.uniform(-1, 1, n)
+    x2 = np.random.uniform(-1, 1, n)
+    X = np.stack([x1, x2], axis=1).astype(np.float32)
+
+    # Frontera "real": w1 * x1 + w2 * x2 + b = 0
+    w_true = np.array([2.0, -1.0], dtype=np.float32)
+    b_true = 0.0
+    z_true = X @ w_true + b_true
+    y = (z_true &gt;= 0).astype(np.float32).reshape(-1, 1)
+
+    X_tensor = torch.from_numpy(X)
+    y_tensor = torch.from_numpy(y)
+
+    # Modelo logístico: 1 neurona con Sigmoid en 2D
+    modelo = nn.Sequential(
+      nn.Linear(2, 1),
+      nn.Sigmoid()
+    )
+
+    criterio = nn.BCELoss()
+    opt = torch.optim.SGD(modelo.parameters(), lr=0.1)
+
+    for epoca in range(1000):
+      y_pred = modelo(X_tensor)
+      loss = criterio(y_pred, y_tensor)
+
+      opt.zero_grad()
+      loss.backward()
+      opt.step()
+
+    print(f"Loss final: {loss.item():.4f}")
+
+    # Visualizar datos y frontera aprendida (z = 0)
+    with torch.no_grad():
+      w = modelo[0].weight[0].detach().numpy()
+      b = modelo[0].bias[0].item()
+
+    x1_grid = np.linspace(-1.2, 1.2, 100)
+    if abs(w[1]) &lt; 1e-6:
+      x2_grid = np.zeros_like(x1_grid)
+    else:
+      x2_grid = -(w[0] * x1_grid + b) / w[1]
+
+    plt.figure(figsize=(4, 4))
+    plt.scatter(X[:, 0], X[:, 1], c=y_tensor.squeeze().numpy(), cmap="coolwarm", alpha=0.7)
+    plt.plot(x1_grid, x2_grid, "k--", label="frontera z=0")
+    plt.axhline(0, color="gray", linewidth=0.5)
+    plt.axvline(0, color="gray", linewidth=0.5)
+    plt.xlabel("x1")
+    plt.ylabel("x2")
+    plt.legend()
+    plt.title("Frontera de decisión aprendida (σ(z)=0.5)")
+    plt.show()</code></pre>
+      </div>
+    </div>
+
+</section>

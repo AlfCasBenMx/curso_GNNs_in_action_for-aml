@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>🌐 Curso de Graph Neural Networks | Tu Guía Amigable</title>
+  <style>
+    :root {
+      --primary-blue: #1e40af;
+      --primary-light: #3b82f6;
+      --accent-purple: #7c3aed;
+      --accent-teal: #0d9488;
+      --accent-orange: #ea580c;
+      --accent-pink: #db2777;
+      --success: #059669;
+      --warning: #d97706;
+      --text-dark: #1e293b;
+      --text-light: #64748b;
+      --bg-light: #f8fafc;
+      --bg-card: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+    
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #fafbfc;
+      color: var(--text-dark);
+      line-height: 1.8;
+      font-size: 17px;
+    }
+
+    /* HERO SECTION */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      overflow: hidden;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      max-width: 900px;
+      padding: 40px;
+    }
+
+    .hero h1 {
+      font-size: 3.2rem;
+      font-weight: 300;
+      margin: 0 0 20px 0;
+    }
+
+    .hero h1 strong {
+      font-weight: 700;
+      color: #fbbf24;
+    }
+
+    .hero-subtitle {
+      font-size: 1.3rem;
+      opacity: 0.95;
+      margin-bottom: 35px;
+      line-height: 1.8;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: #fbbf24;
+      color: #000;
+      padding: 14px 35px;
+      border-radius: 30px;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    /* VISUAL GRAPH IN HERO */
+    .hero-graph {
+      margin: 40px auto;
+      max-width: 500px;
+    }
+
+    .hero-graph svg {
+      width: 100%;
+      height: auto;
+    }
+
+    /* MAIN CONTENT */
+    main {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 60px 24px;
+    }
+
+    /* STORY SECTION */
+    .story-section {
+      background: #fff;
+      border-radius: 24px;
+      padding: 50px;
+      margin-bottom: 40px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      border: 1px solid #e5e7eb;
+    }
+
+    .story-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .story-header .emoji {
+      font-size: 4rem;
+      margin-bottom: 15px;
+    }
+
+    .story-header h2 {
+      font-size: 2rem;
+      color: var(--primary-blue);
+      margin: 0 0 10px;
+      font-weight: 700;
+    }
+
+    .story-header p {
+      color: var(--text-light);
+      font-size: 1.1rem;
+      margin: 0;
+    }
+
+    /* VISUAL DIAGRAM */
+    .visual-diagram {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      border-radius: 20px;
+      padding: 40px;
+      margin: 30px 0;
+      text-align: center;
+    }
+
+    .visual-diagram img {
+      max-width: 100%;
+      border-radius: 12px;
+    }
+
+    .visual-diagram svg {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .visual-diagram .caption {
+      margin-top: 20px;
+      font-size: 0.95rem;
+      color: var(--text-light);
+      font-style: italic;
+    }
+
+    /* FRIENDLY EXPLANATION BOX */
+    .friendly-box {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border-radius: 20px;
+      padding: 35px;
+      margin: 30px 0;
+      border-left: 5px solid #f59e0b;
+    }
+
+    .friendly-box h3 {
+      color: #92400e;
+      margin: 0 0 15px;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .friendly-box p {
+      color: #78350f;
+      margin: 0 0 15px;
+      line-height: 1.9;
+    }
+
+    .friendly-box p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* ANALOGY BOX */
+    .analogy-box {
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      border-radius: 20px;
+      padding: 35px;
+      margin: 30px 0;
+      display: flex;
+      gap: 25px;
+      align-items: flex-start;
+    }
+
+    .analogy-box .icon {
+      font-size: 3.5rem;
+      flex-shrink: 0;
+    }
+
+    .analogy-box .content h4 {
+      color: #1e40af;
+      margin: 0 0 12px;
+      font-size: 1.2rem;
+    }
+
+    .analogy-box .content p {
+      color: #1e3a5f;
+      margin: 0;
+      line-height: 1.8;
+    }
+
+    /* STEP BY STEP */
+    .steps-container {
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+      margin: 30px 0;
+    }
+
+    .step {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      background: #fff;
+      padding: 25px;
+      border-radius: 16px;
+      border: 1px solid #e5e7eb;
+      transition: all 0.3s;
+    }
+
+    .step:hover {
+      transform: translateX(5px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+
+    .step-number {
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .step-content h4 {
+      margin: 0 0 8px;
+      color: var(--primary-blue);
+      font-size: 1.1rem;
+    }
+
+    .step-content p {
+      margin: 0;
+      color: var(--text-light);
+    }
+
+    /* CARDS GRID */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+      margin: 30px 0;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 30px;
+      border: 1px solid #e5e7eb;
+      text-align: center;
+      transition: all 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+    }
+
+    .card .icon {
+      font-size: 3rem;
+      margin-bottom: 15px;
+    }
+
+    .card h4 {
+      color: var(--primary-blue);
+      margin: 0 0 10px;
+      font-size: 1.15rem;
+    }
+
+    .card p {
+      color: var(--text-light);
+      margin: 0;
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+
+    /* CHAPTER PREVIEW */
+    .chapter-preview {
+      background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+      border-radius: 24px;
+      padding: 40px;
+      margin: 30px 0;
+      border: 2px solid #e5e7eb;
+      display: flex;
+      gap: 30px;
+      align-items: center;
+    }
+
+    .chapter-preview:hover {
+      border-color: var(--primary-light);
+    }
+
+    .chapter-number {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 800;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .ch1 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .ch2 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .ch3 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .ch4 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+
+    .chapter-content {
+      flex: 1;
+    }
+
+    .chapter-content h3 {
+      margin: 0 0 8px;
+      color: var(--text-dark);
+      font-size: 1.4rem;
+    }
+
+    .chapter-content .subtitle {
+      color: var(--text-light);
+      margin: 0 0 15px;
+      font-size: 0.95rem;
+    }
+
+    .chapter-content .description {
+      color: var(--text-dark);
+      margin: 0;
+      line-height: 1.7;
+    }
+
+    .chapter-visual {
+      width: 150px;
+      flex-shrink: 0;
+    }
+
+    .chapter-visual svg {
+      width: 100%;
+      height: auto;
+    }
+
+    @media (max-width: 768px) {
+      .chapter-preview {
+        flex-direction: column;
+        text-align: center;
+      }
+      .chapter-visual {
+        order: -1;
+      }
+    }
+
+    /* HIGHLIGHT QUOTE */
+    .highlight-quote {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      border-radius: 20px;
+      padding: 40px;
+      margin: 40px 0;
+      text-align: center;
+    }
+
+    .highlight-quote .quote-icon {
+      font-size: 3rem;
+      margin-bottom: 15px;
+    }
+
+    .highlight-quote p {
+      font-size: 1.3rem;
+      margin: 0;
+      line-height: 1.8;
+      font-weight: 300;
+    }
+
+    .highlight-quote strong {
+      color: #fbbf24;
+    }
+
+    /* CODE PREVIEW */
+    .code-preview {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 25px 30px;
+      margin: 25px 0;
+      overflow-x: auto;
+    }
+
+    .code-preview pre {
+      margin: 0;
+      color: #e2e8f0;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+
+    .code-preview .comment {
+      color: #6b7280;
+    }
+
+    .code-preview .keyword {
+      color: #c084fc;
+    }
+
+    .code-preview .function {
+      color: #60a5fa;
+    }
+
+    .code-preview .string {
+      color: #34d399;
+    }
+
+    /* COMPARISON */
+    .comparison-visual {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 25px;
+      margin: 30px 0;
+    }
+
+    @media (max-width: 768px) {
+      .comparison-visual {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .comparison-item {
+      background: #fff;
+      border-radius: 16px;
+      padding: 30px;
+      border: 2px solid #e5e7eb;
+      text-align: center;
+    }
+
+    .comparison-item.good {
+      border-color: #10b981;
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    }
+
+    .comparison-item.neutral {
+      border-color: #6366f1;
+      background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+    }
+
+    .comparison-item h4 {
+      margin: 0 0 15px;
+      font-size: 1.2rem;
+    }
+
+    .comparison-item p {
+      margin: 0;
+      color: var(--text-light);
+    }
+
+    /* FOOTER */
+    .footer {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      color: #fff;
+      text-align: center;
+      padding: 50px 24px;
+      margin-top: 60px;
+      border-radius: 24px 24px 0 0;
+    }
+
+    .footer h3 {
+      margin: 0 0 15px;
+      font-weight: 300;
+      font-size: 1.5rem;
+    }
+
+    .footer p {
+      margin: 10px 0;
+      opacity: 0.8;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin: 25px 0;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: #fbbf24;
+      text-decoration: none;
+      font-weight: 500;
+      padding: 10px 20px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      transition: all 0.3s;
+    }
+
+    .footer-links a:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    /* INTERACTIVE GRAPH SVG STYLES */
+    .graph-node {
+      transition: all 0.3s;
+    }
+    .graph-node:hover {
+      transform: scale(1.1);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     HERO SECTION - Primera Impresión Amigable
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-content">
+    <h1>Bienvenido al Mundo de las<br><strong>Graph Neural Networks</strong></h1>
+    <p class="hero-subtitle">
+      ¿Alguna vez te has preguntado cómo Facebook sabe quién podría ser tu amigo?<br>
+      ¿O cómo Netflix te recomienda películas basadas en gustos similares?<br>
+      <strong>¡La respuesta está en los grafos!</strong> 🎯
+    </p>
+    
+    <!-- Visual: Simple Graph Animation -->
+    <div class="hero-graph">
+      <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+        <!-- Edges -->
+        <line x1="80" y1="100" x2="200" y2="60" stroke="rgba(255,255,255,0.3)" stroke-width="3"/>
+        <line x1="80" y1="100" x2="200" y2="140" stroke="rgba(255,255,255,0.3)" stroke-width="3"/>
+        <line x1="200" y1="60" x2="320" y2="100" stroke="rgba(255,255,255,0.3)" stroke-width="3"/>
+        <line x1="200" y1="140" x2="320" y2="100" stroke="rgba(255,255,255,0.3)" stroke-width="3"/>
+        <line x1="200" y1="60" x2="200" y2="140" stroke="rgba(255,255,255,0.3)" stroke-width="3"/>
+        
+        <!-- Nodes -->
+        <circle cx="80" cy="100" r="25" fill="#fbbf24" class="graph-node"/>
+        <circle cx="200" cy="60" r="25" fill="#f472b6" class="graph-node"/>
+        <circle cx="200" cy="140" r="25" fill="#34d399" class="graph-node"/>
+        <circle cx="320" cy="100" r="25" fill="#60a5fa" class="graph-node"/>
+        
+        <!-- Labels -->
+        <text x="80" y="105" text-anchor="middle" fill="#000" font-weight="bold" font-size="14">Tú</text>
+        <text x="200" y="65" text-anchor="middle" fill="#000" font-weight="bold" font-size="12">Ana</text>
+        <text x="200" y="145" text-anchor="middle" fill="#000" font-weight="bold" font-size="12">Luis</text>
+        <text x="320" y="105" text-anchor="middle" fill="#000" font-weight="bold" font-size="12">?</text>
+      </svg>
+    </div>
+    
+    <div class="hero-badge">📚 4 Capítulos Prácticos con Python</div>
+  </div>
+</section>
+
+<main>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECCIÓN 1: ¿QUÉ ES UN GRAFO? - Explicación Super Amigable
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="story-section">
+  <div class="story-header">
+    <div class="emoji">🤔</div>
+    <h2>Primero lo Primero: ¿Qué es un Grafo?</h2>
+    <p>No te preocupes, es más simple de lo que suena</p>
+  </div>
+
+  <div class="analogy-box">
+    <div class="icon">🎭</div>
+    <div class="content">
+      <h4>Imagina tu Red de Amigos...</h4>
+      <p>
+        Piensa en todas las personas que conoces. Ahora imagina que cada persona es un <strong>punto</strong> (lo llamamos "nodo"). 
+        Cuando dos personas se conocen, dibujamos una <strong>línea</strong> entre ellas (la llamamos "arista" o "edge").
+        <br><br>
+        <strong>¡Felicidades!</strong> Acabas de crear un grafo en tu mente. 🎉
+      </p>
+    </div>
+  </div>
+
+  <!-- VISUAL: Grafo de Amigos -->
+  <div class="visual-diagram">
+    <svg viewBox="0 0 600 300" xmlns="http://www.w3.org/2000/svg">
+      <!-- Background -->
+      <rect width="600" height="300" fill="#f8fafc" rx="20"/>
+      
+      <!-- Title -->
+      <text x="300" y="35" text-anchor="middle" font-size="18" fill="#1e40af" font-weight="600">Tu Red de Amigos = Un Grafo</text>
+      
+      <!-- Edges (connections) -->
+      <line x1="150" y1="150" x2="300" y2="100" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/>
+      <line x1="150" y1="150" x2="300" y2="200" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/>
+      <line x1="300" y1="100" x2="450" y2="120" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/>
+      <line x1="300" y1="200" x2="450" y2="180" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/>
+      <line x1="300" y1="100" x2="300" y2="200" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/>
+      <line x1="450" y1="120" x2="450" y2="180" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/>
+      
+      <!-- Nodes (people) -->
+      <circle cx="150" cy="150" r="35" fill="#3b82f6"/>
+      <circle cx="300" cy="100" r="30" fill="#f472b6"/>
+      <circle cx="300" cy="200" r="30" fill="#34d399"/>
+      <circle cx="450" cy="120" r="30" fill="#fbbf24"/>
+      <circle cx="450" cy="180" r="30" fill="#a855f7"/>
+      
+      <!-- Labels on nodes -->
+      <text x="150" y="155" text-anchor="middle" fill="white" font-weight="bold" font-size="14">TÚ</text>
+      <text x="300" y="105" text-anchor="middle" fill="white" font-weight="bold" font-size="11">María</text>
+      <text x="300" y="205" text-anchor="middle" fill="white" font-weight="bold" font-size="11">Juan</text>
+      <text x="450" y="125" text-anchor="middle" fill="white" font-weight="bold" font-size="11">Ana</text>
+      <text x="450" y="185" text-anchor="middle" fill="white" font-weight="bold" font-size="11">Pedro</text>
+      
+      <!-- Annotations -->
+      <text x="80" y="280" font-size="13" fill="#64748b">🔵 Nodos = Personas</text>
+      <text x="280" y="280" font-size="13" fill="#64748b">➖ Aristas = Conexiones/Amistades</text>
+    </svg>
+    <p class="caption">Cada círculo es una persona (nodo), cada línea es una amistad (arista)</p>
+  </div>
+
+  <div class="friendly-box">
+    <h3>💡 ¿Por qué son tan útiles los grafos?</h3>
+    <p>
+      Los grafos están en <strong>todos lados</strong> sin que te des cuenta:
+    </p>
+    <p>
+      • <strong>🌐 Internet:</strong> Páginas web conectadas por links<br>
+      • <strong>🧬 Biología:</strong> Proteínas conectadas por interacciones<br>
+      • <strong>🚇 Transporte:</strong> Estaciones conectadas por rutas<br>
+      • <strong>💳 Finanzas:</strong> Cuentas conectadas por transacciones<br>
+      • <strong>📱 Redes sociales:</strong> Personas conectadas por follows
+    </p>
+    <p>
+      <strong>El problema es:</strong> Las redes neuronales tradicionales no saben trabajar con estos datos conectados. 
+      ¡Para eso nacieron las <strong>Graph Neural Networks</strong>! 🚀
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECCIÓN 2: LA MAGIA DE LAS GNNs
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="story-section">
+  <div class="story-header">
+    <div class="emoji">✨</div>
+    <h2>La Magia de las Graph Neural Networks</h2>
+    <p>Cómo las computadoras aprenden de las conexiones</p>
+  </div>
+
+  <div class="analogy-box">
+    <div class="icon">🗣️</div>
+    <div class="content">
+      <h4>La Analogía del Chisme (¡Funciona!)</h4>
+      <p>
+        Imagina que llegas a una fiesta donde no conoces a nadie. Quieres saber si una persona es interesante. 
+        ¿Qué haces? <strong>¡Le preguntas a sus amigos!</strong>
+        <br><br>
+        "¿Qué le gusta a María?" → Le preguntas a Juan, Ana y Pedro (sus amigos).<br>
+        Combinas sus respuestas y ya tienes una idea de cómo es María.
+        <br><br>
+        <strong>Las GNNs hacen exactamente esto, pero con matemáticas.</strong> 🧮
+      </p>
+    </div>
+  </div>
+
+  <!-- VISUAL: Proceso de Agregación -->
+  <div class="visual-diagram">
+    <svg viewBox="0 0 700 350" xmlns="http://www.w3.org/2000/svg">
+      <rect width="700" height="350" fill="#f8fafc" rx="20"/>
+      
+      <!-- Title -->
+      <text x="350" y="35" text-anchor="middle" font-size="18" fill="#1e40af" font-weight="600">¿Cómo Aprende una GNN?</text>
+      
+      <!-- PASO 1: Nodo central y vecinos -->
+      <text x="120" y="70" text-anchor="middle" font-size="14" fill="#6b7280" font-weight="600">PASO 1: Mira tus vecinos</text>
+      
+      <!-- Central node -->
+      <circle cx="120" cy="150" r="30" fill="#3b82f6" stroke="#1e40af" stroke-width="3"/>
+      <text x="120" y="155" text-anchor="middle" fill="white" font-weight="bold" font-size="12">María</text>
+      
+      <!-- Neighbor nodes -->
+      <circle cx="50" cy="100" r="20" fill="#94a3b8"/>
+      <circle cx="50" cy="200" r="20" fill="#94a3b8"/>
+      <circle cx="190" cy="120" r="20" fill="#94a3b8"/>
+      <circle cx="190" cy="180" r="20" fill="#94a3b8"/>
+      
+      <!-- Edges -->
+      <line x1="70" y1="110" x2="95" y2="135" stroke="#cbd5e1" stroke-width="2"/>
+      <line x1="70" y1="190" x2="95" y2="165" stroke="#cbd5e1" stroke-width="2"/>
+      <line x1="170" y1="125" x2="145" y2="140" stroke="#cbd5e1" stroke-width="2"/>
+      <line x1="170" y1="175" x2="145" y2="160" stroke="#cbd5e1" stroke-width="2"/>
+      
+      <!-- Arrow -->
+      <path d="M 230 150 L 270 150" stroke="#1e40af" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+      
+      <!-- PASO 2: Recolectar información -->
+      <text x="350" y="70" text-anchor="middle" font-size="14" fill="#6b7280" font-weight="600">PASO 2: Recolecta su info</text>
+      
+      <rect x="290" y="100" width="120" height="100" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+      <text x="350" y="130" text-anchor="middle" font-size="11" fill="#1e40af">Info vecino 1 📝</text>
+      <text x="350" y="150" text-anchor="middle" font-size="11" fill="#1e40af">Info vecino 2 📝</text>
+      <text x="350" y="170" text-anchor="middle" font-size="11" fill="#1e40af">Info vecino 3 📝</text>
+      <text x="350" y="190" text-anchor="middle" font-size="11" fill="#1e40af">Info vecino 4 📝</text>
+      
+      <!-- Arrow -->
+      <path d="M 420 150 L 460 150" stroke="#1e40af" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+      
+      <!-- PASO 3: Combinar -->
+      <text x="550" y="70" text-anchor="middle" font-size="14" fill="#6b7280" font-weight="600">PASO 3: Combina y actualiza</text>
+      
+      <circle cx="550" cy="150" r="40" fill="#10b981" stroke="#059669" stroke-width="3"/>
+      <text x="550" y="145" text-anchor="middle" fill="white" font-weight="bold" font-size="11">María</text>
+      <text x="550" y="160" text-anchor="middle" fill="white" font-size="10">MEJORADA ✨</text>
+      
+      <!-- Bottom explanation -->
+      <rect x="50" y="260" width="600" height="60" rx="10" fill="#fef3c7"/>
+      <text x="350" y="285" text-anchor="middle" font-size="13" fill="#92400e">
+        💡 Ahora María tiene información de ella + información de sus vecinos
+      </text>
+      <text x="350" y="305" text-anchor="middle" font-size="12" fill="#78350f">
+        ¡Esto se repite varias veces para que la información viaje por todo el grafo!
+      </text>
+      
+      <!-- Arrow marker definition -->
+      <defs>
+        <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L9,3 z" fill="#1e40af"/>
+        </marker>
+      </defs>
+    </svg>
+  </div>
+
+  <div class="highlight-quote">
+    <div class="quote-icon">💬</div>
+    <p>
+      "Dime con quién andas y te diré quién eres"<br>
+      <strong>— Las GNNs toman este dicho literalmente</strong>
+    </p>
+  </div>
+
+  <!-- Los 3 Pasos Explicados -->
+  <h3 style="text-align: center; color: var(--primary-blue); margin: 40px 0 25px;">🔄 El Proceso en 3 Pasos Simples</h3>
+  
+  <div class="steps-container">
+    <div class="step">
+      <div class="step-number">1</div>
+      <div class="step-content">
+        <h4>📥 RECOLECTAR</h4>
+        <p>Cada nodo mira a sus vecinos (los nodos conectados a él) y recopila su información.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-number">2</div>
+      <div class="step-content">
+        <h4>🔀 AGREGAR</h4>
+        <p>Combina toda esa información en una sola representación. Puede ser un promedio, una suma, o algo más complejo.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-number">3</div>
+      <div class="step-content">
+        <h4>✨ ACTUALIZAR</h4>
+        <p>Usa la información combinada para mejorar su propia representación. ¡Ahora sabe más!</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="friendly-box">
+    <h3>🤔 ¿Por qué funciona esto?</h3>
+    <p>
+      Porque en el mundo real, <strong>las cosas similares tienden a estar conectadas</strong>:
+    </p>
+    <p>
+      • Si todos tus amigos son músicos, probablemente tú también tengas algo que ver con la música 🎵<br>
+      • Si todos los papers que citas son de física, tu paper probablemente también es de física 📚<br>
+      • Si todas las cuentas conectadas a la tuya son sospechosas... ¡alerta de fraude! 🚨
+    </p>
+    <p>
+      A esto se le llama <strong>"homofilia"</strong>: los pájaros del mismo plumaje vuelan juntos. 🐦
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECCIÓN 3: CÓMO SE VEN LOS DATOS
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="story-section">
+  <div class="story-header">
+    <div class="emoji">📊</div>
+    <h2>¿Cómo Guardamos un Grafo en la Computadora?</h2>
+    <p>Los 4 ingredientes que necesitas conocer</p>
+  </div>
+
+  <div class="analogy-box">
+    <div class="icon">📋</div>
+    <div class="content">
+      <h4>Piensa en un Directorio de Contactos...</h4>
+      <p>
+        Cuando guardas contactos en tu teléfono, guardas: el nombre, el número, el email, etc.
+        <br><br>
+        Con grafos es similar. Guardamos: <strong>quién es cada persona</strong> (sus características) 
+        y <strong>quién conoce a quién</strong> (las conexiones).
+      </p>
+    </div>
+  </div>
+
+  <!-- VISUAL: Los 4 Ingredientes -->
+  <div class="visual-diagram">
+    <svg viewBox="0 0 800 450" xmlns="http://www.w3.org/2000/svg">
+      <rect width="800" height="450" fill="#f8fafc" rx="20"/>
+      
+      <!-- Title -->
+      <text x="400" y="35" text-anchor="middle" font-size="20" fill="#1e40af" font-weight="700">Los 4 Ingredientes de un Grafo en PyTorch</text>
+      
+      <!-- INGREDIENTE 1: X (Features) -->
+      <rect x="30" y="60" width="175" height="160" rx="15" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+      <rect x="30" y="60" width="175" height="40" rx="15" fill="#3b82f6"/>
+      <text x="117" y="85" text-anchor="middle" fill="white" font-weight="bold" font-size="16">x (Features)</text>
+      <text x="117" y="115" text-anchor="middle" fill="#1e40af" font-size="12">La "ficha" de cada persona</text>
+      <text x="117" y="140" text-anchor="middle" fill="#64748b" font-size="11">Edad: 25</text>
+      <text x="117" y="158" text-anchor="middle" fill="#64748b" font-size="11">Ciudad: Madrid</text>
+      <text x="117" y="176" text-anchor="middle" fill="#64748b" font-size="11">Intereses: [1,0,1,0]</text>
+      <text x="117" y="205" text-anchor="middle" fill="#3b82f6" font-size="10" font-weight="600">📋 Perfil del usuario</text>
+      
+      <!-- INGREDIENTE 2: Edge Index -->
+      <rect x="220" y="60" width="175" height="160" rx="15" fill="#f3e8ff" stroke="#8b5cf6" stroke-width="2"/>
+      <rect x="220" y="60" width="175" height="40" rx="15" fill="#8b5cf6"/>
+      <text x="307" y="85" text-anchor="middle" fill="white" font-weight="bold" font-size="14">edge_index</text>
+      <text x="307" y="115" text-anchor="middle" fill="#6b21a8" font-size="12">Quién conoce a quién</text>
+      <text x="307" y="145" text-anchor="middle" fill="#64748b" font-size="11">María → Juan ✓</text>
+      <text x="307" y="165" text-anchor="middle" fill="#64748b" font-size="11">Juan → Ana ✓</text>
+      <text x="307" y="185" text-anchor="middle" fill="#64748b" font-size="11">Ana → Pedro ✓</text>
+      <text x="307" y="205" text-anchor="middle" fill="#8b5cf6" font-size="10" font-weight="600">🤝 Lista de amistades</text>
+      
+      <!-- INGREDIENTE 3: Y (Labels) -->
+      <rect x="410" y="60" width="175" height="160" rx="15" fill="#dcfce7" stroke="#10b981" stroke-width="2"/>
+      <rect x="410" y="60" width="175" height="40" rx="15" fill="#10b981"/>
+      <text x="497" y="85" text-anchor="middle" fill="white" font-weight="bold" font-size="16">y (Labels)</text>
+      <text x="497" y="115" text-anchor="middle" fill="#047857" font-size="12">La respuesta correcta</text>
+      <text x="497" y="145" text-anchor="middle" fill="#64748b" font-size="11">María = Grupo A</text>
+      <text x="497" y="165" text-anchor="middle" fill="#64748b" font-size="11">Juan = Grupo B</text>
+      <text x="497" y="185" text-anchor="middle" fill="#64748b" font-size="11">Ana = Grupo A</text>
+      <text x="497" y="205" text-anchor="middle" fill="#10b981" font-size="10" font-weight="600">🏷️ Etiquetas reales</text>
+      
+      <!-- INGREDIENTE 4: Train Mask -->
+      <rect x="600" y="60" width="175" height="160" rx="15" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+      <rect x="600" y="60" width="175" height="40" rx="15" fill="#f59e0b"/>
+      <text x="687" y="85" text-anchor="middle" fill="white" font-weight="bold" font-size="14">train_mask</text>
+      <text x="687" y="115" text-anchor="middle" fill="#b45309" font-size="12">¿Cuáles uso para aprender?</text>
+      <text x="687" y="145" text-anchor="middle" fill="#64748b" font-size="11">María = ✅ Entrenar</text>
+      <text x="687" y="165" text-anchor="middle" fill="#64748b" font-size="11">Juan = ❌ Evaluar</text>
+      <text x="687" y="185" text-anchor="middle" fill="#64748b" font-size="11">Ana = ✅ Entrenar</text>
+      <text x="687" y="205" text-anchor="middle" fill="#f59e0b" font-size="10" font-weight="600">📝 Lista de estudio</text>
+      
+      <!-- Bottom visual: Simple graph representation -->
+      <text x="400" y="260" text-anchor="middle" font-size="16" fill="#1e40af" font-weight="600">Ejemplo Visual: Un Grafo Pequeño</text>
+      
+      <!-- Simple graph -->
+      <circle cx="200" cy="350" r="30" fill="#3b82f6"/>
+      <circle cx="350" cy="300" r="25" fill="#f472b6"/>
+      <circle cx="350" cy="400" r="25" fill="#34d399"/>
+      <circle cx="500" cy="350" r="25" fill="#fbbf24"/>
+      
+      <line x1="225" y1="335" x2="325" y2="310" stroke="#cbd5e1" stroke-width="3"/>
+      <line x1="225" y1="365" x2="325" y2="390" stroke="#cbd5e1" stroke-width="3"/>
+      <line x1="375" y1="310" x2="475" y2="340" stroke="#cbd5e1" stroke-width="3"/>
+      <line x1="375" y1="390" x2="475" y2="360" stroke="#cbd5e1" stroke-width="3"/>
+      
+      <text x="200" y="355" text-anchor="middle" fill="white" font-weight="bold" font-size="10">0</text>
+      <text x="350" y="305" text-anchor="middle" fill="white" font-weight="bold" font-size="10">1</text>
+      <text x="350" y="405" text-anchor="middle" fill="white" font-weight="bold" font-size="10">2</text>
+      <text x="500" y="355" text-anchor="middle" fill="white" font-weight="bold" font-size="10">3</text>
+      
+      <!-- Annotations -->
+      <text x="620" y="320" font-size="11" fill="#64748b">x = [[...], [...], [...], [...]]</text>
+      <text x="620" y="340" font-size="11" fill="#64748b">edge_index = [[0,0,1,2], [1,2,3,3]]</text>
+      <text x="620" y="360" font-size="11" fill="#64748b">y = [0, 1, 0, 1]</text>
+      <text x="620" y="380" font-size="11" fill="#64748b">train_mask = [T, F, T, F]</text>
+    </svg>
+  </div>
+
+  <div class="friendly-box">
+    <h3>🎓 Resumen Rápido</h3>
+    <p>
+      <strong>• x</strong> = Características de cada nodo (como un perfil de usuario)<br>
+      <strong>• edge_index</strong> = Lista de conexiones (quién conoce a quién)<br>
+      <strong>• y</strong> = Las respuestas que queremos predecir<br>
+      <strong>• train_mask</strong> = Cuáles nodos usamos para entrenar el modelo
+    </p>
+  </div>
+
+  <!-- EXPLICACIÓN DETALLADA PARA LA CLASE -->
+  <div class="highlight-quote" style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);">
+    <div class="quote-icon">👨‍🏫</div>
+    <p>
+      <strong>¿Quieres entenderlo mejor?</strong><br>
+      A continuación te explico cada componente paso a paso con un ejemplo concreto
+    </p>
+  </div>
+
+  <!-- EJEMPLO VISUAL DETALLADO -->
+  <div class="visual-diagram">
+    <svg viewBox="0 0 800 280" xmlns="http://www.w3.org/2000/svg">
+      <rect width="800" height="280" fill="#f8fafc" rx="20"/>
+      
+      <!-- Title -->
+      <text x="400" y="35" text-anchor="middle" font-size="20" fill="#1e40af" font-weight="700">📊 Imagina 4 Personas en una Red Social</text>
+      
+      <!-- Graph visualization -->
+      <circle cx="150" cy="120" r="35" fill="#3b82f6"/>
+      <circle cx="280" cy="80" r="30" fill="#f472b6"/>
+      <circle cx="280" cy="160" r="30" fill="#34d399"/>
+      <circle cx="410" cy="120" r="30" fill="#fbbf24"/>
+      
+      <!-- Edges -->
+      <line x1="180" y1="105" x2="250" y2="90" stroke="#94a3b8" stroke-width="4"/>
+      <line x1="180" y1="135" x2="250" y2="150" stroke="#94a3b8" stroke-width="4"/>
+      <line x1="305" y1="95" x2="385" y2="110" stroke="#94a3b8" stroke-width="4"/>
+      <line x1="305" y1="145" x2="385" y2="130" stroke="#94a3b8" stroke-width="4"/>
+      
+      <!-- Labels -->
+      <text x="150" y="125" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+      <text x="280" y="85" text-anchor="middle" fill="white" font-weight="bold" font-size="14">1</text>
+      <text x="280" y="165" text-anchor="middle" fill="white" font-weight="bold" font-size="14">2</text>
+      <text x="410" y="125" text-anchor="middle" fill="white" font-weight="bold" font-size="14">3</text>
+      
+      <!-- Legend -->
+      <text x="150" y="175" text-anchor="middle" font-size="11" fill="#64748b">Grupo 🔵</text>
+      <text x="280" y="210" text-anchor="middle" font-size="11" fill="#64748b">Grupo 🔴</text>
+      <text x="280" y="50" text-anchor="middle" font-size="11" fill="#64748b">Grupo 🔴</text>
+      <text x="410" y="175" text-anchor="middle" font-size="11" fill="#64748b">Grupo 🔴</text>
+      
+      <!-- Connections explanation -->
+      <rect x="500" y="60" width="270" height="160" rx="15" fill="#e0e7ff" stroke="#6366f1" stroke-width="2"/>
+      <text x="635" y="90" text-anchor="middle" font-size="14" fill="#4338ca" font-weight="600">Conexiones (Amistades)</text>
+      <text x="635" y="120" text-anchor="middle" font-size="13" fill="#64748b">0 ↔ 1  (Persona 0 conoce a 1)</text>
+      <text x="635" y="145" text-anchor="middle" font-size="13" fill="#64748b">0 ↔ 2  (Persona 0 conoce a 2)</text>
+      <text x="635" y="170" text-anchor="middle" font-size="13" fill="#64748b">1 ↔ 3  (Persona 1 conoce a 3)</text>
+      <text x="635" y="195" text-anchor="middle" font-size="13" fill="#64748b">2 ↔ 3  (Persona 2 conoce a 3)</text>
+      
+      <!-- Bottom note -->
+      <text x="400" y="260" text-anchor="middle" font-size="12" fill="#64748b">Cada círculo = una persona | Cada línea = una amistad</text>
+    </svg>
+  </div>
+
+  <!-- EXPLICACIÓN 1: X -->
+  <div class="analogy-box" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); margin-top: 30px;">
+    <div class="icon">📋</div>
+    <div class="content">
+      <h4>1️⃣ <code style="background: #3b82f6; color: white; padding: 3px 10px; border-radius: 5px;">x</code> = Las características de cada persona</h4>
+      <p>
+        Es como la <strong>"ficha"</strong> de cada usuario: qué le gusta, cuántos años tiene, sus intereses, etc.
+      </p>
+      <div style="background: #1e293b; color: #e2e8f0; padding: 15px 20px; border-radius: 10px; font-family: monospace; margin-top: 15px;">
+        x = [<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;[...],&nbsp;&nbsp;&nbsp;← Perfil de la persona 0 (edad, intereses, etc.)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;[...],&nbsp;&nbsp;&nbsp;← Perfil de la persona 1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;[...],&nbsp;&nbsp;&nbsp;← Perfil de la persona 2<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;[...]&nbsp;&nbsp;&nbsp;&nbsp;← Perfil de la persona 3<br>
+        ]
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPLICACIÓN 2: EDGE_INDEX -->
+  <div class="analogy-box" style="background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);">
+    <div class="icon">🤝</div>
+    <div class="content">
+      <h4>2️⃣ <code style="background: #8b5cf6; color: white; padding: 3px 10px; border-radius: 5px;">edge_index</code> = Lista de conexiones (quién conoce a quién)</h4>
+      <p>
+        Se lee en <strong>columnas</strong>. La fila de arriba es el ORIGEN, la de abajo es el DESTINO.
+      </p>
+      <div style="background: #1e293b; color: #e2e8f0; padding: 15px 20px; border-radius: 10px; font-family: monospace; margin-top: 15px;">
+        edge_index = [<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;[0, 0, 1, 2],&nbsp;&nbsp;&nbsp;← ORIGEN (de dónde sale la conexión)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;[1, 2, 3, 3]&nbsp;&nbsp;&nbsp;&nbsp;← DESTINO (a dónde llega)<br>
+        ]
+      </div>
+      <div style="margin-top: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; text-align: center;">
+        <div style="background: white; padding: 10px; border-radius: 8px; border: 2px solid #8b5cf6;">
+          <strong>Col 1</strong><br>0 → 1<br><span style="font-size: 12px; color: #64748b;">Persona 0 conoce a 1</span>
+        </div>
+        <div style="background: white; padding: 10px; border-radius: 8px; border: 2px solid #8b5cf6;">
+          <strong>Col 2</strong><br>0 → 2<br><span style="font-size: 12px; color: #64748b;">Persona 0 conoce a 2</span>
+        </div>
+        <div style="background: white; padding: 10px; border-radius: 8px; border: 2px solid #8b5cf6;">
+          <strong>Col 3</strong><br>1 → 3<br><span style="font-size: 12px; color: #64748b;">Persona 1 conoce a 3</span>
+        </div>
+        <div style="background: white; padding: 10px; border-radius: 8px; border: 2px solid #8b5cf6;">
+          <strong>Col 4</strong><br>2 → 3<br><span style="font-size: 12px; color: #64748b;">Persona 2 conoce a 3</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPLICACIÓN 3: Y -->
+  <div class="analogy-box" style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);">
+    <div class="icon">🏷️</div>
+    <div class="content">
+      <h4>3️⃣ <code style="background: #10b981; color: white; padding: 3px 10px; border-radius: 5px;">y</code> = La etiqueta/grupo REAL de cada persona</h4>
+      <p>
+        Es la <strong>"respuesta correcta"</strong> que queremos que el modelo aprenda a predecir.
+      </p>
+      <div style="background: #1e293b; color: #e2e8f0; padding: 15px 20px; border-radius: 10px; font-family: monospace; margin-top: 15px;">
+        y = [0, 1, 0, 1]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↑&nbsp;&nbsp;↑&nbsp;&nbsp;↑&nbsp;&nbsp;↑<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;│&nbsp;&nbsp;│&nbsp;&nbsp;└─ Persona 3 → Grupo 1 🔴<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;│&nbsp;&nbsp;└──── Persona 2 → Grupo 0 🔵<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;└─────── Persona 1 → Grupo 1 🔴<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└────────── Persona 0 → Grupo 0 🔵
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPLICACIÓN 4: TRAIN_MASK (LA MÁS IMPORTANTE) -->
+  <div class="analogy-box" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 3px solid #f59e0b;">
+    <div class="icon">⭐</div>
+    <div class="content">
+      <h4>4️⃣ <code style="background: #f59e0b; color: white; padding: 3px 10px; border-radius: 5px;">train_mask</code> = ¿Cuáles uso para ENTRENAR? (¡La clave!)</h4>
+      <p>
+        Esto es como dividir entre <strong>"ejemplos de estudio"</strong> y <strong>"preguntas del examen"</strong>.
+      </p>
+      <div style="background: #1e293b; color: #e2e8f0; padding: 15px 20px; border-radius: 10px; font-family: monospace; margin-top: 15px;">
+        train_mask = [True, False, True, False]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↑&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↑&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↑&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↑<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ Persona 3: ❌ NO entrenar<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└───── Persona 2: ✅ SÍ entrenar<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─────────── Persona 1: ❌ NO entrenar<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└───────────────── Persona 0: ✅ SÍ entrenar
+      </div>
+      
+      <div style="margin-top: 25px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        <div style="background: #dcfce7; padding: 20px; border-radius: 12px; border: 2px solid #10b981;">
+          <strong style="color: #047857; font-size: 1.1rem;">✅ True = "Ejemplos de estudio"</strong>
+          <p style="margin: 10px 0 0; color: #166534;">El modelo VE sus respuestas correctas (y) durante el entrenamiento. <strong>Aprende de ellos.</strong></p>
+        </div>
+        <div style="background: #fee2e2; padding: 20px; border-radius: 12px; border: 2px solid #ef4444;">
+          <strong style="color: #b91c1c; font-size: 1.1rem;">❌ False = "Preguntas del examen"</strong>
+          <p style="margin: 10px 0 0; color: #991b1b;">El modelo NO ve sus respuestas. Los usamos para <strong>verificar si aprendió bien.</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALOGÍA DEL PROFESOR -->
+  <div class="highlight-quote" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); margin-top: 30px;">
+    <div class="quote-icon">👨‍🏫</div>
+    <p>
+      <strong>Analogía del Profesor:</strong><br><br>
+      "Te enseño con las personas 0 y 2 (True).<br>
+      Después te pregunto: ¿A qué grupo pertenecen las personas 1 y 3? (False)"<br><br>
+      <strong style="color: #fbbf24;">Si el modelo predice correctamente las que NUNCA vio → ¡Aprendió bien! 🎉</strong>
+    </p>
+  </div>
+
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECCIÓN 4: LOS 4 CAPÍTULOS DEL CURSO
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="story-section">
+  <div class="story-header">
+    <div class="emoji">📚</div>
+    <h2>Tu Viaje de Aprendizaje</h2>
+    <p>4 capítulos que te llevarán de principiante a experto</p>
+  </div>
+
+  <!-- CAPÍTULO 1: GCN -->
+  <div class="chapter-preview">
+    <div class="chapter-number ch1">1</div>
+    <div class="chapter-content">
+      <h3>Graph Convolutional Networks (GCN)</h3>
+      <p class="subtitle">🎯 Dataset: Karate Club (34 personas)</p>
+      <p class="description">
+        <strong>Tu primera GNN.</strong> Aprenderás con un ejemplo clásico: un club de karate que se dividió en dos grupos. 
+        ¿Puede la red neuronal predecir a qué grupo pertenece cada persona basándose en sus amistades?
+        <br><br>
+        <em>Concepto clave:</em> Cada nodo promedia la información de sus vecinos para actualizarse.
+      </p>
+    </div>
+    <div class="chapter-visual">
+      <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="60" cy="60" r="50" fill="none" stroke="#667eea" stroke-width="2" stroke-dasharray="5,5"/>
+        <circle cx="60" cy="30" r="12" fill="#667eea"/>
+        <circle cx="30" cy="75" r="12" fill="#764ba2"/>
+        <circle cx="90" cy="75" r="12" fill="#764ba2"/>
+        <circle cx="60" cy="90" r="12" fill="#667eea"/>
+        <line x1="60" y1="42" x2="37" y2="67" stroke="#cbd5e1" stroke-width="2"/>
+        <line x1="60" y1="42" x2="83" y2="67" stroke="#cbd5e1" stroke-width="2"/>
+        <line x1="42" y1="75" x2="78" y2="75" stroke="#cbd5e1" stroke-width="2"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- CAPÍTULO 2: GAT -->
+  <div class="chapter-preview">
+    <div class="chapter-number ch2">2</div>
+    <div class="chapter-content">
+      <h3>Graph Attention Networks (GAT)</h3>
+      <p class="subtitle">🎯 Dataset: CiteSeer (3,327 papers académicos)</p>
+      <p class="description">
+        <strong>¿Y si algunos vecinos son más importantes que otros?</strong> 
+        GAT usa "atención" para decidir cuánto peso darle a cada vecino. 
+        Como cuando escuchas más a un amigo experto que a uno que no sabe del tema.
+        <br><br>
+        <em>Concepto clave:</em> La red aprende automáticamente qué vecinos son más relevantes.
+      </p>
+    </div>
+    <div class="chapter-visual">
+      <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="60" cy="60" r="20" fill="#f5576c"/>
+        <!-- Neighbors with different sizes (attention weights) -->
+        <circle cx="30" cy="30" r="15" fill="#f093fb" opacity="0.9"/>
+        <circle cx="90" cy="30" r="8" fill="#f093fb" opacity="0.5"/>
+        <circle cx="30" cy="90" r="12" fill="#f093fb" opacity="0.7"/>
+        <circle cx="90" cy="90" r="18" fill="#f093fb" opacity="1"/>
+        <!-- Edges with varying thickness -->
+        <line x1="45" y1="45" x2="42" y2="42" stroke="#f5576c" stroke-width="4"/>
+        <line x1="75" y1="45" x2="85" y2="35" stroke="#f5576c" stroke-width="1"/>
+        <line x1="45" y1="75" x2="38" y2="82" stroke="#f5576c" stroke-width="2"/>
+        <line x1="75" y1="75" x2="80" y2="80" stroke="#f5576c" stroke-width="5"/>
+        <text x="60" y="64" text-anchor="middle" fill="white" font-size="10" font-weight="bold">?</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- CAPÍTULO 3: GraphSAGE -->
+  <div class="chapter-preview">
+    <div class="chapter-number ch3">3</div>
+    <div class="chapter-content">
+      <h3>GraphSAGE</h3>
+      <p class="subtitle">🎯 Dataset: PubMed (19,717 papers médicos)</p>
+      <p class="description">
+        <strong>¿Qué pasa cuando el grafo es ENORME?</strong> 
+        GraphSAGE resuelve esto muestreando solo algunos vecinos en lugar de todos. 
+        Es como hacer una encuesta: no preguntas a todo el país, solo a una muestra representativa.
+        <br><br>
+        <em>Concepto clave:</em> Escala a millones de nodos usando mini-batches.
+      </p>
+    </div>
+    <div class="chapter-visual">
+      <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <!-- Many small nodes representing big graph -->
+        <circle cx="20" cy="20" r="5" fill="#4facfe" opacity="0.3"/>
+        <circle cx="40" cy="15" r="5" fill="#4facfe" opacity="0.3"/>
+        <circle cx="60" cy="20" r="5" fill="#4facfe" opacity="0.3"/>
+        <circle cx="80" cy="15" r="5" fill="#4facfe" opacity="0.3"/>
+        <circle cx="100" cy="20" r="5" fill="#4facfe" opacity="0.3"/>
+        <circle cx="15" cy="40" r="5" fill="#4facfe" opacity="0.3"/>
+        <circle cx="105" cy="40" r="5" fill="#4facfe" opacity="0.3"/>
+        <circle cx="20" cy="100" r="5" fill="#4facfe" opacity="0.3"/>
+        <circle cx="100" cy="100" r="5" fill="#4facfe" opacity="0.3"/>
+        <!-- Sampled subgraph -->
+        <circle cx="60" cy="60" r="12" fill="#00f2fe"/>
+        <circle cx="40" cy="50" r="8" fill="#4facfe"/>
+        <circle cx="80" cy="50" r="8" fill="#4facfe"/>
+        <circle cx="50" cy="80" r="8" fill="#4facfe"/>
+        <line x1="52" y1="56" x2="46" y2="54" stroke="#00f2fe" stroke-width="2"/>
+        <line x1="68" y1="56" x2="74" y2="54" stroke="#00f2fe" stroke-width="2"/>
+        <line x1="56" y1="70" x2="52" y2="76" stroke="#00f2fe" stroke-width="2"/>
+        <text x="60" y="110" text-anchor="middle" fill="#0d9488" font-size="9">muestra</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- CAPÍTULO 4: GIN -->
+  <div class="chapter-preview">
+    <div class="chapter-number ch4">4</div>
+    <div class="chapter-content">
+      <h3>Graph Isomorphism Networks (GIN)</h3>
+      <p class="subtitle">🎯 Dataset: PROTEINS (1,113 proteínas)</p>
+      <p class="description">
+        <strong>¡Ahora clasificamos grafos completos, no solo nodos!</strong> 
+        ¿Es esta proteína una enzima o no? GIN mira toda la estructura del grafo para decidir.
+        Es el más expresivo de todos: puede distinguir estructuras que otros modelos no pueden.
+        <br><br>
+        <em>Concepto clave:</em> Usa SUMA en lugar de promedio para capturar más información.
+      </p>
+    </div>
+    <div class="chapter-visual">
+      <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <!-- Two different graph structures -->
+        <!-- Graph 1 -->
+        <circle cx="30" cy="40" r="8" fill="#43e97b"/>
+        <circle cx="50" cy="30" r="8" fill="#43e97b"/>
+        <circle cx="50" cy="50" r="8" fill="#43e97b"/>
+        <line x1="36" y1="36" x2="44" y2="34" stroke="#38f9d7" stroke-width="2"/>
+        <line x1="36" y1="44" x2="44" y2="46" stroke="#38f9d7" stroke-width="2"/>
+        <line x1="50" y1="38" x2="50" y2="42" stroke="#38f9d7" stroke-width="2"/>
+        <text x="40" y="70" text-anchor="middle" fill="#059669" font-size="10">Enzima ✓</text>
+        
+        <!-- Graph 2 -->
+        <circle cx="90" cy="35" r="8" fill="#f87171"/>
+        <circle cx="75" cy="50" r="8" fill="#f87171"/>
+        <circle cx="90" cy="50" r="8" fill="#f87171"/>
+        <circle cx="75" cy="35" r="8" fill="#f87171"/>
+        <line x1="81" y1="37" x2="84" y2="37" stroke="#fca5a5" stroke-width="2"/>
+        <line x1="77" y1="43" x2="77" y2="42" stroke="#fca5a5" stroke-width="2"/>
+        <line x1="88" y1="43" x2="88" y2="42" stroke="#fca5a5" stroke-width="2"/>
+        <line x1="81" y1="50" x2="84" y2="50" stroke="#fca5a5" stroke-width="2"/>
+        <text x="82" y="70" text-anchor="middle" fill="#dc2626" font-size="10">No enzima ✗</text>
+        
+        <text x="60" y="100" text-anchor="middle" fill="#64748b" font-size="9">Clasificar grafos completos</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="highlight-quote">
+    <div class="quote-icon">🚀</div>
+    <p>
+      Cada capítulo construye sobre el anterior.<br>
+      <strong>Empieza por GCN y avanza a tu ritmo.</strong>
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECCIÓN 5: COMPARATIVA VISUAL
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="story-section">
+  <div class="story-header">
+    <div class="emoji">⚖️</div>
+    <h2>¿Cuál Arquitectura Elegir?</h2>
+    <p>Una guía rápida para tomar decisiones</p>
+  </div>
+
+  <!-- Visual comparison -->
+  <div class="visual-diagram" style="padding: 20px;">
+    <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+      <rect width="800" height="400" fill="#f8fafc" rx="20"/>
+      
+      <!-- Title -->
+      <text x="400" y="35" text-anchor="middle" font-size="18" fill="#1e40af" font-weight="600">Árbol de Decisión: ¿Qué GNN Necesitas?</text>
+      
+      <!-- Start -->
+      <rect x="300" y="55" width="200" height="40" rx="20" fill="#3b82f6"/>
+      <text x="400" y="80" text-anchor="middle" fill="white" font-weight="bold" font-size="12">¿Qué quieres clasificar?</text>
+      
+      <!-- Branch lines -->
+      <line x1="350" y1="95" x2="200" y2="140" stroke="#cbd5e1" stroke-width="2"/>
+      <line x1="450" y1="95" x2="600" y2="140" stroke="#cbd5e1" stroke-width="2"/>
+      
+      <!-- Node classification branch -->
+      <rect x="100" y="140" width="200" height="35" rx="17" fill="#667eea"/>
+      <text x="200" y="162" text-anchor="middle" fill="white" font-size="12">🔵 Nodos individuales</text>
+      
+      <line x1="200" y1="175" x2="200" y2="210" stroke="#cbd5e1" stroke-width="2"/>
+      
+      <rect x="100" y="210" width="200" height="35" rx="17" fill="#94a3b8"/>
+      <text x="200" y="232" text-anchor="middle" fill="white" font-size="11">¿El grafo es muy grande?</text>
+      
+      <!-- Small graph -->
+      <line x1="150" y1="245" x2="100" y2="280" stroke="#cbd5e1" stroke-width="2"/>
+      <rect x="30" y="280" width="140" height="30" rx="15" fill="#10b981"/>
+      <text x="100" y="300" text-anchor="middle" fill="white" font-size="11">No → GCN o GAT</text>
+      
+      <!-- Large graph -->
+      <line x1="250" y1="245" x2="300" y2="280" stroke="#cbd5e1" stroke-width="2"/>
+      <rect x="230" y="280" width="140" height="30" rx="15" fill="#06b6d4"/>
+      <text x="300" y="300" text-anchor="middle" fill="white" font-size="11">Sí → GraphSAGE</text>
+      
+      <!-- Graph classification branch -->
+      <rect x="500" y="140" width="200" height="35" rx="17" fill="#f5576c"/>
+      <text x="600" y="162" text-anchor="middle" fill="white" font-size="12">📊 Grafos completos</text>
+      
+      <line x1="600" y1="175" x2="600" y2="280" stroke="#cbd5e1" stroke-width="2"/>
+      
+      <rect x="530" y="280" width="140" height="30" rx="15" fill="#43e97b"/>
+      <text x="600" y="300" text-anchor="middle" fill="#064e3b" font-size="11" font-weight="bold">→ GIN</text>
+      
+      <!-- Bottom tips -->
+      <rect x="50" y="340" width="700" height="45" rx="10" fill="#fef3c7"/>
+      <text x="400" y="360" text-anchor="middle" font-size="12" fill="#92400e">
+        💡 Consejo: ¿No sabes cuál elegir? Empieza con GCN, es el más simple y muchas veces funciona muy bien.
+      </text>
+      <text x="400" y="378" text-anchor="middle" font-size="11" fill="#78350f">
+        Si necesitas mejor precisión, prueba GAT. Si tu grafo es enorme, usa GraphSAGE.
+      </text>
+    </svg>
+  </div>
+
+  <div class="cards-grid" style="grid-template-columns: repeat(4, 1fr);">
+    <div class="card" style="border-top: 4px solid #667eea;">
+      <div class="icon">🔵</div>
+      <h4>GCN</h4>
+      <p>Simple y efectivo. Tu primera opción para empezar.</p>
+    </div>
+    <div class="card" style="border-top: 4px solid #f5576c;">
+      <div class="icon">🟣</div>
+      <h4>GAT</h4>
+      <p>Cuando algunos vecinos importan más que otros.</p>
+    </div>
+    <div class="card" style="border-top: 4px solid #00f2fe;">
+      <div class="icon">🔷</div>
+      <h4>GraphSAGE</h4>
+      <p>Grafos enormes con millones de nodos.</p>
+    </div>
+    <div class="card" style="border-top: 4px solid #43e97b;">
+      <div class="icon">🟢</div>
+      <h4>GIN</h4>
+      <p>Clasificar grafos completos (moléculas, proteínas).</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECCIÓN 6: PRÓXIMOS PASOS
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="story-section">
+  <div class="story-header">
+    <div class="emoji">🎯</div>
+    <h2>¿Listo para Empezar?</h2>
+    <p>Tu plan de acción para dominar las GNNs</p>
+  </div>
+
+  <div class="steps-container">
+    <div class="step">
+      <div class="step-number" style="background: #fbbf24; color: #000;">✓</div>
+      <div class="step-content">
+        <h4>Paso 1: Ya lo hiciste 🎉</h4>
+        <p>Leíste esta introducción y ahora entiendes los conceptos básicos. ¡Gran trabajo!</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-number">2</div>
+      <div class="step-content">
+        <h4>Abre el Notebook 1: GCN</h4>
+        <p>Ejecuta cada celda y observa cómo el modelo aprende a clasificar el Karate Club.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-number">3</div>
+      <div class="step-content">
+        <h4>Experimenta y Rompe Cosas</h4>
+        <p>Cambia parámetros, prueba diferentes configuraciones. Aprender es experimentar.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-number">4</div>
+      <div class="step-content">
+        <h4>Avanza al Siguiente Capítulo</h4>
+        <p>Cuando te sientas cómodo, pasa a GAT, luego GraphSAGE, y finalmente GIN.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="friendly-box">
+    <h3>📚 Recursos del Curso</h3>
+    <p>
+      <strong>• Notebooks:</strong> En la misma carpeta donde encontraste este documento<br>
+      <strong>• Artículos:</strong> Cada capítulo tiene un artículo detallado en el blog del autor<br>
+      <strong>• Colab:</strong> Todos los notebooks funcionan en Google Colab con GPU gratuita
+    </p>
+  </div>
+
+  <div class="highlight-quote">
+    <div class="quote-icon">🌟</div>
+    <p>
+      "El mejor momento para empezar a aprender fue ayer.<br>
+      <strong>El segundo mejor momento es ahora.</strong>"
+    </p>
+  </div>
+</section>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <h3>🌐 Graph Neural Network Course</h3>
+  <p>Basado en el excelente trabajo de <strong>Maxime Labonne</strong></p>
+  <div class="footer-links">
+    <a href="https://github.com/mlabonne/Graph-Neural-Network-Course" target="_blank">📂 Repositorio GitHub</a>
+    <a href="https://mlabonne.github.io/blog/" target="_blank">📖 Blog del Autor</a>
+    <a href="https://twitter.com/maximelabonne" target="_blank">🐦 Twitter</a>
+  </div>
+  <p style="margin-top: 30px; font-size: 0.85rem; opacity: 0.6;">
+    Documento creado con ❤️ para hacer el aprendizaje de GNNs más accesible
+  </p>
+</footer>
+
+</body>
+</html>

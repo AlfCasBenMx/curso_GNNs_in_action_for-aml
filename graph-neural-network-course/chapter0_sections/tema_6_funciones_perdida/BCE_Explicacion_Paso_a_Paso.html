@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BCE — Demostración Matemática Paso a Paso</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #e2e8f0;
+            line-height: 1.8;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            background: #1a1a2e;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        /* ── Header ── */
+        .header {
+            background: linear-gradient(135deg, #e94560 0%, #c23152 50%, #0f3460 100%);
+            color: white; padding: 50px 40px; text-align: center;
+            position: relative; overflow: hidden;
+        }
+        .header::before {
+            content: ''; position: absolute; top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%);
+            animation: pulse 6s ease-in-out infinite;
+        }
+        @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+        .header h1 { font-size: 2.4em; margin-bottom: 10px; text-shadow: 2px 2px 8px rgba(0,0,0,0.4); position: relative; }
+        .header .emoji { font-size: 3.5em; display: block; margin-bottom: 10px; position: relative; }
+        .header p { font-size: 1.1em; opacity: 0.92; position: relative; }
+
+        .content { padding: 40px; }
+
+        /* ── Progress Bar ── */
+        .progress-bar-container {
+            background: #0d1b2a; border-radius: 20px; padding: 20px 30px;
+            margin-bottom: 35px; border: 1px solid #0f3460;
+            position: sticky; top: 10px; z-index: 100;
+        }
+        .progress-bar-container .progress-label {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px;
+        }
+        .progress-bar-container .progress-label span { color: #94a3b8; font-size: 0.9em; }
+        .progress-bar-container .progress-label strong { color: #e94560; font-size: 1.1em; }
+        .progress-track {
+            background: #16213e; border-radius: 10px; height: 12px; overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%; border-radius: 10px; width: 0%;
+            background: linear-gradient(90deg, #e94560, #fbbf24, #34d399);
+            transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+        }
+
+        /* ── Step Cards ── */
+        .step {
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: opacity 0.6s ease, max-height 0.8s ease, margin 0.5s ease;
+            margin-bottom: 0;
+            border-radius: 16px;
+        }
+        .step.visible {
+            opacity: 1;
+            max-height: 5000px;
+            margin-bottom: 28px;
+        }
+
+        .step-inner {
+            border: 2px solid #0f3460;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .step-header {
+            padding: 18px 24px;
+            display: flex; align-items: center; gap: 14px;
+        }
+        .step-badge {
+            background: linear-gradient(135deg, #e94560, #c23152);
+            color: white; width: 40px; height: 40px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 0.95em; flex-shrink: 0;
+        }
+        .step-title { color: #e2e8f0; font-size: 1.15em; font-weight: 600; }
+        .step-subtitle { color: #94a3b8; font-size: 0.85em; margin-top: 2px; }
+
+        .step-body { padding: 0 28px 28px 28px; }
+
+        /* ── Equation Box ── */
+        .eq-box {
+            background: #0d1b2a;
+            border-left: 5px solid #e94560;
+            border-radius: 10px;
+            padding: 22px 28px;
+            margin: 16px 0;
+            text-align: center;
+            overflow-x: auto;
+        }
+        .eq-box.blue { border-left-color: #3b82f6; }
+        .eq-box.green { border-left-color: #10b981; }
+        .eq-box.yellow { border-left-color: #f59e0b; }
+        .eq-box.purple { border-left-color: #8b5cf6; }
+        .eq-box.cyan { border-left-color: #06b6d4; }
+        .eq-box.pink { border-left-color: #ec4899; }
+        .eq-box.gold { border-left-color: #fbbf24; border-left-width: 6px; }
+
+        .eq-label {
+            display: block; font-size: 0.78em; font-weight: bold;
+            margin-bottom: 10px; text-align: left;
+        }
+        .eq-box .eq-label { color: #e94560; }
+        .eq-box.blue .eq-label { color: #60a5fa; }
+        .eq-box.green .eq-label { color: #34d399; }
+        .eq-box.yellow .eq-label { color: #fbbf24; }
+        .eq-box.purple .eq-label { color: #a78bfa; }
+        .eq-box.cyan .eq-label { color: #22d3ee; }
+        .eq-box.pink .eq-label { color: #f472b6; }
+        .eq-box.gold .eq-label { color: #fbbf24; font-size: 0.9em; }
+
+        /* ── Narración ── */
+        .narration {
+            color: #cbd5e1; font-size: 0.98em; line-height: 1.85;
+            margin: 12px 0;
+        }
+        .narration strong { color: #e2e8f0; }
+        .narration em { color: #fbbf24; font-style: normal; font-weight: 600; }
+
+        /* ── Caso concreto ── */
+        .case-box {
+            background: #16213e; border-radius: 12px;
+            padding: 18px 22px; margin: 14px 0;
+            border: 1px solid #1e3a5f;
+        }
+        .case-box h4 { color: #fbbf24; margin-bottom: 8px; font-size: 1em; }
+
+        /* ── Insight / Warning ── */
+        .insight {
+            background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.06));
+            border: 1px solid rgba(99,102,241,0.3);
+            border-radius: 12px; padding: 16px 20px; margin: 14px 0;
+        }
+        .insight strong { color: #a78bfa; }
+
+        .warning {
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.25);
+            border-radius: 12px; padding: 16px 20px; margin: 14px 0;
+        }
+        .warning strong { color: #f87171; }
+
+        /* ── Botones ── */
+        .btn-container { text-align: center; margin: 30px 0; }
+
+        .btn-next {
+            background: linear-gradient(135deg, #e94560, #c23152);
+            color: white; border: none; border-radius: 50px;
+            padding: 16px 48px; font-size: 1.15em; font-weight: 700;
+            cursor: pointer; transition: all 0.3s ease;
+            box-shadow: 0 6px 24px rgba(233,69,96,0.35);
+            display: inline-flex; align-items: center; gap: 10px;
+        }
+        .btn-next:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 32px rgba(233,69,96,0.5);
+        }
+        .btn-next:disabled {
+            opacity: 0.4; cursor: default; transform: none;
+            box-shadow: none;
+        }
+        .btn-next .arrow { font-size: 1.3em; transition: transform 0.3s; }
+        .btn-next:hover:not(:disabled) .arrow { transform: translateX(4px); }
+
+        .btn-reset {
+            background: #16213e; color: #94a3b8; border: 2px solid #0f3460;
+            border-radius: 50px; padding: 12px 32px; font-size: 1em;
+            cursor: pointer; transition: all 0.3s ease; margin-left: 12px;
+        }
+        .btn-reset:hover { border-color: #e94560; color: #e94560; }
+
+        /* ── Footer ── */
+        .footer {
+            background: #0d1b2a; color: #475569; padding: 22px;
+            text-align: center; font-size: 0.85em;
+        }
+
+        /* ── KaTeX tweaks ── */
+        .katex { font-size: 1.25em; color: #e2e8f0; }
+        .eq-box .katex { font-size: 1.35em; }
+
+        /* ── Responsive ── */
+        @media (max-width: 700px) {
+            .header h1 { font-size: 1.7em; }
+            .content { padding: 22px; }
+            .step-body { padding: 0 18px 20px 18px; }
+            .eq-box { padding: 16px; }
+            .btn-next { padding: 14px 32px; font-size: 1em; }
+        }
+
+        /* ── Animación ── */
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .step.visible .step-inner {
+            animation: fadeSlideIn 0.5s ease forwards;
+        }
+
+        /* ── Step colors ── */
+        .step[data-color="red"] .step-inner { border-color: #e94560; }
+        .step[data-color="red"] .step-header { background: rgba(233,69,96,0.08); }
+        .step[data-color="blue"] .step-inner { border-color: #3b82f6; }
+        .step[data-color="blue"] .step-header { background: rgba(59,130,246,0.08); }
+        .step[data-color="green"] .step-inner { border-color: #10b981; }
+        .step[data-color="green"] .step-header { background: rgba(16,185,129,0.08); }
+        .step[data-color="yellow"] .step-inner { border-color: #f59e0b; }
+        .step[data-color="yellow"] .step-header { background: rgba(245,158,11,0.08); }
+        .step[data-color="purple"] .step-inner { border-color: #8b5cf6; }
+        .step[data-color="purple"] .step-header { background: rgba(139,92,246,0.08); }
+        .step[data-color="cyan"] .step-inner { border-color: #06b6d4; }
+        .step[data-color="cyan"] .step-header { background: rgba(6,182,212,0.08); }
+        .step[data-color="pink"] .step-inner { border-color: #ec4899; }
+        .step[data-color="pink"] .step-header { background: rgba(236,72,153,0.08); }
+        .step[data-color="gold"] .step-inner { border-color: #fbbf24; }
+        .step[data-color="gold"] .step-header { background: rgba(251,191,36,0.08); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- ═══════ HEADER ═══════ -->
+    <div class="header">
+        <span class="emoji">📐</span>
+        <h1>Binary Cross-Entropy</h1>
+        <p>Demostración Matemática — Ecuación por Ecuación</p>
+        <p style="margin-top:8px;font-size:0.88em;opacity:0.75;">Pulsa el botón o la tecla <strong>→</strong> para avanzar paso a paso</p>
+    </div>
+
+    <div class="content">
+
+        <!-- ── Barra de progreso ── -->
+        <div class="progress-bar-container">
+            <div class="progress-label">
+                <span>Progreso de la demostración</span>
+                <strong id="progressText">0 / 14</strong>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             PASO 1: PLANTEAMIENTO DEL PROBLEMA
+             ═══════════════════════════════════════════════════ -->
+        <div class="step" data-color="red" id="step1">
+            <div class="step-inner">
+                <div class="step-header">
+                    <div class="step-badge">1</div>
+                    <div><div class="step-title">Planteamiento del Problema</div>
+                    <div class="step-subtitle">¿Qué queremos modelar?</div></div>
+                </div>
+                <div class="step-body">
+                    <p class="narration">Tenemos un problema de <strong>clasificación binaria</strong>. Cada muestra tiene una etiqueta real:</p>
+                    <div class="eq-box">
+                        <span class="eq-label">🏷️ Etiqueta real</span>
+                        $$y \in \{0, 1\}$$
+                    </div>
+                    <p class="narration">Y nuestro modelo produce una <em>probabilidad estimada</em> de que la clase sea 1:</p>
+                    <div class="eq-box blue">
+                        <span class="eq-label">🤖 Predicción del modelo</span>
+                        $$\hat{y} = P(y=1 \mid x) \quad \in [0,\; 1]$$
+                    </div>
+                    <p class="narration"><strong>Objetivo:</strong> encontrar una función que mida qué tan <em>lejos</em> está \(\hat{y}\) de \(y\), y que produzca buenos gradientes para el aprendizaje.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             PASO 2: DISTRIBUCIÓN DE BERNOULLI
+             ═══════════════════════════════════════════════════ -->
+        <div class="step" data-color="blue" id="step2">
+            <div class="step-inner">
+                <div class="step-header">
+                    <div class="step-badge">2</div>
+                    <div><div class="step-title">Modelar como Bernoulli</div>
+                    <div class="step-subtitle">La base probabilística</div></div>
+                </div>
+                <div class="step-body">
+                    <p class="narration">Como \(y\) solo toma valores 0 ó 1, lo modelamos como una <strong>variable aleatoria de Bernoulli</strong> con parámetro \(\hat{y}\). Su función de masa de probabilidad se escribe de forma compacta:</p>
+                    <div class="eq-box blue">
+                        <span class="eq-label">📊 Probabilidad de Bernoulli</span>
+                        $$P(y \mid \hat{y}) \;=\; \hat{y}^{\,y} \;\cdot\; (1 - \hat{y})^{\,(1-y)}$$
+                    </div>
+                    <div class="insight">
+                        <strong>🔍 ¿Por qué funciona este truco de exponentes?</strong> Los exponentes \(y\) y \((1-y)\) actúan como un <em>interruptor</em>: solo uno de los dos factores sobrevive según el valor de \(y\).
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             PASO 3: VERIFICACIÓN y=1
+             ═══════════════════════════════════════════════════ -->
+        <div class="step" data-color="blue" id="step3">
+            <div class="step-inner">
+                <div class="step-header">
+                    <div class="step-badge">3</div>
+                    <div><div class="step-title">Verificación: caso y = 1</div>
+                    <div class="step-subtitle">Comprobamos que la fórmula es correcta</div></div>
+                </div>
+                <div class="step-body">
+                    <p class="narration">Sustituimos \(y=1\) en la expresión de Bernoulli:</p>
+                    <div class="eq-box blue">
+                        <span class="eq-label">📝 Sustituyendo y = 1</span>
+                        $$P(y{=}1 \mid \hat{y}) = \hat{y}^{\,\color{#60a5fa}{1}} \cdot (1-\hat{y})^{\,\color{#60a5fa}{(1-1)}}$$
+                    </div>
+                    <div class="eq-box blue">
+                        <span class="eq-label">📝 Simplificando: exponente 0 → factor = 1</span>
+                        $$= \hat{y}^{1} \cdot (1-\hat{y})^{0} = \hat{y} \cdot 1 = \hat{y}$$
+                    </div>
+                    <p class="narration">✅ La probabilidad de observar \(y=1\) es simplemente \(\hat{y}\). <em>Exactamente lo que queremos</em>.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             PASO 4: VERIFICACIÓN y=0
+             ═══════════════════════════════════════════════════ -->
+        <div class="step" data-color="cyan" id="step4">
+            <div class="step-inner">
+                <div class="step-header">
+                    <div class="step-badge">4</div>
+                    <div><div class="step-title">Verificación: caso y = 0</div>
+                    <div class="step-subtitle">El caso simétrico</div></div>
+                </div>
+                <div class="step-body">
+                    <p class="narration">Ahora sustituimos \(y=0\):</p>
+                    <div class="eq-box cyan">
+                        <span class="eq-label">📝 Sustituyendo y = 0</span>
+                        $$P(y{=}0 \mid \hat{y}) = \hat{y}^{\,\color{#22d3ee}{0}} \cdot (1-\hat{y})^{\,\color{#22d3ee}{(1-0)}}$$
+                    </div>
+                    <div class="eq-box cyan">
+                        <span class="eq-label">📝 Simplificando</span>
+                        $$= 1 \cdot (1-\hat{y})^{1} = 1 - \hat{y}$$
+                    </div>
+                    <p class="narration">✅ La probabilidad de observar \(y=0\) es \(1-\hat{y}\). Los exponentes actúan como un <em>selector elegante</em>.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             PASO 5: VEROSIMILITUD PARA N MUESTRAS
+             ═══════════════════════════════════════════════════ -->
+        <div class="step" data-color="purple" id="step5">
+            <div class="step-inner">
+                <div class="step-header">
+                    <div class="step-badge">5</div>
+                    <div><div class="step-title">Verosimilitud para N muestras</div>
+                    <div class="step-subtitle">Del caso individual al dataset completo</div></div>
+                </div>
+                <div class="step-body">
+                    <p class="narration">Si tenemos \(N\) muestras <strong>independientes</strong>, la probabilidad conjunta (llamada <em>verosimilitud</em>) es el <strong>producto</strong> de las probabilidades individuales:</p>
+                    <div class="eq-box purple">
+                        <span class="eq-label">📦 Verosimilitud (Likelihood)</span>
+                        $$\mathcal{L} = \prod_{i=1}^{N} P(y_i \mid \hat{y}_i) = \prod_{i=1}^{N} \hat{y}_i^{\,y_i} \cdot (1-\hat{y}_i)^{(1-y_i)}$$
+                    </div>
+                    <p class="narration"><strong>Queremos maximizar</strong> esta verosimilitud: encontrar los parámetros del modelo que hacen que los datos observados sean <em>lo más probables posible</em>.</p>
+                    <div class="warning">
+                        <strong>⚠️ Problema práctico:</strong> Un producto de muchas probabilidades (números entre 0 y 1) se vuelve un número <em>extremadamente pequeño</em>. Con 1000 muestras, el producto sería del orden de \(10^{-300}\). ¡Imposible de manejar numéricamente!
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             PASO 6: APLICAR LOGARITMO
+             ═══════════════════════════════════════════════════ -->
+        <div class="step" data-color="green" id="step6">
+            <div class="step-inner">
+                <div class="step-header">
+                    <div class="step-badge">6</div>
+                    <div><div class="step-title">Aplicar logaritmo</div>
+                    <div class="step-subtitle">Convertir productos en sumas</div></div>
+                </div>
+                <div class="step-body">
+                    <p class="narration">Aplicamos \(\log\) a ambos lados. Como \(\log\) es <strong>monótona creciente</strong>, maximizar \(\mathcal{L}\) es equivalente a maximizar \(\log\mathcal{L}\).</p>
+                    <p class="narration">La propiedad fundamental que usamos es:</p>
+                    <div class="eq-box green">
+                        <span class="eq-label">🔑 Propiedad: log de un producto = suma de logs</span>
+                        $$\log\!\Big(\prod_{i} a_i\Big) = \sum_{i} \log(a_i)$$
+                    </div>
+                    <p class="narration">Aplicando esto a nuestra verosimilitud:</p>
+                    <div class="eq-box green">
+                        <span class="eq-label">📝 Log-verosimilitud (paso 1)</span>
+                        $$\log \mathcal{L} = \sum_{i=1}^{N} \log\!\Big[\hat{y}_i^{\,y_i} \cdot (1-\hat{y}_i)^{(1-y_i)}\Big]$$
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             PASO 7: EXPANDIR LOS LOGARITMOS
+             ═══════════════════════════════════════════════════ -->
+        <div class="step" data-color="green" id="step7">
+            <div class="step-inner">
+                <div class="step-header">
+                    <div class="step-badge">7</div>
+                    <div><div class="step-title">Expandir los logaritmos</div>
+                    <div class="step-subtitle">Dos propiedades más del log</div></div>
+                </div>
+                <div class="step-body">
+                    <p class="narration">Aplicamos dos propiedades más:</p>
+                    <div class="case-box">
+                        <h4>Propiedad 1: log de un producto</h4>
+                        $$\log(a \cdot b) = \log(a) + \log(b)$$
+                    </div>
+                    <div class="case-box">
+                        <h4>Propiedad 2: log de una potencia</h4>
+                        $$\log(a^b) = b \cdot \log(a)$$
+                    </div>
+                    <p class="narration">Aplicando ambas al contenido de la sumatoria:</p>
+                    <div class="eq-box green">
+                        <span class="eq-label">📝 Primero separamos el producto dentro del log</span>
+                        $$\log\!\Big[\hat{y}_i^{\,y_i} \cdot (1-\hat{y}_i)^{(1-y_i)}\Big] = \log\!\big(\hat{y}_i^{\,y_i}\big) + \log\!\big((1-\hat{y}_i)^{(1-y_i)}\big)$$
+                    </div>
+                    <div class="eq-box green">
+                        <span class="eq-label">📝 Luego bajamos los exponentes</span>
+                        $$= y_i \cdot \log(\hat{y}_i) + (1-y_i) \cdot \log(1-\hat{y}_i)$$
+                    </div>
+                    <p class="narration">Entonces la log-verosimilitud completa es:</p>
+                    <div class="eq-box green">
+                        <span class="eq-label">📝 Log-verosimilitud expandida</span>
+                        $$\log \mathcal{L} = \sum_{i=1}^{N}\Big[ y_i \cdot \log(\hat{y}_i) + (1-y_i) \cdot \log(1-\hat{y}_i) \Big]$$
+                    </div>
+                    <div class="insight">
+                        <strong>✨ ¡Ya se reconoce la forma de BCE!</strong> Pero falta un paso: queremos <em>minimizar</em> una pérdida, no <em>maximizar</em> una verosimilitud.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             PASO 8: NEGAR → NLL
+             ═══════════════════════════════════════════════════ -->
+        <div class="step" data-color="red" id="step8">
+            <div class="step-inner">
+                <div class="step-header">
+                    <div class="step-badge">8</div>
+                    <div><div class="step-title">Negar → Negative Log-Likelihood</div>
+                    <div class="step-subtitle">De maximizar verosimilitud a minimizar pérdida</div></div>
+                </div>
+                <div class="step-body">
+                    <p class="narration">En deep learning los optimizadores <strong>minimizan</strong>. Así que negamos la log-verosimilitud y promediamos:</p>
+                    <div class="eq-box">
+                        <span class="eq-label">🔄 Equivalencia fundamental</span>
+                        $$\underset{\theta}{\max}\;\log\mathcal{L} \quad\Longleftrightarrow\quad \underset{\theta}{\min}\;(-\log\mathcal{L})$$
+                    </div>
+                    <p class="narration">Negamos y dividimos entre \(N\):</p>
+                    <div class="eq-box gold">
+                        <span class="eq-label">⭐ BINARY CROSS-ENTROPY — FORMA FINAL</span>
+                        $$\boxed{\;\mathcal{L}_{\text{BCE}} = -\frac{1}{N}\sum_{i=1}^{N}\Big[ y_i \cdot \log(\hat{y}_i) \;+\; (1-y_i) \cdot \log(1-\hat{y}_i) \Big]\;}$$
+                    </div>
+                    <div class="insight">
+                        <strong>🎯 Resumen del camino hasta aquí:</strong><br>
+                        Bernoulli → Verosimilitud (producto) → Log (suma) → Negar + Promediar = <strong>BCE</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             PASO 9: CONEXIÓN CON ENTROPÍA CRUZADA
+             ═══════════════════════════════════════════════════ -->
+        <div class="step" data-color="purple" id="step9">
+            <div class="step-inner">
+                <div class="step-header">
+                    <div class="step-badge">9</div>
+                    <div><div class="step-title">¿Por qué se llama "Cross-Entropy"?</div>
+                    <div class="step-subtitle">Conexión con Teoría de la Información</div></div>
+                </div>
+                <div class="step-body">
+                    <p class="narration">En teoría de la información, la <strong>entropía cruzada</strong> entre una distribución real \(p\) y una estimada \(q\) se define como:</p>
+                    <div class="eq-box purple">
+                        <span class="eq-label">📚 Entropía Cruzada (definición general)</span>
+                        $$H(p,\, q) = -\sum_{x} p(x) \cdot \log\, q(x)$$
+                    </div>
+                    <p class="narration">Para el caso <strong>binario</strong>, \(p\) tiene solo dos valores: \(p(1)=y\) y \(p(0)=1-y\). Sustituyendo:</p>
+                    <div class="eq-box purple">
+                        <span class="eq-label">📝 Caso binario de la entropía cruzada</span>
+                        $$H(p,\,q) = -\Big[ y \cdot \log(\hat{y}) + (1-y) \cdot \log(1-\hat{y}) \Big]$$
+                    </div>
+                    <div class="insight">
+                        <strong>💡 Dos caminos, mismo destino:</strong><br>
+                        • <strong>Estadística:</strong> max verosimilitud → NLL → BCE<br>
+                        • <strong>Teoría de la información:</strong> min entropía cruzada → BCE<br>
+                        Ambos convergen a la <em>misma fórmula</em>.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             PASO 10: INCORPORAR SIGMOID
+             ═══════════════════════════════════════════════════ -->
+        <div class="step" data-color="yellow" id="step10">
+            <div class="step-inner">
+                <div class="step-header">
+                    <div class="step-badge">10</div>
+                    <div><div class="step-title">Incorporar Sigmoid</div>
+                    <div class="step-subtitle">De logit a probabilidad</div></div>
+                </div>
+                <div class="step-body">
+                    <p class="narration">La red neuronal produce un <strong>logit</strong> \(z\in(-\infty,+\infty)\). Lo convertimos a probabilidad con <strong>sigmoid</strong>:</p>
+                    <div class="eq-box yellow">
+                        <span class="eq-label">σ — Función Sigmoide</span>
+                        $$\hat{y} = \sigma(z) = \frac{1}{1+e^{-z}}$$
+                    </div>
+                    <p class="narration">Propiedades clave que usaremos en la derivación del gradiente:</p>
+                    <div class="eq-box yellow">
+                        <span class="eq-label">🔧 Complemento</span>
+                        $$1 - \sigma(z) = \sigma(-z) = \frac{e^{-z}}{1+e^{-z}}$$
+                    </div>
+                    <div class="eq-box yellow">
+                        <span class="eq-label">🔧 Derivada de sigmoid (se demuestra por cociente)</span>
+                        $$\frac{d\sigma}{dz} = \sigma(z)\cdot\big(1-\sigma(z)\big) = \hat{y}\,(1-\hat{y})$$
+                    </div>
+                    <p class="narration">Sustituyendo \(\hat{y}=\sigma(z)\) en BCE:</p>
+                    <div class="eq-box yellow">
+                        <span class="eq-label">📐 BCE en función del logit z</span>
+                        $$\mathcal{L}(z) = -\Big[y\cdot\log\!\big(\sigma(z)\big) + (1-y)\cdot\log\!\big(1-\sigma(z)\big)\Big]$$
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             PASO 11: GRADIENTE ∂L/∂ŷ
+             ═══════════════════════════════════════════════════ -->
+        <div class="step" data-color="red" id="step11">
+            <div class="step-inner">
+                <div class="step-header">
+                    <div class="step-badge">11</div>
+                    <div><div class="step-title">Gradiente ∂ℒ / ∂ŷ</div>
+                    <div class="step-subtitle">Derivada respecto a la probabilidad</div></div>
+                </div>
+                <div class="step-body">
+                    <p class="narration">Derivamos BCE respecto a \(\hat{y}\). Partimos de:</p>
+                    <div class="eq-box">
+                        <span class="eq-label">📝 Punto de partida</span>
+                        $$\mathcal{L} = -y\,\log(\hat{y}) - (1-y)\,\log(1-\hat{y})$$
+                    </div>
+                    <p class="narration">Recordamos: \(\frac{d}{dx}\log(x)=\frac{1}{x}\) y \(\frac{d}{dx}\log(1-x)=\frac{-1}{1-x}\). Derivando término a término:</p>
+                    <div class="eq-box">
+                        <span class="eq-label">📝 Derivada, paso 1</span>
+                        $$\frac{\partial\mathcal{L}}{\partial\hat{y}} = -y\cdot\frac{1}{\hat{y}} \;-\; (1-y)\cdot\frac{(-1)}{1-\hat{y}}$$
+                    </div>
+                    <div class="eq-box">
+                        <span class="eq-label">📝 Simplificando signos</span>
+                        $$= -\frac{y}{\hat{y}} + \frac{1-y}{1-\hat{y}}$$
+                    </div>
+                    <p class="narration">Juntamos en un solo denominador común \(\hat{y}(1-\hat{y})\):</p>
+                    <div class="eq-box green">
+                        <span class="eq-label">📝 Denominador común</span>
+                        $$\frac{\partial\mathcal{L}}{\partial\hat{y}} = \frac{-y(1-\hat{y}) + (1-y)\,\hat{y}}{\hat{y}\,(1-\hat{y})}$$
+                    </div>
+                    <p class="narration">Expandimos el numerador: \(-y+y\hat{y}+\hat{y}-y\hat{y} = \hat{y}-y\)</p>
+                    <div class="eq-box green">
+                        <span class="eq-label">✅ Resultado</span>
+                        $$\frac{\partial\mathcal{L}}{\partial\hat{y}} = \frac{\hat{y} - y}{\hat{y}\,(1-\hat{y})}$$
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             PASO 12: GRADIENTE ∂L/∂z (MÁGICO)
+             ═══════════════════════════════════════════════════ -->
+        <div class="step" data-color="green" id="step12">
+            <div class="step-inner">
+                <div class="step-header">
+                    <div class="step-badge">12</div>
+                    <div><div class="step-title">Gradiente ∂ℒ / ∂z — La fórmula mágica</div>
+                    <div class="step-subtitle">Regla de la cadena: todo se cancela</div></div>
+                </div>
+                <div class="step-body">
+                    <p class="narration">Queremos la derivada respecto al <strong>logit \(z\)</strong>. Aplicamos la <strong>regla de la cadena</strong>:</p>
+                    <div class="eq-box green">
+                        <span class="eq-label">⛓️ Regla de la cadena</span>
+                        $$\frac{\partial\mathcal{L}}{\partial z} = \frac{\partial\mathcal{L}}{\partial\hat{y}} \;\cdot\; \frac{\partial\hat{y}}{\partial z}$$
+                    </div>
+                    <p class="narration">Sustituimos las dos piezas que ya derivamos:</p>
+                    <div class="eq-box green">
+                        <span class="eq-label">📝 Sustituyendo</span>
+                        $$= \frac{\hat{y}-y}{\hat{y}(1-\hat{y})} \;\cdot\; \hat{y}(1-\hat{y})$$
+                    </div>
+                    <p class="narration">¡Los denominadores se <em>cancelan perfectamente</em> con la derivada de sigmoid!</p>
+                    <div class="eq-box gold">
+                        <span class="eq-label">⭐ RESULTADO ELEGANTE</span>
+                        $$\boxed{\;\frac{\partial\mathcal{L}}{\partial z} = \hat{y} - y = \sigma(z) - y\;}$$
+                    </div>
+                    <div class="insight">
+                        <strong>✨ ¿Por qué es "mágica"?</strong><br>
+                        El gradiente es simplemente <em>la predicción menos la etiqueta</em>. Sin fracciones, sin logaritmos en el resultado final. Esta simplicidad es lo que hace que BCE + Sigmoid funcione tan bien: <strong>los gradientes son proporcionales al error</strong>, exactamente lo que necesitamos para aprender rápido de los errores grandes y hacer ajustes finos en los pequeños.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             PASO 13: FORMA NUMÉRICAMENTE ESTABLE
+             ═══════════════════════════════════════════════════ -->
+        <div class="step" data-color="yellow" id="step13">
+            <div class="step-inner">
+                <div class="step-header">
+                    <div class="step-badge">13</div>
+                    <div><div class="step-title">Forma Numéricamente Estable</div>
+                    <div class="step-subtitle">Lo que PyTorch realmente calcula</div></div>
+                </div>
+                <div class="step-body">
+                    <p class="narration">Calcular \(\log(\sigma(z))\) directamente puede causar overflow. Derivemos la forma segura. Partimos de:</p>
+                    <div class="eq-box yellow">
+                        <span class="eq-label">📝 BCE con sigmoid sustituido</span>
+                        $$\mathcal{L} = -y\,\log\sigma(z) - (1-y)\,\log(1-\sigma(z))$$
+                    </div>
+                    <p class="narration">Observamos que \(\log\sigma(z) = \log\frac{1}{1+e^{-z}} = -\log(1+e^{-z})\) y \(\log(1-\sigma(z)) = \log\frac{e^{-z}}{1+e^{-z}} = -z - \log(1+e^{-z})\). Sustituyendo:</p>
+                    <div class="eq-box yellow">
+                        <span class="eq-label">📝 Sustituyendo y agrupando</span>
+                        $$\mathcal{L} = -y\big[-\log(1+e^{-z})\big] - (1-y)\big[-z-\log(1+e^{-z})\big]$$
+                    </div>
+                    <div class="eq-box yellow">
+                        <span class="eq-label">📝 Distribuyendo</span>
+                        $$= y\log(1+e^{-z}) + (1-y)\,z + (1-y)\log(1+e^{-z})$$
+                    </div>
+                    <div class="eq-box yellow">
+                        <span class="eq-label">📝 Agrupando los logs: [y + (1−y)] = 1</span>
+                        $$= z - zy + \log(1+e^{-z}) \qquad\text{(válida para } z \geq 0\text{)}$$
+                    </div>
+                    <p class="narration">Para \(z < 0\) usamos la identidad \(\log(1+e^{-z}) = -z + \log(1+e^{z})\). La forma que cubre ambos casos:</p>
+                    <div class="eq-box gold">
+                        <span class="eq-label">⭐ FORMA ESTABLE (BCEWithLogitsLoss en PyTorch)</span>
+                        $$\boxed{\;\mathcal{L} = \max(z,\,0) - z\cdot y + \log\!\big(1 + e^{-|z|}\big)\;}$$
+                    </div>
+                    <div class="insight">
+                        <strong>🛡️ ¿Por qué es segura?</strong> El exponencial siempre recibe un argumento ≤ 0 (porque \(-|z| \leq 0\)), así que \(e^{-|z|} \leq 1\). <strong>Nunca hay overflow.</strong> Esta es la razón de usar <code>BCEWithLogitsLoss</code>.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             PASO 14: RESUMEN COMPLETO
+             ═══════════════════════════════════════════════════ -->
+        <div class="step" data-color="gold" id="step14">
+            <div class="step-inner">
+                <div class="step-header">
+                    <div class="step-badge">✓</div>
+                    <div><div class="step-title">Resumen — El Camino Completo</div>
+                    <div class="step-subtitle">Todas las ecuaciones clave en orden</div></div>
+                </div>
+                <div class="step-body">
+                    <div class="eq-box blue">
+                        <span class="eq-label">① Bernoulli</span>
+                        $$P(y \mid \hat{y}) = \hat{y}^{y}\,(1-\hat{y})^{(1-y)}$$
+                    </div>
+                    <div class="eq-box purple">
+                        <span class="eq-label">② Verosimilitud</span>
+                        $$\mathcal{L} = \prod_i \hat{y}_i^{y_i}(1-\hat{y}_i)^{(1-y_i)}$$
+                    </div>
+                    <div class="eq-box green">
+                        <span class="eq-label">③ Log → Suma</span>
+                        $$\log\mathcal{L} = \sum_i\big[y_i\log\hat{y}_i + (1{-}y_i)\log(1{-}\hat{y}_i)\big]$$
+                    </div>
+                    <div class="eq-box">
+                        <span class="eq-label">④ Negar + Promediar = BCE</span>
+                        $$\boxed{\mathcal{L}_{\text{BCE}} = -\tfrac{1}{N}\sum_i\big[y_i\log\hat{y}_i + (1{-}y_i)\log(1{-}\hat{y}_i)\big]}$$
+                    </div>
+                    <div class="eq-box green">
+                        <span class="eq-label">⑤ Gradiente (BCE + Sigmoid)</span>
+                        $$\boxed{\frac{\partial\mathcal{L}}{\partial z} = \sigma(z) - y}$$
+                    </div>
+                    <div class="eq-box yellow">
+                        <span class="eq-label">⑥ Forma estable (PyTorch)</span>
+                        $$\boxed{\mathcal{L} = \max(z,0) - zy + \log(1{+}e^{-|z|})}$$
+                    </div>
+                    <div style="background:linear-gradient(135deg, #e94560, #c23152); border-radius:15px; padding:30px; text-align:center; margin-top:22px; color:white;">
+                        <div style="font-size:2em; margin-bottom:8px;">🎓</div>
+                        <h3 style="font-size:1.4em; margin-bottom:8px;">Demostración Completa — Q.E.D.</h3>
+                        <p style="opacity:0.92;font-size:0.95em;">Has recorrido cada paso matemático: desde la distribución de Bernoulli hasta la forma numéricamente estable que ejecuta PyTorch internamente.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ BOTONES ═══════ -->
+        <div class="btn-container">
+            <button class="btn-next" id="btnNext" onclick="nextStep()">
+                Siguiente paso <span class="arrow">→</span>
+            </button>
+            <button class="btn-reset" id="btnReset" onclick="resetSteps()" style="display:none;">
+                ↺ Reiniciar
+            </button>
+        </div>
+
+    </div><!-- /content -->
+
+    <div class="footer">
+        📐 Binary Cross-Entropy — Demostración Matemática Paso a Paso
+    </div>
+
+</div><!-- /container -->
+
+<script>
+// ═══════ Step-by-step controller ═══════
+const totalSteps = 14;
+let currentStep = 0;
+
+function renderMath(el) {
+    if (typeof renderMathInElement === 'function') {
+        renderMathInElement(el, {
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            throwOnError: false
+        });
+    }
+}
+
+function nextStep() {
+    if (currentStep >= totalSteps) return;
+    currentStep++;
+    const stepEl = document.getElementById('step' + currentStep);
+    stepEl.classList.add('visible');
+
+    // Render KaTeX for this step
+    setTimeout(() => renderMath(stepEl), 50);
+
+    // Scroll
+    setTimeout(() => {
+        stepEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 150);
+
+    updateProgress();
+
+    if (currentStep >= totalSteps) {
+        document.getElementById('btnNext').disabled = true;
+        document.getElementById('btnNext').innerHTML = '✅ Demostración completa';
+        document.getElementById('btnReset').style.display = 'inline-block';
+    }
+}
+
+function resetSteps() {
+    currentStep = 0;
+    for (let i = 1; i <= totalSteps; i++) {
+        document.getElementById('step' + i).classList.remove('visible');
+    }
+    const btn = document.getElementById('btnNext');
+    btn.disabled = false;
+    btn.innerHTML = 'Siguiente paso <span class="arrow">→</span>';
+    document.getElementById('btnReset').style.display = 'none';
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateProgress() {
+    document.getElementById('progressText').textContent = currentStep + ' / ' + totalSteps;
+    document.getElementById('progressFill').style.width = (currentStep / totalSteps * 100) + '%';
+}
+
+// ═══════ Keyboard shortcuts ═══════
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+        if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            nextStep();
+        }
+    }
+    if (e.key === 'r' || e.key === 'R') {
+        if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+            resetSteps();
+        }
+    }
+});
+
+// ═══════ Wait for KaTeX auto-render to load ═══════
+document.addEventListener('DOMContentLoaded', () => {
+    // Auto-render might need a moment to load (it's deferred)
+    const waitForKatex = setInterval(() => {
+        if (typeof renderMathInElement === 'function') {
+            clearInterval(waitForKatex);
+        }
+    }, 100);
+});
+</script>
+
+</body>
+</html>

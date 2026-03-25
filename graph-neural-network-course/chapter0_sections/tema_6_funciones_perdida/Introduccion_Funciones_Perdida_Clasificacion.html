@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Introducción: Funciones de Pérdida para Clasificación</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header .emoji {
+            font-size: 4em;
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.95;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section h2 {
+            color: #f5576c;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #f5576c;
+        }
+        
+        .objectives {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .objectives h3 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+        
+        .objectives ul {
+            list-style: none;
+        }
+        
+        .objectives li {
+            padding: 10px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+        
+        .objectives li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(245, 87, 108, 0.2);
+            border-color: #f5576c;
+        }
+        
+        .card-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            display: block;
+        }
+        
+        .card h3 {
+            color: #f5576c;
+            font-size: 1.4em;
+            margin-bottom: 15px;
+        }
+        
+        .card p {
+            color: #666;
+            line-height: 1.8;
+            margin: 8px 0;
+        }
+        
+        .formula-box {
+            background: #f8f9fa;
+            border-left: 4px solid #f5576c;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        .warning-box h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .use-cases {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+        
+        .use-cases h3 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        
+        .use-cases ul {
+            list-style: none;
+        }
+        
+        .use-cases li {
+            padding: 12px 0;
+            padding-left: 35px;
+            position: relative;
+            font-size: 1.1em;
+        }
+        
+        .use-cases li:before {
+            content: "🎯";
+            position: absolute;
+            left: 0;
+            font-size: 1.2em;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .comparison-table th {
+            background: #f5576c;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-size: 1.1em;
+        }
+        
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .highlight {
+            background: linear-gradient(120deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .pro-tip {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: #333;
+            padding: 20px 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+        
+        .pro-tip:before {
+            content: "💡 ";
+            font-size: 1.5em;
+        }
+        
+        .footer {
+            background: #2d3748;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .footer p {
+            margin: 10px 0;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(245, 87, 108, 0.6);
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .feature-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #f5576c;
+        }
+        
+        .feature-item h4 {
+            color: #f5576c;
+            margin-bottom: 10px;
+        }
+        
+        /* Menú Hamburguesa */
+        .hamburger-menu {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.3);
+        }
+        
+        .hamburger-menu.active {
+            transform: translateX(0);
+        }
+        
+        .hamburger-toggle {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 1001;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .hamburger-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(245, 87, 108, 0.6);
+        }
+        
+        .hamburger-toggle span {
+            width: 25px;
+            height: 3px;
+            background: white;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .hamburger-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translate(8px, 8px);
+        }
+        
+        .hamburger-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .hamburger-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
+        }
+        
+        .menu-header {
+            padding: 30px 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            text-align: center;
+        }
+        
+        .menu-header h3 {
+            font-size: 1.3em;
+            margin-bottom: 5px;
+        }
+        
+        .menu-nav {
+            padding: 20px 0;
+        }
+        
+        .menu-nav a {
+            display: block;
+            color: #e2e8f0;
+            text-decoration: none;
+            padding: 15px 25px;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+        
+        .menu-nav a:hover {
+            background: rgba(245, 87, 108, 0.1);
+            border-left-color: #f5576c;
+            color: white;
+        }
+        
+        /* Cuestionario */
+        .quiz-container {
+            background: linear-gradient(135deg, #f093fb15 0%, #f5576c15 100%);
+            border: 2px solid #f5576c;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+        
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .quiz-header h3 {
+            color: #f5576c;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+        
+        .quiz-question {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .quiz-question h4 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .quiz-option {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .quiz-option:hover {
+            background: #f5576c15;
+            border-color: #f5576c;
+        }
+        
+        .quiz-option input[type="radio"] {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        
+        .quiz-option.correct {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+        
+        .quiz-option.incorrect {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+        
+        .quiz-submit {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+        
+        .quiz-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(245, 87, 108, 0.4);
+        }
+        
+        .quiz-result {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+        
+        .quiz-result.show {
+            display: block;
+        }
+        
+        .quiz-score {
+            font-size: 2em;
+            font-weight: bold;
+            color: #f5576c;
+            margin: 10px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .hamburger-menu {
+                width: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Botón Hamburguesa -->
+    <button class="hamburger-toggle" id="hamburgerToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    
+    <!-- Menú Lateral -->
+    <nav class="hamburger-menu" id="hamburgerMenu">
+        <div class="menu-header">
+            <h3>📚 Navegación</h3>
+            <p style="font-size: 0.9em; opacity: 0.9;">Clasificación</p>
+        </div>
+        <div class="menu-nav">
+            <a href="#quiz">📝 Cuestionario</a>
+            <a href="#objetivos">🎯 Objetivos</a>
+            <a href="#que-es">📚 ¿Qué es Clasificación?</a>
+            <a href="#funciones">🔧 Funciones Principales</a>
+            <a href="#errores">⚠️ Errores Comunes</a>
+            <a href="#comparacion">📊 Tabla Comparativa</a>
+            <a href="#casos-uso">💼 Casos de Uso</a>
+            <a href="#notebook">🚀 En el Notebook</a>
+            <a href="#importancia">📈 Importancia</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="header">
+            <span class="emoji">🎯</span>
+            <h1>Funciones de Pérdida para CLASIFICACIÓN</h1>
+            <p>Aprende a evaluar y mejorar modelos de clasificación con PyTorch</p>
+        </div>
+        
+        <div class="content">
+            <!-- Cuestionario -->
+            <div id="quiz" class="quiz-container">
+                <div class="quiz-header">
+                    <h3>📝 Cuestionario de Diagnóstico</h3>
+                    <p style="color: #666; font-size: 1.1em;">Evalúa tus conocimientos previos antes de comenzar</p>
+                </div>
+                
+                <div class="quiz-question">
+                    <h4>1. ¿Qué tipo de problema es detectar si un email es spam o no?</h4>
+                    <div class="quiz-options">
+                        <label class="quiz-option">
+                            <input type="radio" name="q1" value="a">
+                            <span>a) Regresión</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q1" value="b">
+                            <span>b) Clasificación binaria</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q1" value="c">
+                            <span>c) Clustering</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q1" value="d">
+                            <span>d) Clasificación multi-clase</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="quiz-question">
+                    <h4>2. ¿Cuál es la función de pérdida MÁS recomendada para clasificación binaria en producción?</h4>
+                    <div class="quiz-options">
+                        <label class="quiz-option">
+                            <input type="radio" name="q2" value="a">
+                            <span>a) MSELoss</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q2" value="b">
+                            <span>b) BCELoss</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q2" value="c">
+                            <span>c) BCEWithLogitsLoss</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q2" value="d">
+                            <span>d) L1Loss</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="quiz-question">
+                    <h4>3. En detección de fraude con 99% transacciones legítimas y 1% fraudulentas, ¿qué debes usar?</h4>
+                    <div class="quiz-options">
+                        <label class="quiz-option">
+                            <input type="radio" name="q3" value="a">
+                            <span>a) BCELoss sin modificaciones</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q3" value="b">
+                            <span>b) CrossEntropyLoss</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q3" value="c">
+                            <span>c) BCEWithLogitsLoss con pos_weight</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q3" value="d">
+                            <span>d) MSELoss</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="quiz-question">
+                    <h4>4. ¿Qué función debes usar para clasificar imágenes en 1000 categorías (como ImageNet)?</h4>
+                    <div class="quiz-options">
+                        <label class="quiz-option">
+                            <input type="radio" name="q4" value="a">
+                            <span>a) BCELoss</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q4" value="b">
+                            <span>b) BCEWithLogitsLoss</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q4" value="c">
+                            <span>c) CrossEntropyLoss</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q4" value="d">
+                            <span>d) MAELoss</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="quiz-question">
+                    <h4>5. CrossEntropyLoss en PyTorch ya incluye automáticamente:</h4>
+                    <div class="quiz-options">
+                        <label class="quiz-option">
+                            <input type="radio" name="q5" value="a">
+                            <span>a) Sigmoid</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q5" value="b">
+                            <span>b) Softmax</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q5" value="c">
+                            <span>c) ReLU</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q5" value="d">
+                            <span>d) Tanh</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <button class="quiz-submit" onclick="checkQuiz()">Verificar Respuestas</button>
+                
+                <div class="quiz-result" id="quizResult">
+                    <h3>Resultados</h3>
+                    <div class="quiz-score" id="quizScore"></div>
+                    <p id="quizFeedback"></p>
+                </div>
+            </div>
+            
+            <div id="objetivos" class="objectives">
+                <h3>🎯 ¿Qué aprenderás?</h3>
+                <ul>
+                    <li>Dominar BCE (Binary Cross-Entropy) para clasificación binaria</li>
+                    <li>Usar Cross-Entropy para problemas multi-clase</li>
+                    <li>Manejar clases desbalanceadas con Weighted BCE (¡crucial para fraude/AML!)</li>
+                    <li>Comparar cálculos manuales vs PyTorch</li>
+                    <li>Aplicar funciones de pérdida en casos reales de negocio</li>
+                </ul>
+            </div>
+            
+            <div id="que-es" class="section">
+                <h2>📚 ¿Qué es Clasificación?</h2>
+                <p>En <span class="highlight">clasificación</span>, nuestro modelo predice <strong>categorías</strong> o <strong>clases</strong> discretas, no valores continuos.</p>
+                <br>
+                <p><strong>Ejemplos del mundo real:</strong></p>
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <h4>📧 Binaria (2 clases)</h4>
+                        <p>Spam vs No Spam<br>Fraude vs Legítimo<br>Enfermo vs Sano</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>🎨 Multi-clase (3+ clases)</h4>
+                        <p>Tipos de frutas<br>Dígitos 0-9<br>Especies de animales</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>⚠️ Desbalanceadas</h4>
+                        <p>AML (1% fraude)<br>Diagnóstico médico<br>Defectos de manufactura</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="funciones" class="section">
+                <h2>🔧 Las Funciones Principales</h2>
+                <div class="cards">
+                    <div class="card">
+                        <span class="card-icon">🎲</span>
+                        <h3>BCE - Binary Cross-Entropy</h3>
+                        <p><strong>Para 2 clases (binaria)</strong></p>
+                        <div class="formula-box">
+BCE = -(1/n) · Σ[y·log(p) + (1-y)·log(1-p)]
+                        </div>
+                        <p>✅ <strong>Ventaja:</strong> Funciona con probabilidades</p>
+                        <p>⚠️ <strong>Importante:</strong> Requiere sigmoid antes</p>
+                        <p>🎯 <strong>Usa para:</strong> Spam detection, clasificación simple</p>
+                    </div>
+                    
+                    <div class="card">
+                        <span class="card-icon">⭐</span>
+                        <h3>BCE with Logits</h3>
+                        <p><strong>MÁS ESTABLE (Recomendado)</strong></p>
+                        <div class="formula-box">
+Aplica Sigmoid + BCE automáticamente
+                        </div>
+                        <p>✅ <strong>Ventaja:</strong> Más estable numéricamente</p>
+                        <p>✅ <strong>Ventaja:</strong> Combina ambas operaciones</p>
+                        <p>🎯 <strong>Usa para:</strong> Producción, siempre que puedas</p>
+                        <p><strong>💡 Esta es la versión PRO</strong></p>
+                    </div>
+                    
+                    <div class="card">
+                        <span class="card-icon">🌈</span>
+                        <h3>Cross-Entropy Loss</h3>
+                        <p><strong>Para múltiples clases</strong></p>
+                        <div class="formula-box">
+CE = -(1/n) · Σ log(softmax(x)_y)
+                        </div>
+                        <p>✅ <strong>Ventaja:</strong> Incluye softmax automático</p>
+                        <p>✅ <strong>Ventaja:</strong> Funciona con N clases</p>
+                        <p>🎯 <strong>Usa para:</strong> ImageNet, MNIST, multi-clase</p>
+                    </div>
+                    
+                    <div class="card">
+                        <span class="card-icon">⚖️</span>
+                        <h3>Weighted BCE</h3>
+                        <p><strong>Para clases desbalanceadas</strong></p>
+                        <div class="formula-box">
+pos_weight = #negativas / #positivas
+BCEWithLogitsLoss(pos_weight=w)
+                        </div>
+                        <p>✅ <strong>Ventaja:</strong> Maneja desbalanceo</p>
+                        <p>✅ <strong>Ventaja:</strong> Crucial para AML/fraude</p>
+                        <p>🎯 <strong>Usa para:</strong> Datos desbalanceados (99% vs 1%)</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="errores" class="warning-box">
+                <h4>⚠️ Errores Comunes a Evitar</h4>
+                <ul style="margin-left: 20px;">
+                    <li><strong>NO aplicar sigmoid/softmax manualmente</strong> si usas BCEWithLogitsLoss o CrossEntropyLoss</li>
+                    <li><strong>NO usar BCE simple</strong> - usa BCEWithLogitsLoss (más estable)</li>
+                    <li><strong>NO ignorar el desbalanceo</strong> - usa pos_weight para datos desbalanceados</li>
+                    <li><strong>NO confundir etiquetas:</strong> BCE usa 0/1, CrossEntropy usa índices 0,1,2...</li>
+                </ul>
+            </div>
+            
+            <div id="comparacion" class="section">
+                <h2>📊 Tabla Comparativa Rápida</h2>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Función</th>
+                            <th>PyTorch</th>
+                            <th>Clases</th>
+                            <th>¿Aplica Sigmoid/Softmax?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>BCE</strong></td>
+                            <td><code>nn.BCELoss()</code></td>
+                            <td>2 (binaria)</td>
+                            <td>❌ No (debes hacerlo tú)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>BCE with Logits</strong> ⭐</td>
+                            <td><code>nn.BCEWithLogitsLoss()</code></td>
+                            <td>2 (binaria)</td>
+                            <td>✅ Sí (automático)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cross-Entropy</strong></td>
+                            <td><code>nn.CrossEntropyLoss()</code></td>
+                            <td>2+ (multi-clase)</td>
+                            <td>✅ Sí (automático)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Weighted BCE</strong> ⭐</td>
+                            <td><code>BCEWithLogitsLoss(pos_weight=w)</code></td>
+                            <td>2 (desbalanceada)</td>
+                            <td>✅ Sí (automático)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="casos-uso" class="use-cases">
+                <h3>💼 Casos de Uso en el Mundo Real</h3>
+                <ul>
+                    <li><strong>Finanzas - AML/Fraude:</strong> Weighted BCE (98% legítimas, 2% fraude)</li>
+                    <li><strong>Email Marketing:</strong> BCE with Logits (spam vs no spam)</li>
+                    <li><strong>Computer Vision:</strong> Cross-Entropy (clasificar 1000 objetos)</li>
+                    <li><strong>Medicina:</strong> Weighted BCE (diagnóstico de enfermedades raras)</li>
+                    <li><strong>Retail:</strong> Cross-Entropy (categorizar productos)</li>
+                    <li><strong>Cybersecurity:</strong> Weighted BCE (detección de ataques)</li>
+                </ul>
+            </div>
+            
+            <div class="pro-tip">
+                <strong>PRO TIP:</strong> En AML y fraude, el costo de NO detectar un caso  positivo (False Negative) es MUCHO mayor que tener falsas alarmas (False Positives). ¡Usa pos_weight para reflejarlo!
+            </div>
+            
+            <div id="notebook" class="section">
+                <h2>🚀 En el Notebook Aprenderás</h2>
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <h4>1️⃣ Detector de Spam</h4>
+                        <p>Implementarás BCE paso a paso con ejemplos reales de emails</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>2️⃣ Clasificador de Frutas</h4>
+                        <p>Usarás Cross-Entropy para clasificar múltiples categorías</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>3️⃣ Detección de AML</h4>
+                        <p>Manejarás datos MUY desbalanceados (100:1) con Weighted BCE</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>4️⃣ Cálculos Manuales</h4>
+                        <p>Entenderás la matemática antes de usar PyTorch</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>5️⃣ Métricas Avanzadas</h4>
+                        <p>Precision, Recall, F1-Score para evaluar tus modelos</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>6️⃣ Best Practices</h4>
+                        <p>Tips profesionales para producción real</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="importancia" class="section">
+                <h2>📈 ¿Por Qué es Importante?</h2>
+                <p>Las funciones de pérdida de clasificación son <strong>fundamentales</strong> en:</p>
+                <ul style="margin-left: 30px; margin-top: 15px; line-height: 2;">
+                    <li>🏦 <strong>Finanzas:</strong> Detección de fraude y lavado de dinero</li>
+                    <li>🏥 <strong>Medicina:</strong> Diagnóstico de enfermedades</li>
+                    <li>🛡️ <strong>Seguridad:</strong> Detección de amenazas y ataques</li>
+                    <li>📧 <strong>Marketing:</strong> Filtrado de spam y segmentación</li>
+                    <li>🚗 <strong>Autos Autónomos:</strong> Clasificación de objetos en la vía</li>
+                    <li>🛒 <strong>E-commerce:</strong> Recomendaciones y categorización</li>
+                </ul>
+            </div>
+            
+            <div style="text-align: center; margin-top: 50px;">
+                <h2 style="color: #f5576c; margin-bottom: 20px;">¿Listo para dominar la clasificación?</h2>
+                <p style="font-size: 1.2em; color: #666; margin-bottom: 30px;">
+                    Abre el notebook y aprende a construir clasificadores profesionales
+                </p>
+                <a href="3_Funciones_Perdida_Clasificacion_PyTorch.ipynb" class="cta-button">
+                    📓 Abrir Notebook de Clasificación
+                </a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>💡 Recuerda:</strong> En clasificación, la función de pérdida es solo el principio. También necesitas las métricas correctas (Precision, Recall, F1).</p>
+            <p style="margin-top: 20px; opacity: 0.8;">© 2026 - Capacitación en Machine Learning con PyTorch</p>
+        </div>
+    </div>
+    
+    <script>
+        // Menú Hamburguesa
+        const hamburgerToggle = document.getElementById('hamburgerToggle');
+        const hamburgerMenu = document.getElementById('hamburgerMenu');
+        
+        hamburgerToggle.addEventListener('click', () => {
+            hamburgerToggle.classList.toggle('active');
+            hamburgerMenu.classList.toggle('active');
+        });
+        
+        // Cerrar menú al hacer click en un enlace
+        document.querySelectorAll('.menu-nav a').forEach(link => {
+            link.addEventListener('click', () => {
+                hamburgerToggle.classList.remove('active');
+                hamburgerMenu.classList.remove('active');
+            });
+        });
+        
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // Cuestionario
+        const correctAnswers = {
+            q1: 'b',  // Clasificación binaria
+            q2: 'c',  // BCEWithLogitsLoss
+            q3: 'c',  // BCEWithLogitsLoss con pos_weight
+            q4: 'c',  // CrossEntropyLoss
+            q5: 'b'   // Softmax
+        };
+        
+        function checkQuiz() {
+            let score = 0;
+            const totalQuestions = Object.keys(correctAnswers).length;
+            
+            // Verificar cada pregunta
+            for (let question in correctAnswers) {
+                const selectedAnswer = document.querySelector(`input[name="${question}"]:checked`);
+                const options = document.querySelectorAll(`input[name="${question}"]`);
+                
+                options.forEach(option => {
+                    const label = option.parentElement;
+                    label.classList.remove('correct', 'incorrect');
+                    
+                    if (option.value === correctAnswers[question]) {
+                        label.classList.add('correct');
+                    }
+                });
+                
+                if (selectedAnswer && selectedAnswer.value === correctAnswers[question]) {
+                    score++;
+                } else if (selectedAnswer) {
+                    selectedAnswer.parentElement.classList.add('incorrect');
+                }
+            }
+            
+            // Mostrar resultado
+            const resultDiv = document.getElementById('quizResult');
+            const scoreDiv = document.getElementById('quizScore');
+            const feedbackDiv = document.getElementById('quizFeedback');
+            
+            resultDiv.classList.add('show');
+            scoreDiv.textContent = `${score} / ${totalQuestions}`;
+            
+            let feedback = '';
+            if (score === totalQuestions) {
+                feedback = '🎉 ¡Excelente! Tienes una base sólida. ¡Adelante con el notebook!';
+                feedbackDiv.style.color = '#28a745';
+            } else if (score >= 3) {
+                feedback = '👍 ¡Bien! Tienes conocimientos previos. El notebook te ayudará a profundizar.';
+                feedbackDiv.style.color = '#007bff';
+            } else {
+                feedback = '📚 ¡No te preocupes! Este material es perfecto para ti. Presta atención al contenido.';
+                feedbackDiv.style.color = '#ffc107';
+            }
+            
+            feedbackDiv.innerHTML = `<strong>${feedback}</strong>`;
+            
+            // Scroll al resultado
+            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
+</body>
+</html>

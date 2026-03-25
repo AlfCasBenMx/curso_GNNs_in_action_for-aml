@@ -1,0 +1,287 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     INTRODUCCIÓN Y ROADMAP
+     ═══════════════════════════════════════════════════════════════════════════ -->
+
+<div class="content-card">
+  <h2 style="color: var(--primary-dark); margin-bottom: 20px;">👋 El Viaje que Haremos</h2>
+  <div style="background: #020617; padding: 14px 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #1f2937;">
+    <h3 style="color: #e5e7eb; margin: 0 0 6px; font-size: 0.98em;">✅ Al terminar esta sección deberías poder:</h3>
+    <ul style="color: #9ca3af; font-size: 0.9em; margin: 0 0 0 18px; line-height: 1.6;">
+      <li>Saber cómo crear tu propio notebook para el curso.</li>
+      <li>Tener listos los imports básicos (PyTorch, NumPy, Matplotlib).</li>
+      <li>Entender el mapa general del capítulo 0 y su ruta.</li>
+    </ul>
+  </div>
+  
+  <!-- ═══════════════════════════════════════════════════════════════════════════
+       DIAGRAMA VISUAL DEL VIAJE
+       ═══════════════════════════════════════════════════════════════════════════ -->
+  <div style="background: linear-gradient(135deg, #1e1b4b, #312e81); border-radius: 16px; padding: 25px; margin-bottom: 25px;">
+    <div style="text-align: center; color: #c4b5fd; font-weight: bold; margin-bottom: 20px; font-size: 1.1em;">🗺️ Mapa del Viaje: De Neuronas a Redes Neuronales</div>
+    
+    <svg viewBox="0 0 800 280" style="width: 100%; max-width: 800px; display: block; margin: 0 auto;">
+      <!-- Definiciones -->
+      <defs>
+        <linearGradient id="gradBlue" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:#3b82f6"/>
+          <stop offset="100%" style="stop-color:#60a5fa"/>
+        </linearGradient>
+        <linearGradient id="gradGreen" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:#22c55e"/>
+          <stop offset="100%" style="stop-color:#4ade80"/>
+        </linearGradient>
+        <linearGradient id="gradPurple" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:#8b5cf6"/>
+          <stop offset="100%" style="stop-color:#a78bfa"/>
+        </linearGradient>
+        <linearGradient id="gradOrange" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:#f59e0b"/>
+          <stop offset="100%" style="stop-color:#fbbf24"/>
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+          <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      
+      <!-- Fondo -->
+      <rect width="800" height="280" fill="#0f172a" rx="12"/>
+      
+      <!-- ACTO 1: Fundamentos -->
+      <rect x="15" y="15" width="180" height="250" fill="rgba(59, 130, 246, 0.1)" stroke="rgba(59, 130, 246, 0.4)" stroke-width="2" rx="10"/>
+      <text x="105" y="40" font-size="11" fill="#60a5fa" text-anchor="middle" font-weight="bold">ACTO 1: FUNDAMENTOS</text>
+      
+      <!-- Neurona -->
+      <circle cx="60" cy="90" r="25" fill="url(#gradBlue)" filter="url(#glow)"/>
+      <text x="60" y="95" font-size="18" fill="white" text-anchor="middle">🧠</text>
+      <text x="60" y="130" font-size="9" fill="#94a3b8" text-anchor="middle">Neurona</text>
+      
+      <!-- Regresión -->
+      <circle cx="145" cy="90" r="25" fill="url(#gradBlue)" filter="url(#glow)"/>
+      <text x="145" y="95" font-size="18" fill="white" text-anchor="middle">📈</text>
+      <text x="145" y="130" font-size="9" fill="#94a3b8" text-anchor="middle">Regresión</text>
+      
+      <!-- Clasificación -->
+      <circle cx="105" cy="170" r="25" fill="url(#gradBlue)" filter="url(#glow)"/>
+      <text x="105" y="175" font-size="18" fill="white" text-anchor="middle">🎯</text>
+      <text x="105" y="210" font-size="9" fill="#94a3b8" text-anchor="middle">Clasificación</text>
+      
+      <!-- Flechas internas Acto 1 -->
+      <path d="M 85 90 L 115 90" stroke="#60a5fa" stroke-width="2" fill="none" marker-end="url(#arrowBlue)"/>
+      <path d="M 105 115 L 105 140" stroke="#60a5fa" stroke-width="2" fill="none"/>
+      
+      <!-- ACTO 2: El Problema -->
+      <rect x="210" y="15" width="180" height="250" fill="rgba(251, 191, 36, 0.1)" stroke="rgba(251, 191, 36, 0.4)" stroke-width="2" rx="10"/>
+      <text x="300" y="40" font-size="11" fill="#fbbf24" text-anchor="middle" font-weight="bold">ACTO 2: EL PROBLEMA</text>
+      
+      <!-- Frontera -->
+      <circle cx="255" cy="90" r="25" fill="url(#gradOrange)" filter="url(#glow)"/>
+      <text x="255" y="95" font-size="18" fill="white" text-anchor="middle">🚧</text>
+      <text x="255" y="130" font-size="9" fill="#94a3b8" text-anchor="middle">Frontera</text>
+      
+      <!-- Capas Ocultas -->
+      <circle cx="340" cy="90" r="25" fill="url(#gradOrange)" filter="url(#glow)"/>
+      <text x="340" y="95" font-size="18" fill="white" text-anchor="middle">🏭</text>
+      <text x="340" y="130" font-size="9" fill="#94a3b8" text-anchor="middle">Capas</text>
+      
+      <!-- XOR + Círculo -->
+      <circle cx="300" cy="170" r="30" fill="url(#gradOrange)" filter="url(#glow)"/>
+      <text x="300" y="165" font-size="14" fill="white" text-anchor="middle">🔳⭕</text>
+      <text x="300" y="182" font-size="8" fill="white" text-anchor="middle">XOR+Círculo</text>
+      <text x="300" y="220" font-size="9" fill="#fbbf24" text-anchor="middle" font-weight="bold">¡No-linealidad!</text>
+      
+      <!-- Flecha Acto 1 → 2 -->
+      <path d="M 195 140 L 210 140" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4,2"/>
+      
+      <!-- ACTO 3: La Maquinaria -->
+      <rect x="405" y="15" width="190" height="250" fill="rgba(139, 92, 246, 0.1)" stroke="rgba(139, 92, 246, 0.4)" stroke-width="2" rx="10"/>
+      <text x="500" y="40" font-size="11" fill="#a78bfa" text-anchor="middle" font-weight="bold">ACTO 3: LA MAQUINARIA</text>
+      
+      <!-- Forward -->
+      <circle cx="440" cy="90" r="22" fill="url(#gradPurple)" filter="url(#glow)"/>
+      <text x="440" y="95" font-size="16" fill="white" text-anchor="middle">➡️</text>
+      <text x="440" y="125" font-size="8" fill="#94a3b8" text-anchor="middle">Forward</text>
+      
+      <!-- Loss -->
+      <circle cx="500" cy="90" r="22" fill="url(#gradPurple)" filter="url(#glow)"/>
+      <text x="500" y="95" font-size="16" fill="white" text-anchor="middle">📉</text>
+      <text x="500" y="125" font-size="8" fill="#94a3b8" text-anchor="middle">Loss</text>
+      
+      <!-- Backprop -->
+      <circle cx="560" cy="90" r="22" fill="url(#gradPurple)" filter="url(#glow)"/>
+      <text x="560" y="95" font-size="16" fill="white" text-anchor="middle">⬅️</text>
+      <text x="560" y="125" font-size="8" fill="#94a3b8" text-anchor="middle">Backprop</text>
+      
+      <!-- Optimizer -->
+      <circle cx="470" cy="170" r="22" fill="url(#gradPurple)" filter="url(#glow)"/>
+      <text x="470" y="175" font-size="16" fill="white" text-anchor="middle">🚀</text>
+      <text x="470" y="205" font-size="8" fill="#94a3b8" text-anchor="middle">Optim</text>
+      
+      <!-- Regularización -->
+      <circle cx="530" cy="170" r="22" fill="url(#gradPurple)" filter="url(#glow)"/>
+      <text x="530" y="175" font-size="16" fill="white" text-anchor="middle">🛡️</text>
+      <text x="530" y="205" font-size="8" fill="#94a3b8" text-anchor="middle">Reg</text>
+      
+      <!-- Flecha Acto 2 → 3 -->
+      <path d="M 390 140 L 405 140" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4,2"/>
+      
+      <!-- ACTO 4: Práctica -->
+      <rect x="610" y="15" width="175" height="250" fill="rgba(34, 197, 94, 0.1)" stroke="rgba(34, 197, 94, 0.4)" stroke-width="2" rx="10"/>
+      <text x="697" y="40" font-size="11" fill="#4ade80" text-anchor="middle" font-weight="bold">ACTO 4: PRÁCTICA</text>
+      
+      <!-- Loop -->
+      <circle cx="660" cy="100" r="28" fill="url(#gradGreen)" filter="url(#glow)"/>
+      <text x="660" y="105" font-size="20" fill="white" text-anchor="middle">🔄</text>
+      <text x="660" y="145" font-size="9" fill="#94a3b8" text-anchor="middle">Loop Completo</text>
+      
+      <!-- Simulador -->
+      <circle cx="740" cy="100" r="28" fill="url(#gradGreen)" filter="url(#glow)"/>
+      <text x="740" y="105" font-size="20" fill="white" text-anchor="middle">🎮</text>
+      <text x="740" y="145" font-size="9" fill="#94a3b8" text-anchor="middle">Simulador</text>
+      
+      <!-- GNNs (futuro) -->
+      <circle cx="700" cy="200" r="32" fill="rgba(34, 197, 94, 0.3)" stroke="#4ade80" stroke-width="2" stroke-dasharray="4,2"/>
+      <text x="700" y="195" font-size="18" fill="#4ade80" text-anchor="middle">📊</text>
+      <text x="700" y="212" font-size="9" fill="#4ade80" text-anchor="middle">→ GNNs</text>
+      
+      <!-- Flecha Acto 3 → 4 -->
+      <path d="M 595 140 L 610 140" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4,2"/>
+    </svg>
+    
+    <div style="display: flex; justify-content: center; gap: 30px; margin-top: 15px; font-size: 0.8em; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <div style="width: 12px; height: 12px; background: #3b82f6; border-radius: 50%;"></div>
+        <span style="color: #94a3b8;">Fundamentos</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <div style="width: 12px; height: 12px; background: #f59e0b; border-radius: 50%;"></div>
+        <span style="color: #94a3b8;">El Problema</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <div style="width: 12px; height: 12px; background: #8b5cf6; border-radius: 50%;"></div>
+        <span style="color: #94a3b8;">La Maquinaria</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <div style="width: 12px; height: 12px; background: #22c55e; border-radius: 50%;"></div>
+        <span style="color: #94a3b8;">Práctica</span>
+      </div>
+    </div>
+  </div>
+  
+  <div class="highlight">
+    <div class="icon">🗺️</div>
+    <div>
+      <strong>Nuestra ruta de aprendizaje:</strong>
+      <ol style="margin-top: 10px;">
+        <li>La <strong>neurona artificial</strong> — el bloque básico</li>
+        <li><strong>Regresión lineal</strong> — la red más simple</li>
+        <li><strong>De regresión a clasificación</strong> — el sigmoid</li>
+        <li><strong>La frontera de decisión</strong> — ¿cuándo funciona una línea?</li>
+        <li><strong>Las capas ocultas</strong> — el poder de las redes profundas</li>
+        <li><strong>¿Por qué no basta con líneas?</strong> — el ejercicio del círculo</li>
+        <li><strong>Funciones de activación</strong> — la magia de la no-linealidad</li>
+        <li><strong>Forward pass</strong> — de entrada a predicción</li>
+        <li><strong>Loss functions</strong> — midiendo el error</li>
+        <li><strong>Backpropagation</strong> — cómo la red aprende</li>
+        <li><strong>Optimizadores</strong> — SGD, Adam</li>
+        <li><strong>Regularización</strong> — evitando overfitting</li>
+        <li><strong>El loop completo</strong> — todo junto</li>
+      </ol>
+    </div>
+  </div>
+
+  <div style="background: #020617; padding: 20px; border-radius: 12px; margin-top: 25px; border: 1px solid #1f2937;">
+    <h3 style="color: #e5e7eb; margin-bottom: 10px;">🔧 Paso 0: crea tu propio notebook</h3>
+    <p style="color: #d1d5db; font-size: 0.95em; margin-bottom: 10px;">
+      Antes de ver los ejemplos, abre un notebook vacío (en VS Code, Jupyter, Colab, etc.) y copia/pega este primer bloque.
+      Será la <strong>primera celda</strong> de tu cuaderno y se encarga de importar librerías y fijar semillas.
+    </p>
+    <div style="background: #0b1120; border-radius: 10px; padding: 12px 14px; border: 1px solid #1e293b; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.85em; color: #e5e7eb; overflow-x: auto;">
+      <div style="color: #93c5fd; margin-bottom: 6px; font-weight: 500;">📋 Código para copiar y pegar:</div>
+      <pre style="margin: 0;"><code>import torch
+import torch.nn as nn
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Configuración para reproducibilidad
+torch.manual_seed(42)
+np.random.seed(42)
+
+print(f"PyTorch version: {torch.__version__}")
+print("✅ Librerías importadas correctamente")</code></pre>
+    </div>
+    <p style="color: #9ca3af; font-size: 0.9em; margin-top: 8px;">
+      A partir de aquí, las siguientes secciones del capítulo te mostrarán más bloques de código que también puedes copiar y pegar
+      en tu cuaderno (por ejemplo, el modelo de regresión lineal, la función de pérdida, el loop de entrenamiento, etc.).
+    </p>
+  </div>
+
+  <div style="background: linear-gradient(135deg, #1e3a8a, #1d4ed8); padding: 20px; border-radius: 12px; margin-top: 25px;">
+    <h3 style="color: #93c5fd; margin-bottom: 15px;">📋 Guía de Correspondencia HTML ↔ Notebook</h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+      <thead>
+        <tr style="background: #3b82f6; color: white;">
+          <th style="padding: 10px; text-align: left; border-radius: 6px 0 0 0;">Sección HTML</th>
+          <th style="padding: 10px; text-align: center;">Celdas Notebook</th>
+          <th style="padding: 10px; text-align: left; border-radius: 0 6px 0 0;">Qué Aprenderás</th>
+        </tr>
+      </thead>
+      <tbody style="background: rgba(30, 58, 138, 0.5);">
+        <tr style="border-bottom: 1px solid rgba(147, 197, 253, 0.3);">
+          <td style="padding: 10px; color: #bfdbfe;"><strong style="color: #93c5fd;">1. La Neurona</strong></td>
+          <td style="padding: 10px; text-align: center; color: #e0f2fe;">📦 1-3</td>
+          <td style="padding: 10px; color: #bfdbfe;">Anatomía, pesos, bias</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(147, 197, 253, 0.3);">
+          <td style="padding: 10px; color: #bfdbfe;"><strong style="color: #93c5fd;">2. Regresión Lineal</strong></td>
+          <td style="padding: 10px; text-align: center; color: #e0f2fe;">🏠 2-3</td>
+          <td style="padding: 10px; color: #bfdbfe;">y = wx + b (red más simple)</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(147, 197, 253, 0.3);">
+          <td style="padding: 10px; color: #bfdbfe;"><strong style="color: #93c5fd;">2.5-3. Clasificación y Capas</strong></td>
+          <td style="padding: 10px; text-align: center; color: #e0f2fe;">🔮 7-9</td>
+          <td style="padding: 10px; color: #bfdbfe;">Por qué necesitamos capas ocultas</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(147, 197, 253, 0.3);">
+          <td style="padding: 10px; color: #bfdbfe;"><strong style="color: #93c5fd;">4. Activaciones</strong></td>
+          <td style="padding: 10px; text-align: center; color: #e0f2fe;">⚡ 9-10</td>
+          <td style="padding: 10px; color: #bfdbfe;">ReLU, Sigmoid, Tanh, Softmax</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(147, 197, 253, 0.3);">
+          <td style="padding: 10px; color: #bfdbfe;"><strong style="color: #93c5fd;">5. Forward Pass</strong></td>
+          <td style="padding: 10px; text-align: center; color: #e0f2fe;">—</td>
+          <td style="padding: 10px; color: #bfdbfe;">Flujo de datos (teórico)</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(147, 197, 253, 0.3);">
+          <td style="padding: 10px; color: #bfdbfe;"><strong style="color: #93c5fd;">6. Loss Functions</strong></td>
+          <td style="padding: 10px; text-align: center; color: #e0f2fe;">📈 4-5</td>
+          <td style="padding: 10px; color: #bfdbfe;">MSE, CrossEntropy</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(147, 197, 253, 0.3);">
+          <td style="padding: 10px; color: #bfdbfe;"><strong style="color: #93c5fd;">7. Backpropagation</strong></td>
+          <td style="padding: 10px; text-align: center; color: #e0f2fe;">🔄 5-6</td>
+          <td style="padding: 10px; color: #bfdbfe;">Autograd, gradientes</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(147, 197, 253, 0.3);">
+          <td style="padding: 10px; color: #bfdbfe;"><strong style="color: #93c5fd;">8. Optimizadores</strong></td>
+          <td style="padding: 10px; text-align: center; color: #e0f2fe;">🚀 6</td>
+          <td style="padding: 10px; color: #bfdbfe;">Learning rate, Adam</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(147, 197, 253, 0.3);">
+          <td style="padding: 10px; color: #bfdbfe;"><strong style="color: #93c5fd;">9. Regularización</strong></td>
+          <td style="padding: 10px; text-align: center; color: #e0f2fe;">🎲 8</td>
+          <td style="padding: 10px; color: #bfdbfe;">Dropout, overfitting</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; color: #bfdbfe;"><strong style="color: #93c5fd;">10. Loop Completo</strong></td>
+          <td style="padding: 10px; text-align: center; color: #e0f2fe;">🔁 10-13</td>
+          <td style="padding: 10px; color: #bfdbfe;">Entrenamiento end-to-end</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top: 15px; padding: 12px; background: linear-gradient(135deg, #78350f, #92400e); border-radius: 8px; border-left: 4px solid #fbbf24;">
+      <strong style="color: #fbbf24;">💡 Tip:</strong> <span style="color: #fde68a;">Lee cada sección del HTML y luego copia/pega los bloques de código en tu propio notebook (o usa el notebook de ejemplo como guía). ¡La práctica escribiendo y ejecutando el código refuerza la teoría!</span>
+    </div>
+  </div>
+</div>

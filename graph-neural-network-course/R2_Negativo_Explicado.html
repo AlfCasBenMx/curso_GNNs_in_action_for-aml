@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R² Negativo — ¿Por qué tu modelo es peor que la media?</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap');
+
+        :root {
+            --bg-dark: #0a0e1a;
+            --bg-card: #111827;
+            --bg-card2: #1a2235;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-orange: #f59e0b;
+            --accent-purple: #8b5cf6;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #1e293b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* ===== HERO ===== */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            padding: 2rem;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle at 30% 40%, rgba(239,68,68,0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 60%, rgba(59,130,246,0.08) 0%, transparent 50%);
+            animation: pulse-bg 8s ease-in-out infinite alternate;
+        }
+        @keyframes pulse-bg {
+            0% { transform: scale(1) rotate(0deg); }
+            100% { transform: scale(1.1) rotate(5deg); }
+        }
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 5rem);
+            font-weight: 900;
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(135deg, var(--accent-red), var(--accent-orange), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+        .hero .subtitle {
+            font-size: 1.4rem;
+            color: var(--text-secondary);
+            position: relative;
+            z-index: 1;
+            max-width: 700px;
+        }
+        .hero .r2-giant {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(5rem, 15vw, 12rem);
+            font-weight: 800;
+            color: var(--accent-red);
+            position: relative;
+            z-index: 1;
+            margin: 2rem 0;
+            text-shadow: 0 0 60px rgba(239,68,68,0.4);
+            animation: glow-red 2s ease-in-out infinite alternate;
+        }
+        @keyframes glow-red {
+            from { text-shadow: 0 0 30px rgba(239,68,68,0.3); }
+            to { text-shadow: 0 0 80px rgba(239,68,68,0.6); }
+        }
+        .scroll-hint {
+            position: absolute;
+            bottom: 2rem;
+            z-index: 1;
+            animation: bounce 2s infinite;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        .scroll-hint span { font-size: 1.5rem; display: block; }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(10px); }
+        }
+
+        /* ===== SECTIONS ===== */
+        .section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+        .section-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .section-title .icon { font-size: 2.5rem; }
+        .section-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 2.5rem;
+        }
+
+        /* ===== FORMULA CARD ===== */
+        .formula-card {
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-card2));
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 3rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .formula-card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple), var(--accent-cyan));
+        }
+        .formula-main {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(1.5rem, 4vw, 3rem);
+            font-weight: 700;
+            margin: 1.5rem 0;
+            color: var(--text-primary);
+        }
+        .formula-parts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .formula-part {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: left;
+        }
+        .formula-part .label {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        .formula-part .desc {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        .color-res { color: var(--accent-red); }
+        .color-tot { color: var(--accent-blue); }
+        .color-green { color: var(--accent-green); }
+
+        /* ===== R2 RANGE BAR ===== */
+        .r2-range {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 3rem;
+            margin-bottom: 3rem;
+        }
+        .range-bar-container {
+            position: relative;
+            margin: 3rem 0 5rem 0;
+        }
+        .range-bar {
+            height: 40px;
+            border-radius: 20px;
+            background: linear-gradient(90deg, 
+                #7f1d1d 0%, 
+                #ef4444 25%, 
+                #f59e0b 40%,
+                #eab308 50%, 
+                #22c55e 70%, 
+                #10b981 100%);
+            position: relative;
+        }
+        .range-marker {
+            position: absolute;
+            top: -12px;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+        .range-marker .dot {
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            border: 3px solid white;
+            margin: 0 auto 8px auto;
+        }
+        .range-marker .marker-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .range-marker .marker-desc {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+        .range-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* ===== COMPARISON VISUAL ===== */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        .comp-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .comp-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        .comp-card.bad { border-top: 4px solid var(--accent-red); }
+        .comp-card.good { border-top: 4px solid var(--accent-green); }
+        .comp-card .card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .comp-card .card-icon {
+            font-size: 2.5rem;
+        }
+        .comp-card .card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+        .comp-card .card-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* ===== INTERACTIVE CHART ===== */
+        .chart-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-bottom: 3rem;
+        }
+        .chart-container {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+        .chart-canvas-wrap {
+            flex: 1;
+            min-width: 400px;
+            position: relative;
+        }
+        canvas {
+            width: 100% !important;
+            border-radius: 12px;
+            background: #0d1322;
+        }
+        .chart-sidebar {
+            width: 300px;
+            min-width: 250px;
+        }
+        .stat-box {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+        }
+        .stat-box .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.3rem;
+        }
+        .stat-box .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+
+        /* ===== TABLE COMPARISON ===== */
+        .data-table-wrap {
+            overflow-x: auto;
+            margin: 2rem 0;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+        .data-table th {
+            background: var(--bg-card2);
+            padding: 1rem;
+            text-align: center;
+            font-weight: 700;
+            border-bottom: 2px solid var(--border);
+        }
+        .data-table td {
+            padding: 0.8rem 1rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+        .data-table tr:hover td {
+            background: rgba(255,255,255,0.03);
+        }
+        .data-table .winner { color: var(--accent-green); font-weight: 700; }
+        .data-table .loser { color: var(--accent-red); font-weight: 700; }
+        .data-table .total-row {
+            background: rgba(255,255,255,0.05);
+            font-weight: 800;
+            font-size: 1rem;
+        }
+
+        /* ===== ERROR BAR VISUAL ===== */
+        .error-bars {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 4rem;
+            margin: 3rem 0;
+            min-height: 280px;
+        }
+        .error-bar-item {
+            text-align: center;
+        }
+        .error-bar {
+            width: 100px;
+            border-radius: 8px 8px 0 0;
+            margin: 0 auto;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            transition: height 1s ease;
+        }
+        .error-bar .bar-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 800;
+            font-size: 1.3rem;
+            padding: 0.5rem;
+            position: absolute;
+            top: -2rem;
+        }
+        .error-bar-label {
+            margin-top: 0.8rem;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .error-bar-desc {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        /* ===== ANALOGY ===== */
+        .analogy-card {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 1px solid var(--accent-purple);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 3rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .analogy-card::before {
+            content: '💡';
+            position: absolute;
+            top: -1rem;
+            right: 2rem;
+            font-size: 4rem;
+            opacity: 0.3;
+        }
+        .analogy-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent-purple);
+        }
+        .analogy-scenario {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+        .analogy-box {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .analogy-box .analogy-icon { font-size: 3rem; margin-bottom: 0.5rem; }
+        .analogy-box .analogy-title { font-weight: 700; margin-bottom: 0.3rem; }
+        .analogy-box .analogy-desc { color: var(--text-secondary); font-size: 0.9rem; }
+
+        /* ===== CAUSES ===== */
+        .causes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .cause-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.8rem;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+        .cause-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent-orange);
+        }
+        .cause-card .cause-icon { font-size: 2rem; margin-bottom: 0.8rem; }
+        .cause-card .cause-title { font-weight: 700; font-size: 1.1rem; margin-bottom: 0.5rem; }
+        .cause-card .cause-desc { color: var(--text-secondary); font-size: 0.9rem; }
+        .cause-card .cause-fix {
+            margin-top: 0.8rem;
+            padding: 0.5rem 0.8rem;
+            background: rgba(16,185,129,0.1);
+            border-left: 3px solid var(--accent-green);
+            border-radius: 0 8px 8px 0;
+            font-size: 0.85rem;
+            color: var(--accent-green);
+        }
+
+        /* ===== INTERACTIVE SLIDER ===== */
+        .slider-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 3rem 0;
+            text-align: center;
+        }
+        .slider-section h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .slider-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            background: linear-gradient(90deg, var(--accent-red), var(--accent-orange), var(--accent-green));
+            border-radius: 4px;
+            outline: none;
+            margin: 1.5rem 0;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .slider-r2-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 4rem;
+            font-weight: 900;
+            margin: 1rem 0;
+            transition: color 0.3s;
+        }
+        .slider-interpretation {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            min-height: 3rem;
+        }
+        .slider-visual {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-top: 2rem;
+        }
+        .slider-bar-wrap {
+            text-align: center;
+        }
+        .slider-bar {
+            width: 60px;
+            border-radius: 6px 6px 0 0;
+            margin: 0 auto;
+            transition: height 0.4s ease, background 0.3s;
+            min-height: 10px;
+        }
+        .slider-bar-label {
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        /* ===== WHY MEAN SECTION ===== */
+        .mean-proof {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 3rem 0;
+        }
+        .proof-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .proof-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            background: rgba(255,255,255,0.02);
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-cyan);
+        }
+        .proof-step-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--accent-cyan);
+            min-width: 50px;
+        }
+        .proof-step-content h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
+        }
+        .proof-step-content p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        .proof-step-content code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(255,255,255,0.08);
+            padding: 0.1rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        /* ===== MEAN CANDIDATES ===== */
+        .mean-candidates {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 0.8rem;
+            margin: 2rem 0;
+            min-height: 200px;
+            flex-wrap: wrap;
+        }
+        .candidate-bar {
+            width: 65px;
+            border-radius: 6px 6px 0 0;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s;
+        }
+        .candidate-bar.best {
+            box-shadow: 0 0 20px rgba(16,185,129,0.4);
+        }
+        .candidate-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 700;
+            position: absolute;
+            top: -1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+        }
+        .candidate-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding-top: 0.5rem;
+            color: rgba(255,255,255,0.8);
+        }
+        .candidate-bottom-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            text-align: center;
+            padding: 4rem 2rem;
+            border-top: 1px solid var(--border);
+        }
+        .footer .takeaway {
+            max-width: 800px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(59,130,246,0.1));
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 20px;
+            padding: 3rem;
+        }
+        .footer .takeaway h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--accent-red), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .footer .takeaway p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        @media (max-width: 768px) {
+            .analogy-scenario { grid-template-columns: 1fr; }
+            .chart-container { flex-direction: column; }
+            .chart-sidebar { width: 100%; }
+            .error-bars { gap: 2rem; }
+            .slider-visual { gap: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ==================== HERO ==================== -->
+<section class="hero">
+    <h1>R² Negativo Explicado</h1>
+    <p class="subtitle">¿Cómo es posible que un modelo sea <strong>peor</strong> que simplemente predecir la media?</p>
+    <div class="r2-giant">R² = -0.55</div>
+    <div class="scroll-hint">
+        Scroll para entender
+        <span>↓</span>
+    </div>
+</section>
+
+<!-- ==================== FORMULA ==================== -->
+<section class="section">
+    <h2 class="section-title"><span class="icon">📐</span> La Fórmula de R²</h2>
+    <p class="section-subtitle">Todo se reduce a comparar DOS errores</p>
+
+    <div class="formula-card">
+        <p style="color: var(--text-secondary); font-size: 1.1rem;">R cuadrado se calcula así:</p>
+        <div class="formula-main">
+            R² = 1 − <span class="color-res">SS_res</span> / <span class="color-tot">SS_tot</span>
+        </div>
+        <div class="formula-parts">
+            <div class="formula-part">
+                <div class="label color-res">SS_res = Σ(yᵢ − ŷᵢ)²</div>
+                <div class="desc">
+                    <strong>Error de TU MODELO</strong><br>
+                    Suma de las diferencias al cuadrado entre los valores reales y las predicciones de tu modelo
+                </div>
+            </div>
+            <div class="formula-part">
+                <div class="label color-tot">SS_tot = Σ(yᵢ − ȳ)²</div>
+                <div class="desc">
+                    <strong>Error de LA MEDIA</strong><br>
+                    Suma de las diferencias al cuadrado entre los valores reales y la media (el "modelo tonto")
+                </div>
+            </div>
+            <div class="formula-part">
+                <div class="label color-green">Interpretación</div>
+                <div class="desc">
+                    Si <span class="color-res">SS_res</span> &gt; <span class="color-tot">SS_tot</span>, la fracción es &gt; 1, y por tanto <strong>R² &lt; 0</strong>.<br>
+                    Significa: tu modelo se equivoca MÁS que la media.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- R2 Scale -->
+    <div class="r2-range">
+        <h3 style="text-align:center; margin-bottom:1rem;">Escala de interpretación de R²</h3>
+        <div class="range-bar-container">
+            <div class="range-bar">
+                <div class="range-marker" style="left: 5%; top: 50px;">
+                    <div class="dot" style="background: #7f1d1d;"></div>
+                    <div class="marker-label" style="color: var(--accent-red);">R² &lt; 0</div>
+                    <div class="marker-desc">Peor que la media 💀</div>
+                </div>
+                <div class="range-marker" style="left: 35%; top: 50px;">
+                    <div class="dot" style="background: var(--accent-orange);"></div>
+                    <div class="marker-label" style="color: var(--accent-orange);">R² = 0</div>
+                    <div class="marker-desc">Igual que la media 😐</div>
+                </div>
+                <div class="range-marker" style="left: 65%; top: 50px;">
+                    <div class="dot" style="background: #eab308;"></div>
+                    <div class="marker-label" style="color: #eab308;">R² = 0.5</div>
+                    <div class="marker-desc">Modelo decente 🤔</div>
+                </div>
+                <div class="range-marker" style="left: 90%; top: 50px;">
+                    <div class="dot" style="background: var(--accent-green);"></div>
+                    <div class="marker-label" style="color: var(--accent-green);">R² → 1</div>
+                    <div class="marker-desc">¡Modelo excelente! 🎯</div>
+                </div>
+            </div>
+            <div class="range-labels">
+                <span>← Malo</span>
+                <span>Bueno →</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== COMPARISON ==================== -->
+<section class="section">
+    <h2 class="section-title"><span class="icon">⚔️</span> La Batalla: Tu Modelo vs La Media</h2>
+    <p class="section-subtitle">Datos reales: [10, 20, 30, 40, 50] — Media = 30</p>
+
+    <div class="comparison-grid">
+        <div class="comp-card bad">
+            <div class="card-header">
+                <div class="card-icon">🤖</div>
+                <div>
+                    <div class="card-title" style="color: var(--accent-red);">Tu Modelo (R² negativo)</div>
+                    <div class="card-subtitle">Predice: [35, 5, 50, 10, 60]</div>
+                </div>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                El modelo intenta ser inteligente, pero <strong>aprende patrones equivocados</strong>.
+                Sus predicciones a veces aciertan bien pero otras se van muy lejos.
+            </p>
+            <div class="stat-box">
+                <div class="stat-label">Error total (SS_res)</div>
+                <div class="stat-value color-res">1,550</div>
+            </div>
+        </div>
+
+        <div class="comp-card good">
+            <div class="card-header">
+                <div class="card-icon">📊</div>
+                <div>
+                    <div class="card-title" style="color: var(--accent-green);">Modelo "La Media"</div>
+                    <div class="card-subtitle">Predice: [30, 30, 30, 30, 30]</div>
+                </div>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                El modelo más simple posible: <strong>siempre predice 30</strong> (la media).
+                Es "tonto" pero consistente. Nunca se equivoca demasiado.
+            </p>
+            <div class="stat-box">
+                <div class="stat-label">Error total (SS_tot)</div>
+                <div class="stat-value color-green">1,000</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Bars -->
+    <div style="text-align: center; margin: 2rem 0;">
+        <h3 style="font-size: 1.4rem; margin-bottom: 0.5rem;">Comparación del error total</h3>
+        <p style="color: var(--text-secondary);">A menor barra, mejor</p>
+    </div>
+    <div class="error-bars" id="errorBars">
+        <div class="error-bar-item">
+            <div class="error-bar" style="height: 250px; background: linear-gradient(to top, #991b1b, #ef4444);">
+                <div class="bar-value" style="color: var(--accent-red);">1,550</div>
+            </div>
+            <div class="error-bar-label" style="color: var(--accent-red);">🤖 Tu Modelo</div>
+            <div class="error-bar-desc">SS_res</div>
+        </div>
+        <div class="error-bar-item">
+            <div class="error-bar" style="height: 160px; background: linear-gradient(to top, #064e3b, #10b981);">
+                <div class="bar-value" style="color: var(--accent-green);">1,000</div>
+            </div>
+            <div class="error-bar-label" style="color: var(--accent-green);">📊 La Media</div>
+            <div class="error-bar-desc">SS_tot</div>
+        </div>
+    </div>
+
+    <div style="text-align:center; margin: 2rem 0;">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; padding: 1.5rem; background: rgba(239,68,68,0.1); border-radius: 12px; display: inline-block;">
+            R² = 1 − <span class="color-res">1550</span> / <span class="color-tot">1000</span> = 1 − 1.55 = <span class="color-res" style="font-weight: 900; font-size: 2rem;">−0.55</span>
+        </div>
+    </div>
+
+    <!-- Detailed Table -->
+    <div class="data-table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Dato</th>
+                    <th>y Real</th>
+                    <th>🤖 Predicción Modelo</th>
+                    <th>📊 Predicción Media</th>
+                    <th style="color: var(--accent-red);">Error² Modelo</th>
+                    <th style="color: var(--accent-green);">Error² Media</th>
+                    <th>¿Quién gana?</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>10</td>
+                    <td>35</td>
+                    <td>30</td>
+                    <td class="loser">625</td>
+                    <td class="winner">400</td>
+                    <td>📊 Media</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>20</td>
+                    <td>5</td>
+                    <td>30</td>
+                    <td class="loser">225</td>
+                    <td class="winner">100</td>
+                    <td>📊 Media</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>30</td>
+                    <td>50</td>
+                    <td>30</td>
+                    <td class="loser">400</td>
+                    <td class="winner">0</td>
+                    <td>📊 Media</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>40</td>
+                    <td>10</td>
+                    <td>30</td>
+                    <td class="loser">900</td>
+                    <td class="winner">100</td>
+                    <td>📊 Media</td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td>50</td>
+                    <td>60</td>
+                    <td>30</td>
+                    <td class="winner">100</td>
+                    <td class="loser">400</td>
+                    <td>🤖 Modelo</td>
+                </tr>
+                <tr class="total-row">
+                    <td colspan="3"></td>
+                    <td><strong>TOTAL →</strong></td>
+                    <td class="loser" style="font-size:1.1rem;">2,250</td>
+                    <td class="winner" style="font-size:1.1rem;">1,000</td>
+                    <td style="font-size: 1.3rem;">📊 🏆</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <p style="text-align:center; color: var(--text-secondary); margin-top: 1rem;">
+        El modelo solo gana en <strong>1 de 5 datos</strong>. La media es más consistente.
+    </p>
+</section>
+
+<!-- ==================== INTERACTIVE CHART ==================== -->
+<section class="section">
+    <h2 class="section-title"><span class="icon">📈</span> Visualización Gráfica</h2>
+    <p class="section-subtitle">Las líneas muestran el error de cada predicción respecto al valor real</p>
+
+    <div class="chart-section">
+        <div class="chart-container">
+            <div class="chart-canvas-wrap">
+                <canvas id="mainChart" height="400"></canvas>
+            </div>
+            <div class="chart-sidebar">
+                <div class="stat-box">
+                    <div class="stat-label">R² del modelo</div>
+                    <div class="stat-value color-res" id="chartR2">−0.55</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Error Modelo (SS_res)</div>
+                    <div class="stat-value color-res" id="chartSSres">1550</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Error Media (SS_tot)</div>
+                    <div class="stat-value color-green" id="chartSStot">1000</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Veredicto</div>
+                    <div class="stat-value" id="chartVerdict" style="font-size: 1rem; color: var(--accent-red);">
+                        🤖 Modelo es PEOR que la media
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== WHY MEAN IS POWERFUL ==================== -->
+<section class="section">
+    <h2 class="section-title"><span class="icon">🎯</span> ¿Por qué la media es tan difícil de superar?</h2>
+    <p class="section-subtitle">La media tiene un "superpoder" matemático</p>
+
+    <div class="mean-proof">
+        <div class="proof-steps">
+            <div class="proof-step">
+                <div class="proof-step-num">01</div>
+                <div class="proof-step-content">
+                    <h4>La media MINIMIZA el error cuadrático</h4>
+                    <p>De todos los valores constantes que podrías elegir, la media es el que produce el <strong>menor error cuadrático total</strong>. Esto es un hecho matemático demostrado.</p>
+                </div>
+            </div>
+            <div class="proof-step">
+                <div class="proof-step-num">02</div>
+                <div class="proof-step-content">
+                    <h4>Nunca se va a los extremos</h4>
+                    <p>La media siempre está "en el centro" de los datos. No comete errores gigantes con ningún dato individual — los errores se <strong>distribuyen uniformemente</strong>.</p>
+                </div>
+            </div>
+            <div class="proof-step">
+                <div class="proof-step-num">03</div>
+                <div class="proof-step-content">
+                    <h4>Para ganarle, necesitas información ÚTIL</h4>
+                    <p>Un modelo que usa features irrelevantes o aprende ruido no tiene información útil. Sin información real, cualquier intento de "ser inteligente" <strong>solo añade error</strong>.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bar chart: different constant predictions -->
+    <div style="text-align:center; margin: 2rem 0;">
+        <h3 style="font-size: 1.3rem;">¿Qué pasa si predecimos siempre un valor fijo?</h3>
+        <p style="color: var(--text-secondary);">Datos: [10, 20, 30, 40, 50] — La media (30) siempre gana</p>
+    </div>
+    <div class="mean-candidates" id="meanCandidates"></div>
+</section>
+
+<!-- ==================== INTERACTIVE R2 SLIDER ==================== -->
+<section class="section">
+    <div class="slider-section">
+        <h3>🎮 Experimenta: ¿Qué significa cada valor de R²?</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem;">Mueve el slider para ver cómo cambia la interpretación</p>
+        <div class="slider-container">
+            <input type="range" id="r2Slider" min="-150" max="100" value="-55">
+            <div class="slider-r2-display" id="sliderDisplay">-0.55</div>
+            <div class="slider-interpretation" id="sliderInterpretation">
+                Tu modelo es un 55% PEOR que simplemente usar la media
+            </div>
+            <div class="slider-visual">
+                <div class="slider-bar-wrap">
+                    <div class="slider-bar" id="sliderBarModel" style="height: 155px; background: var(--accent-red);"></div>
+                    <div class="slider-bar-label">Error Modelo</div>
+                </div>
+                <div class="slider-bar-wrap">
+                    <div class="slider-bar" id="sliderBarMean" style="height: 100px; background: var(--accent-cyan);"></div>
+                    <div class="slider-bar-label">Error Media</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== ANALOGY ==================== -->
+<section class="section">
+    <div class="analogy-card">
+        <h3>💡 Analogía: El GPS borracho</h3>
+        <p style="color: var(--text-secondary);">Imagina que estás perdido en una ciudad desconocida...</p>
+        <div class="analogy-scenario">
+            <div class="analogy-box">
+                <div class="analogy-icon">🧭</div>
+                <div class="analogy-title" style="color: var(--accent-green);">Modelo "Media"</div>
+                <div class="analogy-desc">
+                    <strong>"Camina hacia el centro de la ciudad"</strong><br><br>
+                    No es un consejo perfecto, pero te acerca razonablemente a cualquier destino.
+                    Nunca te manda al lugar equivocado.
+                </div>
+            </div>
+            <div class="analogy-box">
+                <div class="analogy-icon">🗺️</div>
+                <div class="analogy-title" style="color: var(--accent-red);">Tu Modelo (R² &lt; 0)</div>
+                <div class="analogy-desc">
+                    <strong>"Gira a la izquierda... no, a la derecha... cruza el río..."</strong><br><br>
+                    A veces acierta espectacularmente, pero otras te manda al polígono industrial.
+                    En promedio, <strong>estarías mejor sin GPS</strong>.
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== CAUSES ==================== -->
+<section class="section">
+    <h2 class="section-title"><span class="icon">🔍</span> ¿Por qué ocurre R² negativo?</h2>
+    <p class="section-subtitle">Diagnóstico: las causas más comunes y cómo solucionarlas</p>
+
+    <div class="causes-grid">
+        <div class="cause-card">
+            <div class="cause-icon">📈</div>
+            <div class="cause-title">Overfitting</div>
+            <div class="cause-desc">El modelo memoriza el train set pero falla en test. Aprende ruido en vez de patrones reales.</div>
+            <div class="cause-fix">✅ Regularización (L1, L2), Cross-validation, menos features</div>
+        </div>
+        <div class="cause-card">
+            <div class="cause-icon">🗑️</div>
+            <div class="cause-title">Features Irrelevantes</div>
+            <div class="cause-desc">Variables que no tienen relación real con el target. El modelo intenta usarlas y genera ruido.</div>
+            <div class="cause-fix">✅ Feature selection, análisis de correlación, PCA</div>
+        </div>
+        <div class="cause-card">
+            <div class="cause-icon">⚙️</div>
+            <div class="cause-title">Modelo Inadecuado</div>
+            <div class="cause-desc">Usar un modelo lineal cuando la relación es no-lineal, o viceversa.</div>
+            <div class="cause-fix">✅ Probar otros algoritmos: árboles, SVM, redes neuronales</div>
+        </div>
+        <div class="cause-card">
+            <div class="cause-icon">📊</div>
+            <div class="cause-title">Datos Problemáticos</div>
+            <div class="cause-desc">Outliers extremos, datos mal etiquetados, o escala incorrecta de variables.</div>
+            <div class="cause-fix">✅ Limpieza de datos, normalización, detección de outliers</div>
+        </div>
+        <div class="cause-card">
+            <div class="cause-icon">📉</div>
+            <div class="cause-title">Pocos Datos</div>
+            <div class="cause-desc">Con muy pocos datos no hay suficiente información para que el modelo aprenda patrones reales.</div>
+            <div class="cause-fix">✅ Recolectar más datos, data augmentation</div>
+        </div>
+        <div class="cause-card">
+            <div class="cause-icon">🔀</div>
+            <div class="cause-title">Data Leakage inverso</div>
+            <div class="cause-desc">Train y test no representan la misma distribución, o el split se hizo de forma incorrecta.</div>
+            <div class="cause-fix">✅ Revisar el split, stratified sampling, temporal split</div>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== FOOTER ==================== -->
+<section class="footer">
+    <div class="takeaway">
+        <h2>📌 Conclusión</h2>
+        <p>
+            Un <strong>R² negativo</strong> es una señal de alarma: tu modelo literalmente <strong>añade ruido</strong> en vez de encontrar patrones.
+            La media gana porque es el <strong>punto de equilibrio matemático</strong> — no necesita información y nunca se equivoca de forma catastrófica.
+            <br><br>
+            Para superar a la media, tu modelo necesita <strong>información genuinamente útil</strong> sobre la relación entre las variables.
+        </p>
+    </div>
+</section>
+
+<!-- ==================== SCRIPTS ==================== -->
+<script>
+// ===== MAIN CHART =====
+(function() {
+    const canvas = document.getElementById('mainChart');
+    const ctx = canvas.getContext('2d');
+
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 400 * dpr;
+    ctx.scale(dpr, dpr);
+    const W = rect.width;
+    const H = 400;
+
+    const yReal = [10, 20, 30, 40, 50];
+    const yModel = [35, 5, 50, 10, 60];
+    const yMean = 30;
+
+    const padding = { top: 40, right: 30, bottom: 50, left: 60 };
+    const chartW = W - padding.left - padding.right;
+    const chartH = H - padding.top - padding.bottom;
+
+    function xPos(i) { return padding.left + (i / (yReal.length - 1)) * chartW; }
+    function yPos(v) { return padding.top + chartH - ((v + 5) / 75) * chartH; }
+
+    // Grid
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.lineWidth = 1;
+    for (let v = 0; v <= 70; v += 10) {
+        const y = yPos(v);
+        ctx.beginPath(); ctx.moveTo(padding.left, y); ctx.lineTo(W - padding.right, y); ctx.stroke();
+        ctx.fillStyle = '#64748b';
+        ctx.font = '12px JetBrains Mono, monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText(v, padding.left - 10, y + 4);
+    }
+
+    // X labels
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#64748b';
+    for (let i = 0; i < yReal.length; i++) {
+        ctx.fillText(`Dato ${i+1}`, xPos(i), H - 10);
+    }
+
+    // Mean line
+    ctx.setLineDash([8, 6]);
+    ctx.strokeStyle = '#06b6d4';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(padding.left, yPos(yMean));
+    ctx.lineTo(W - padding.right, yPos(yMean));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#06b6d4';
+    ctx.textAlign = 'left';
+    ctx.font = 'bold 13px Inter, sans-serif';
+    ctx.fillText('Media = 30', W - padding.right - 90, yPos(yMean) - 8);
+
+    // Error lines from mean
+    for (let i = 0; i < yReal.length; i++) {
+        ctx.strokeStyle = 'rgba(6,182,212,0.3)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(xPos(i) - 10, yPos(yReal[i]));
+        ctx.lineTo(xPos(i) - 10, yPos(yMean));
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
+    // Error lines from model
+    for (let i = 0; i < yReal.length; i++) {
+        ctx.strokeStyle = 'rgba(239,68,68,0.4)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(xPos(i) + 10, yPos(yReal[i]));
+        ctx.lineTo(xPos(i) + 10, yPos(yModel[i]));
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
+    // Real line
+    ctx.strokeStyle = '#f1f5f9';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    for (let i = 0; i < yReal.length; i++) {
+        if (i === 0) ctx.moveTo(xPos(i), yPos(yReal[i]));
+        else ctx.lineTo(xPos(i), yPos(yReal[i]));
+    }
+    ctx.stroke();
+
+    // Model line
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < yModel.length; i++) {
+        if (i === 0) ctx.moveTo(xPos(i), yPos(yModel[i]));
+        else ctx.lineTo(xPos(i), yPos(yModel[i]));
+    }
+    ctx.stroke();
+
+    // Points - Real
+    for (let i = 0; i < yReal.length; i++) {
+        ctx.beginPath();
+        ctx.arc(xPos(i), yPos(yReal[i]), 7, 0, Math.PI * 2);
+        ctx.fillStyle = '#f1f5f9';
+        ctx.fill();
+        ctx.strokeStyle = '#0d1322';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+    // Points - Model
+    for (let i = 0; i < yModel.length; i++) {
+        ctx.beginPath();
+        ctx.arc(xPos(i), yPos(yModel[i]), 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#ef4444';
+        ctx.fill();
+        ctx.strokeStyle = '#0d1322';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+
+    // Legend
+    const legendY = 20;
+    ctx.font = 'bold 12px Inter, sans-serif';
+    // Real
+    ctx.fillStyle = '#f1f5f9';
+    ctx.beginPath(); ctx.arc(padding.left + 10, legendY, 5, 0, Math.PI*2); ctx.fill();
+    ctx.textAlign = 'left';
+    ctx.fillText('Real', padding.left + 22, legendY + 4);
+    // Model
+    ctx.fillStyle = '#ef4444';
+    ctx.beginPath(); ctx.arc(padding.left + 80, legendY, 5, 0, Math.PI*2); ctx.fill();
+    ctx.fillText('Modelo', padding.left + 92, legendY + 4);
+    // Mean
+    ctx.fillStyle = '#06b6d4';
+    ctx.beginPath(); ctx.arc(padding.left + 170, legendY, 5, 0, Math.PI*2); ctx.fill();
+    ctx.fillText('Media', padding.left + 182, legendY + 4);
+})();
+
+// ===== MEAN CANDIDATES BAR CHART =====
+(function() {
+    const container = document.getElementById('meanCandidates');
+    const yReal = [10, 20, 30, 40, 50];
+    const candidates = [10, 15, 20, 25, 28, 30, 32, 35, 40, 45, 50];
+    const maxError = 3000;
+
+    candidates.forEach(c => {
+        const error = yReal.reduce((sum, y) => sum + (y - c) ** 2, 0);
+        const h = Math.max(20, (error / maxError) * 180);
+        const isBest = c === 30;
+        const color = isBest ? 'var(--accent-green)' : 'rgba(255,255,255,0.15)';
+
+        const html = `
+            <div class="candidate-bar ${isBest ? 'best' : ''}" style="height: ${h}px; background: ${color};">
+                <div class="candidate-value" style="color: ${isBest ? 'var(--accent-green)' : 'var(--text-muted)'};">${error}</div>
+                <div class="candidate-label">${c}</div>
+            </div>
+            <div class="candidate-bottom-label">${isBest ? '← MEDIA ✓' : ''}</div>
+        `;
+        const div = document.createElement('div');
+        div.style.textAlign = 'center';
+        div.innerHTML = html;
+        container.appendChild(div);
+    });
+})();
+
+// ===== R2 SLIDER =====
+(function() {
+    const slider = document.getElementById('r2Slider');
+    const display = document.getElementById('sliderDisplay');
+    const interpretation = document.getElementById('sliderInterpretation');
+    const barModel = document.getElementById('sliderBarModel');
+    const barMean = document.getElementById('sliderBarMean');
+
+    function update() {
+        const val = parseInt(slider.value);
+        const r2 = val / 100;
+        display.textContent = r2.toFixed(2);
+
+        // SS_res / SS_tot = 1 - R2
+        const ratio = 1 - r2;
+        const meanH = 100;
+        const modelH = Math.min(300, Math.max(5, meanH * ratio));
+
+        barModel.style.height = modelH + 'px';
+        barMean.style.height = meanH + 'px';
+
+        if (r2 < 0) {
+            display.style.color = '#ef4444';
+            barModel.style.background = '#ef4444';
+            const pct = Math.round(Math.abs(r2) * 100);
+            interpretation.innerHTML = `💀 Tu modelo es un <strong>${pct}%</strong> PEOR que simplemente usar la media`;
+        } else if (r2 === 0) {
+            display.style.color = '#f59e0b';
+            barModel.style.background = '#f59e0b';
+            interpretation.innerHTML = `😐 Tu modelo es <strong>exactamente igual</strong> que usar la media. No aporta nada.`;
+        } else if (r2 < 0.3) {
+            display.style.color = '#f59e0b';
+            barModel.style.background = '#f59e0b';
+            interpretation.innerHTML = `😕 Modelo pobre. Solo explica el <strong>${Math.round(r2*100)}%</strong> de la varianza.`;
+        } else if (r2 < 0.7) {
+            display.style.color = '#eab308';
+            barModel.style.background = '#eab308';
+            interpretation.innerHTML = `🤔 Modelo aceptable. Explica el <strong>${Math.round(r2*100)}%</strong> de la varianza.`;
+        } else if (r2 < 0.9) {
+            display.style.color = '#22c55e';
+            barModel.style.background = '#22c55e';
+            interpretation.innerHTML = `😊 Buen modelo. Explica el <strong>${Math.round(r2*100)}%</strong> de la varianza.`;
+        } else {
+            display.style.color = '#10b981';
+            barModel.style.background = '#10b981';
+            interpretation.innerHTML = `🎯 ¡Excelente! Explica el <strong>${Math.round(r2*100)}%</strong> de la varianza.`;
+        }
+    }
+
+    slider.addEventListener('input', update);
+    update();
+})();
+</script>
+</body>
+</html>

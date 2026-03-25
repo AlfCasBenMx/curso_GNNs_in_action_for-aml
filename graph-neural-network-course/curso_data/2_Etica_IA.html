@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Módulo 2: Ética en la Inteligencia Artificial</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+      color: #e0e0e0;
+      line-height: 1.6;
+    }
+    .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+    .hero {
+      text-align: center;
+      padding: 60px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 40px rgba(102,126,234,0.3);
+    }
+    .hero h1 { font-size: 2.5em; margin-bottom: 15px; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+    .hero p { font-size: 1.2em; opacity: 0.95; color: white; }
+    .section { background: #2a2a40; border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    .section-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+    .section-number { width: 45px; height: 45px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3em; font-weight: bold; color: white; }
+    .section-title h2 { font-size: 1.4em; color: #a5b4fc; }
+    .section-title p { font-size: 0.9em; color: #9ca3af; }
+    .analogy { background: linear-gradient(135deg, #374151, #1f2937); border-left: 4px solid #fbbf24; padding: 20px; border-radius: 0 12px 12px 0; margin: 20px 0; }
+    .analogy .header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .analogy .header .icon { font-size: 1.5em; }
+    .analogy .header .title { font-weight: bold; color: #fbbf24; }
+    .highlight { display: flex; align-items: flex-start; gap: 15px; padding: 20px; border-radius: 12px; margin: 15px 0; border-left: 4px solid; }
+    .highlight.info { background: rgba(59,130,246,0.15); border-color: #3b82f6; }
+    .highlight.warning { background: rgba(251,191,36,0.15); border-color: #fbbf24; }
+    .highlight.success { background: rgba(34,197,94,0.15); border-color: #22c55e; }
+    .highlight .icon { font-size: 1.5em; }
+    .concept-card { background: linear-gradient(135deg, #1e293b, #0f172a); padding: 25px; border-radius: 12px; margin: 15px 0; border: 1px solid rgba(96,165,250,0.3); }
+    .concept-card h4 { color: #60a5fa; margin-bottom: 10px; font-size: 1.1em; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; }
+    @media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+    .feature-card { background: linear-gradient(135deg, #1e293b, #0f172a); padding: 20px; border-radius: 12px; text-align: center; border: 1px solid rgba(139,92,246,0.3); transition: transform 0.2s, box-shadow 0.2s; }
+    .feature-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(139,92,246,0.2); }
+    .feature-card .icon { font-size: 2.2em; margin-bottom: 12px; }
+    .feature-card h4 { color: #a5b4fc; margin-bottom: 8px; }
+    .feature-card p { font-size: 0.9em; color: #9ca3af; }
+    .comparison-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.95em; }
+    .comparison-table th { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 12px; text-align: left; }
+    .comparison-table td { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .comparison-table tr:nth-child(even) { background: rgba(255,255,255,0.03); }
+    .nav-buttons { display: flex; justify-content: space-between; margin-top: 40px; flex-wrap: wrap; gap: 15px; }
+    .nav-btn { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; padding: 15px 30px; border-radius: 12px; font-weight: bold; font-size: 1em; box-shadow: 0 4px 15px rgba(59,130,246,0.4); transition: transform 0.2s, box-shadow 0.2s; }
+    .nav-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59,130,246,0.5); }
+    .nav-btn.secondary { background: linear-gradient(135deg, #6b7280, #4b5563); box-shadow: 0 4px 15px rgba(107,114,128,0.4); }
+    .quiz-container { background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 12px; padding: 25px; margin: 20px 0; border: 1px solid rgba(139,92,246,0.3); }
+    .quiz-question { color: #a5b4fc; font-size: 1.05em; margin-bottom: 15px; }
+    .quiz-option { display: block; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px 15px; margin: 8px 0; cursor: pointer; transition: all 0.2s; }
+    .quiz-option:hover { border-color: #667eea; background: rgba(102,126,234,0.1); }
+    .quiz-option.correct { border-color: #22c55e; background: rgba(34,197,94,0.2); }
+    .quiz-option.incorrect { border-color: #ef4444; background: rgba(239,68,68,0.2); }
+    .diagram-container { background: linear-gradient(135deg, #1e1b4b, #312e81); border-radius: 16px; padding: 25px; margin: 25px 0; }
+    .diagram-title { text-align: center; color: #c4b5fd; font-weight: bold; margin-bottom: 20px; font-size: 1.1em; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <h1>⚖️ Módulo 2</h1>
+      <h2 style="font-size: 1.8em; margin-bottom: 20px; color: white;">Ética en la Inteligencia Artificial</h2>
+      <p>Construir y usar IA con responsabilidad, seguridad y transparencia</p>
+      <div style="margin-top: 25px; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 10px; display: inline-block;">
+        <span style="font-size: 1.1em;">⏱️ Tiempo estimado: <strong>45-60 minutos</strong></span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-number">📋</div>
+        <div class="section-title">
+          <h2>Objetivos de Aprendizaje</h2>
+          <p>Lo que aprenderás en este módulo</p>
+        </div>
+      </div>
+      <div style="background: #020617; padding: 14px 16px; border-radius: 12px; border: 1px solid #1f2937;">
+        <h3 style="color: #e5e7eb; margin: 0 0 6px; font-size: 0.98em;">✅ Al terminar este módulo deberías poder:</h3>
+        <ul style="color: #9ca3af; font-size: 0.9em; margin: 0 0 0 18px; line-height: 1.9;">
+          <li>Identificar riesgos éticos (sesgo, privacidad, seguridad, desinformación, PI)</li>
+          <li>Aplicar principios de IA responsable (justicia, transparencia, accountability, inclusión)</li>
+          <li>Usar métricas de fairness y robustez (TPR gap, disparate impact, red teaming)</li>
+          <li>Conocer marcos regulatorios (GDPR, EU AI Act) y estándares (NIST AI RMF, ISO 42001)</li>
+          <li>Documentar con model cards / data statements y preparar una DPIA básica</li>
+          <li>Diseñar guardrails técnicos (RAG, filtros, HIL) y plan de monitoreo post-despliegue</li>
+          <li>Completar una checklist de salida a producción con seguridad, privacidad y gobernanza</li>
+        </ul>
+      </div>
+    </div>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-number">1</div>
+        <div class="section-title">
+          <h2>¿Por qué importa la ética en IA?</h2>
+          <p>Fundamentos y riesgos clave</p>
+        </div>
+      </div>
+      <p>La IA puede amplificar tanto beneficios como daños. Un modelo mal diseñado puede discriminar, filtrar datos sensibles o desinformar a millones. La ética en IA busca <strong>minimizar daños</strong>, <strong>proteger derechos</strong> y <strong>mantener la confianza</strong>.</p>
+      <div class="highlight info">
+        <div class="icon">📊</div>
+        <div>
+          <strong>Impacto:</strong> Un error de IA no escala linealmente: puede replicarse a miles de usuarios en segundos. Por eso la prevención (diseño responsable) es más barata que la remediación (incidentes, multas, reputación).
+        </div>
+      </div>
+      <div class="analogy">
+        <div class="header">
+          <span class="icon">🚦</span>
+          <span class="title">Analogía: Semáforos para el tráfico</span>
+        </div>
+        <p>Así como las ciudades necesitan semáforos y señales para que el tráfico sea seguro, los sistemas de IA necesitan reglas, controles y supervisión para operar sin causar accidentes éticos.</p>
+      </div>
+      <h3 style="color: #a5b4fc; margin: 25px 0 15px;">Riesgos más frecuentes</h3>
+      <div class="grid-2">
+        <div class="feature-card">
+          <div class="icon">🎭</div>
+          <h4>Sesgos y discriminación</h4>
+          <p>Datos históricos reflejan desigualdades. El modelo puede reforzarlas.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">🔒</div>
+          <h4>Privacidad</h4>
+          <p>Datos sensibles en prompts o entrenamientos pueden filtrarse.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">🛡️</div>
+          <h4>Seguridad</h4>
+          <p>Prompt injection, fuga de contexto, malware generado.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">📉</div>
+          <h4>Calidad y veracidad</h4>
+          <p>Alucinaciones y errores factuales pueden causar daño reputacional.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">📣</div>
+          <h4>Desinformación</h4>
+          <p>Escala masiva de contenido falso (texto, imágenes, deepfakes).</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">⚙️</div>
+          <h4>Opacidad</h4>
+          <p>Modelos como cajas negras dificultan explicar decisiones.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-number">8</div>
+        <div class="section-title">
+          <h2>Privacidad y Protección de Datos</h2>
+          <p>PII, datos sensibles y minimización</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="concept-card">
+          <h4>🔑 Buenas prácticas</h4>
+          <ul style="margin-left: 15px; line-height: 1.8; font-size: 0.92em;">
+            <li>Evita enviar PII a terceros; usa seudonimización o hashing</li>
+            <li>Implementa <strong>data minimization</strong>: solo los datos necesarios</li>
+            <li>Define retención y borrado automático (right to be forgotten)</li>
+            <li>Logs sin PII, con enmascaramiento y acceso controlado</li>
+          </ul>
+        </div>
+        <div class="concept-card">
+          <h4>🧰 Técnicas</h4>
+          <ul style="margin-left: 15px; line-height: 1.8; font-size: 0.92em;">
+            <li>Regex + clasificadores para detectar PII en prompts/respuestas</li>
+            <li>Redactar y reemplazar con tokens (e.g., &lt;EMAIL&gt;, &lt;ID&gt;)</li>
+            <li>Privacy by design: DPIA temprana, consentimiento explícito</li>
+            <li>Data residency: dónde se alojan y procesan tus datos</li>
+          </ul>
+        </div>
+      </div>
+      <div class="highlight warning">
+        <div class="icon">🚫</div>
+        <div>
+          <strong>Evita</strong> usar chats de producción para depurar: podrías extraer PII. Crea entornos de test con datos sintéticos.
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-number">9</div>
+        <div class="section-title">
+          <h2>Seguridad y Abusos</h2>
+          <p>Jailbreaks, prompt injection y supply chain</p>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="concept-card">
+          <h4>🛡️ Amenazas</h4>
+          <ul style="margin-left: 15px; line-height: 1.8; font-size: 0.9em;">
+            <li>Prompt injection y fuga de contexto</li>
+            <li>Data exfiltration en RAG (documentos internos)</li>
+            <li>Malware / código dañino generado</li>
+            <li>Model poisoning y dependencias vulnerables</li>
+          </ul>
+        </div>
+        <div class="concept-card">
+          <h4>🧰 Controles</h4>
+          <ul style="margin-left: 15px; line-height: 1.8; font-size: 0.9em;">
+            <li>Separar instrucciones del sistema y del usuario</li>
+            <li>Filtros de contenido y clasificación toxicity/PII</li>
+            <li>Validación de datos de entrada (no confiar en HTML/JS de usuarios)</li>
+            <li>Revisar dependencias y proveedores (SBOM, SLSA)</li>
+          </ul>
+        </div>
+        <div class="concept-card">
+          <h4>⚙️ Patrón seguro</h4>
+          <p style="line-height: 1.7;">Entrada → Normalizador → Clasificador de riesgo → Prompt seguro → LLM → Post-filtro → Logging/alertas.</p>
+        </div>
+      </div>
+      <div class="highlight info">
+        <div class="icon">🧪</div>
+        <div>
+          <strong>Prueba:</strong> Ejecuta jailbreaks conocidos (DAN, translation, JSON breaks) y mide el porcentaje bloqueado. Ajusta políticas y prompts del sistema.
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-number">10</div>
+        <div class="section-title">
+          <h2>Transparencia y Documentación</h2>
+          <p>Model cards y data statements</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="concept-card">
+          <h4>🗂️ Model Card</h4>
+          <ul style="margin-left: 15px; line-height: 1.8; font-size: 0.92em;">
+            <li>Propósito y casos no permitidos</li>
+            <li>Datos de entrenamiento y limitaciones</li>
+            <li>Métricas por grupo y fairness</li>
+            <li>Controles y responsables de contacto</li>
+          </ul>
+        </div>
+        <div class="concept-card">
+          <h4>📄 Data Statement</h4>
+          <ul style="margin-left: 15px; line-height: 1.8; font-size: 0.92em;">
+            <li>Origen y licencia de datos</li>
+            <li>Representatividad y ausencias</li>
+            <li>Métodos de limpieza/anonimización</li>
+            <li>Riesgos conocidos y sesgos residuales</li>
+          </ul>
+        </div>
+      </div>
+      <div class="highlight success">
+        <div class="icon">📌</div>
+        <div>
+          <strong>Entrega mínima:</strong> ficha de modelo, ficha de datos, owners, fecha de revisión, enlaces a pruebas de sesgo y seguridad.
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-number">11</div>
+        <div class="section-title">
+          <h2>Monitoreo y Métricas en Producción</h2>
+          <p>Drift, alertas y calidad continua</p>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="concept-card">
+          <h4>📊 Calidad</h4>
+          <p style="line-height: 1.7;">Tasa de alucinación, precisión factual, latencia, cobertura de fuentes en RAG.</p>
+        </div>
+        <div class="concept-card">
+          <h4>⚖️ Fairness</h4>
+          <p style="line-height: 1.7;">TPR/FPR por grupo, disparidad de outputs, quejas de usuarios segmentadas.</p>
+        </div>
+        <div class="concept-card">
+          <h4>🛡️ Seguridad</h4>
+          <p style="line-height: 1.7;">% de prompts bloqueados, intentos de data exfiltration, uso anómalo.</p>
+        </div>
+      </div>
+      <div class="highlight info">
+        <div class="icon">⏱️</div>
+        <div>
+          <strong>Cadencia:</strong> revisa métricas semanal en beta y mensual en producción. Define umbrales que disparen rollback o revisión humana.
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-number">12</div>
+        <div class="section-title">
+          <h2>Flujo de Aprobación y Humanos en el Loop</h2>
+          <p>Quién autoriza y cómo</p>
+        </div>
+      </div>
+      <div class="diagram-container">
+        <div class="diagram-title">🔄 Flujo sugerido</div>
+        <p style="text-align: center; line-height: 1.8; color: #e0e7ff;">
+          Producto define caso → Legal/Privacidad valida datos → Seguridad revisa amenazas → Responsible AI revisa sesgos → Piloto con HIL → Go/No-Go comité → Monitoreo continuo
+        </p>
+      </div>
+      <div class="highlight warning">
+        <div class="icon">🧍</div>
+        <div>
+          <strong>HIL obligatorio</strong> en: decisiones crediticias, salud, empleo, educación, outputs públicos con riesgo reputacional alto.
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-number">13</div>
+        <div class="section-title">
+          <h2>Plan de Respuesta e Incidentes</h2>
+          <p>Qué hacer cuando algo falla</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="concept-card">
+          <h4>🚨 Pasos 0-72h</h4>
+          <ul style="margin-left: 15px; line-height: 1.8; font-size: 0.92em;">
+            <li>Activar equipo (Producto, Legal, Seguridad, Comms)</li>
+            <li>Contener: desactivar endpoint o features riesgosas</li>
+            <li>Reproducir y aislar prompts/datos involucrados</li>
+            <li>Notificar a stakeholders y, si aplica, autoridades</li>
+          </ul>
+        </div>
+        <div class="concept-card">
+          <h4>🔁 Mejora continua</h4>
+          <ul style="margin-left: 15px; line-height: 1.8; font-size: 0.92em;">
+            <li>Post-mortem con causas raíz y acciones</li>
+            <li>Actualizar guardrails, datasets y documentación</li>
+            <li>Reentrenar o recalibrar modelos si hubo sesgo/drift</li>
+            <li>Capacitar al equipo en la lección aprendida</li>
+          </ul>
+        </div>
+      </div>
+      <div class="highlight info">
+        <div class="icon">📝</div>
+        <div>
+          <strong>DPIA rápida (6 pasos):</strong> 1) Propósito y datos; 2) Riesgos para sujetos; 3) Probabilidad/impacto; 4) Controles; 5) Plan de mitigación; 6) Responsable y fecha de revisión.
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-number">2</div>
+        <div class="section-title">
+          <h2>Principios de IA Responsable</h2>
+          <p>Guías que debes aplicar</p>
+        </div>
+      </div>
+      <div class="diagram-container">
+        <div class="diagram-title">🧭 Principios Clave</div>
+        <div class="grid-3" style="margin: 0;">
+          <div class="concept-card">
+            <h4>⚖️ Justicia</h4>
+            <p>Evitar discriminación. Medir y mitigar sesgos.</p>
+          </div>
+          <div class="concept-card">
+            <h4>🔍 Transparencia</h4>
+            <p>Explicar propósito, límites y datos usados.</p>
+          </div>
+          <div class="concept-card">
+            <h4>🧾 Rendición de cuentas</h4>
+            <p>Roles claros, responsables designados, trazabilidad.</p>
+          </div>
+          <div class="concept-card">
+            <h4>🔒 Privacidad</h4>
+            <p>Minimización de datos, consentimiento, seguridad.</p>
+          </div>
+          <div class="concept-card">
+            <h4>🛡️ Seguridad</h4>
+            <p>Protección contra abusos, ataques y mal uso.</p>
+          </div>
+          <div class="concept-card">
+            <h4>🤝 Inclusión</h4>
+            <p>Diseñar para diversidad de usuarios y contextos.</p>
+          </div>
+        </div>
+      </div>
+      <div class="highlight info">
+        <div class="icon">💡</div>
+        <div>
+          <strong>Tip:</strong> Ancla tu proyecto a estos principios y documenta evidencias (tests de sesgo, revisiones de privacidad, responsables, disclaimers).
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-number">3</div>
+        <div class="section-title">
+          <h2>Riesgos Detallados y Mitigaciones</h2>
+          <p>Checklist práctico</p>
+        </div>
+      </div>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Riesgo</th>
+            <th>Ejemplo</th>
+            <th>Mitigación</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Sesgo</strong></td>
+            <td>Modelo de contratación favorece un género</td>
+            <td>Balancear datos, pruebas A/B por grupo, revisar features sensibles</td>
+          </tr>
+          <tr>
+            <td><strong>Privacidad</strong></td>
+            <td>Prompt con datos personales</td>
+            <td>Enmascarar/anonimizar, no enviar PII a terceros, acuerdos de datos</td>
+          </tr>
+          <tr>
+            <td><strong>Alucinaciones</strong></td>
+            <td>Reporte con cifras inventadas</td>
+            <td>RAG con fuentes citadas, limitar temperatura, verificaciones humanas</td>
+          </tr>
+          <tr>
+            <td><strong>Seguridad</strong></td>
+            <td>Prompt injection logra filtrar contexto</td>
+            <td>Sanitizar entradas, separar instrucciones del sistema, filtros</td>
+          </tr>
+          <tr>
+            <td><strong>Propiedad intelectual</strong></td>
+            <td>Imagen generada imita marca registrada</td>
+            <td>Filtros de marcas, revisión humana en outputs públicos</td>
+          </tr>
+          <tr>
+            <td><strong>Desinformación</strong></td>
+            <td>Texto persuasivo con datos falsos</td>
+            <td>Chequear fuentes, añadir disclaimers, limitar casos de uso</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="highlight warning">
+        <div class="icon">🧪</div>
+        <div>
+          <strong>Red Teaming:</strong> Prueba tu sistema como si fueras un atacante. Intenta extraer contexto, inducir sesgos o forzar contenidos prohibidos. Documenta resultados y fixes.
+        </div>
+      </div>
+
+      <h3 style="color: #a5b4fc; margin: 22px 0 12px;">Métricas clave de fairness y robustez</h3>
+      <div class="grid-2">
+        <div class="concept-card">
+          <h4>📈 Fairness</h4>
+          <ul style="margin-left: 15px; line-height: 1.8; font-size: 0.92em;">
+            <li><strong>Disparate Impact:</strong> Ratio de positivos entre grupos (ideal 0.8-1.25)</li>
+            <li><strong>Equal Opportunity Gap:</strong> Diferencia de TPR entre grupos</li>
+            <li><strong>Calibration:</strong> Probabilidades consistentes entre subgrupos</li>
+          </ul>
+        </div>
+        <div class="concept-card">
+          <h4>🛡️ Robustez</h4>
+          <ul style="margin-left: 15px; line-height: 1.8; font-size: 0.92em;">
+            <li><strong>Adversarial prompts:</strong> % de prompts maliciosos bloqueados</li>
+            <li><strong>Hallucination rate:</strong> % de respuestas sin respaldo en fuentes</li>
+            <li><strong>PII leakage:</strong> % de respuestas que devuelven datos sensibles</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-number">4</div>
+        <div class="section-title">
+          <h2>Marcos Regulatorios y Estándares</h2>
+          <p>Qué debes conocer</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="concept-card">
+          <h4>🌍 Regulaciones</h4>
+          <ul style="margin-left: 15px; line-height: 1.8; font-size: 0.92em;">
+            <li><strong>GDPR (UE):</strong> Base legal, minimización de datos, derechos ARCO</li>
+            <li><strong>EU AI Act:</strong> Clasifica riesgo (inaceptable, alto, limitado, mínimo). Requisitos para sistemas de alto riesgo.</li>
+            <li><strong>CCPA/CPRA (California):</strong> Derechos del consumidor y opt-out</li>
+          </ul>
+        </div>
+        <div class="concept-card">
+          <h4>📐 Estándares y guías</h4>
+          <ul style="margin-left: 15px; line-height: 1.8; font-size: 0.92em;">
+            <li><strong>NIST AI Risk Management Framework:</strong> Gobernanza y controles</li>
+            <li><strong>ISO/IEC 42001:</strong> Sistemas de gestión para IA</li>
+            <li><strong>OECD AI Principles:</strong> Transparencia, robustez, accountability</li>
+          </ul>
+        </div>
+      </div>
+      <div class="highlight info">
+        <div class="icon">📄</div>
+        <div>
+          <strong>Nota:</strong> Si manejas datos de la UE o California, involucra a Legal/Privacy desde el inicio. Documenta base legal, DPIA y retención de datos.
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-number">5</div>
+        <div class="section-title">
+          <h2>Gobernanza y Buenas Prácticas</h2>
+          <p>Del diseño al despliegue</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="concept-card">
+          <h4>🏛️ Gobernanza interna</h4>
+          <ul style="margin-left: 15px; line-height: 1.8; font-size: 0.92em;">
+            <li>Define <strong>roles y RACI</strong> (Producto, Legal, Seguridad, Datos)</li>
+            <li>Revisión de <strong>casos de uso</strong> y nivel de riesgo</li>
+            <li><strong>Inventario</strong> de modelos, datasets y APIs</li>
+            <li><strong>Bitácora</strong> de prompts y versiones de modelos</li>
+          </ul>
+        </div>
+        <div class="concept-card">
+          <h4>🧪 Ciclo de vida responsable</h4>
+          <ul style="margin-left: 15px; line-height: 1.8; font-size: 0.92em;">
+            <li><strong>Diseño:</strong> Definir propósito, usuarios y no-usos</li>
+            <li><strong>Datos:</strong> Calidad, balance, anonimización</li>
+            <li><strong>Validación:</strong> Evaluaciones de sesgo, robustez y seguridad</li>
+            <li><strong>Despliegue:</strong> Guardrails, monitoreo, métricas de drift</li>
+          </ul>
+        </div>
+      </div>
+      <div class="highlight success">
+        <div class="icon">✅</div>
+        <div>
+          <strong>Prácticas recomendadas:</strong> RAG con fuentes verificadas, logs para auditoría, límites de temperatura, respuestas con citas, revisión humana para outputs sensibles.
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-number">6</div>
+        <div class="section-title">
+          <h2>Casos y Dilemas Éticos</h2>
+          <p>Discusión rápida</p>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="concept-card" style="border-left: 4px solid #fbbf24;">
+          <h4>🩺 Salud</h4>
+          <p>Modelo de diagnóstico que reduce falsos negativos pero aumenta falsos positivos. ¿Se despliega?</p>
+          <p style="font-size: 0.85em; color: #9ca3af;">Discute riesgos/beneficios y mitigaciones.</p>
+        </div>
+        <div class="concept-card" style="border-left: 4px solid #3b82f6;">
+          <h4>💼 Reclutamiento</h4>
+          <p>Clasificador de CVs entrenado con datos históricos sesgados. ¿Cómo corregirlo?</p>
+          <p style="font-size: 0.85em; color: #9ca3af;">Balanceo, fairness metrics, revisión humana.</p>
+        </div>
+        <div class="concept-card" style="border-left: 4px solid #22c55e;">
+          <h4>📣 Marketing</h4>
+          <p>GenAI genera claims de producto no verificados. ¿Quién aprueba antes de publicar?</p>
+          <p style="font-size: 0.85em; color: #9ca3af;">Flujos de aprobación y disclaimers.</p>
+        </div>
+      </div>
+      <div class="highlight warning">
+        <div class="icon">🤔</div>
+        <div>
+          <strong>Ejercicio:</strong> Elige uno de estos casos y define: 3 riesgos, 3 controles, quién aprueba y cómo monitorear.
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-number">7</div>
+        <div class="section-title">
+          <h2>Checklist Rápida antes de Desplegar</h2>
+          <p>Usa esto como guardrail mínimo</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div style="background: rgba(255,255,255,0.05); padding: 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+          <ul style="color: #e5e7eb; line-height: 1.9; font-size: 0.95em;">
+            <li>Propósito y usuarios definidos</li>
+            <li>Datos sensibles eliminados o enmascarados</li>
+            <li>Evaluación de sesgo con métricas (e.g., disparate impact)</li>
+            <li>Fuentes verificadas o RAG implementado</li>
+            <li>Guardrails de seguridad y filtros</li>
+          </ul>
+        </div>
+        <div style="background: rgba(255,255,255,0.05); padding: 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+          <ul style="color: #e5e7eb; line-height: 1.9; font-size: 0.95em;">
+            <li>Revisión humana para decisiones críticas</li>
+            <li>Logs y trazabilidad activados</li>
+            <li>Política de retención de datos y consentimiento</li>
+            <li>Plan de respuesta a incidentes</li>
+            <li>Disclaimers y comunicación al usuario final</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-number">🎯</div>
+        <div class="section-title">
+          <h2>Quiz Ético</h2>
+          <p>Prueba rápida de conocimientos</p>
+        </div>
+      </div>
+
+      <div class="quiz-container" id="quiz1">
+        <p class="quiz-question">1. ¿Cuál es el riesgo principal de usar datos históricos en un modelo de contratación?</p>
+        <div class="quiz-option" data-correct="true" onclick="checkAnswer(this)">a) Reforzar sesgos y discriminar candidatos</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">b) Aumentar el costo de cómputo</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">c) Reducir la precisión del modelo</div>
+        <div class="quiz-feedback" style="display: none; margin-top: 15px; padding: 15px; border-radius: 8px;"></div>
+      </div>
+
+      <div class="quiz-container" id="quiz2">
+        <p class="quiz-question">2. ¿Qué regulación europea exige minimización de datos y derechos ARCO?</p>
+        <div class="quiz-option" data-correct="true" onclick="checkAnswer(this)">a) GDPR</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">b) EU AI Act</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">c) CCPA</div>
+        <div class="quiz-feedback" style="display: none; margin-top: 15px; padding: 15px; border-radius: 8px;"></div>
+      </div>
+
+      <div class="quiz-container" id="quiz3">
+        <p class="quiz-question">3. ¿Qué práctica ayuda a reducir alucinaciones en un chatbot?</p>
+        <div class="quiz-option" data-correct="true" onclick="checkAnswer(this)">a) Usar RAG con fuentes verificadas</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">b) Aumentar la temperatura</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">c) Desactivar los logs</div>
+        <div class="quiz-feedback" style="display: none; margin-top: 15px; padding: 15px; border-radius: 8px;"></div>
+      </div>
+
+      <div class="quiz-container" id="quiz4">
+        <p class="quiz-question">4. ¿Qué es el prompt injection?</p>
+        <div class="quiz-option" data-correct="true" onclick="checkAnswer(this)">a) Inyectar instrucciones maliciosas para modificar el comportamiento del modelo</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">b) Un método para mejorar la precisión</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">c) Una técnica de compresión de prompts</div>
+        <div class="quiz-feedback" style="display: none; margin-top: 15px; padding: 15px; border-radius: 8px;"></div>
+      </div>
+
+      <div class="quiz-container" id="quiz5">
+        <p class="quiz-question">5. ¿Qué estándar ofrece un marco de gestión de riesgos para IA?</p>
+        <div class="quiz-option" data-correct="true" onclick="checkAnswer(this)">a) NIST AI RMF</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">b) HTML5</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">c) ISO 8601</div>
+        <div class="quiz-feedback" style="display: none; margin-top: 15px; padding: 15px; border-radius: 8px;"></div>
+      </div>
+
+      <div class="quiz-container" id="quiz6">
+        <p class="quiz-question">6. ¿Qué control reduce fuga de PII en un chatbot?</p>
+        <div class="quiz-option" data-correct="true" onclick="checkAnswer(this)">a) Enmascarar PII y limitar logging sensible</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">b) Aumentar la temperatura del modelo</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">c) Añadir más emojis a la respuesta</div>
+        <div class="quiz-feedback" style="display: none; margin-top: 15px; padding: 15px; border-radius: 8px;"></div>
+      </div>
+
+      <div class="quiz-container" id="quiz7">
+        <p class="quiz-question">7. ¿Qué documento describe propósito, datos y limitaciones de un modelo?</p>
+        <div class="quiz-option" data-correct="true" onclick="checkAnswer(this)">a) Model Card</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">b) Sitemap</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">c) Roadmap comercial</div>
+        <div class="quiz-feedback" style="display: none; margin-top: 15px; padding: 15px; border-radius: 8px;"></div>
+      </div>
+
+      <div class="quiz-container" id="quiz8">
+        <p class="quiz-question">8. ¿Qué hacer ante un incidente ético en producción?</p>
+        <div class="quiz-option" data-correct="true" onclick="checkAnswer(this)">a) Contener, activar equipo, analizar raíz y actualizar guardrails</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">b) Ignorarlo si pocos usuarios se quejan</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">c) Borrar los logs para evitar auditoría</div>
+        <div class="quiz-feedback" style="display: none; margin-top: 15px; padding: 15px; border-radius: 8px;"></div>
+      </div>
+    </section>
+
+    <section class="section" style="background: linear-gradient(135deg, #1e3a8a, #1e40af);">
+      <div class="section-header">
+        <div class="section-number" style="background: linear-gradient(135deg, #22c55e, #16a34a);">✓</div>
+        <div class="section-title">
+          <h2 style="color: #93c5fd;">Resumen del Módulo</h2>
+          <p style="color: #bfdbfe;">Puntos clave para recordar</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px;">
+          <h4 style="color: #fbbf24; margin-bottom: 15px;">📌 Conceptos Clave</h4>
+          <ul style="color: #bfdbfe; line-height: 1.8;">
+            <li>Principios: justicia, transparencia, accountability, privacidad, seguridad</li>
+            <li>Riesgos: sesgo, alucinaciones, desinformación, privacidad, seguridad</li>
+            <li>Controles: RAG, filtros, revisión humana, logs, guardrails, red teaming</li>
+            <li>Regulación y estándares: GDPR, EU AI Act (riesgo), NIST AI RMF, ISO 42001</li>
+            <li>Privacidad y seguridad: minimización de datos, PII masking, supply chain</li>
+            <li>Operación: monitoreo continuo, model cards, incident response</li>
+          </ul>
+        </div>
+        <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px;">
+          <h4 style="color: #fbbf24; margin-bottom: 15px;">🚀 Acciones Sugeridas</h4>
+          <ul style="color: #bfdbfe; line-height: 1.8;">
+            <li>Define responsables y RACI para tus proyectos de IA</li>
+            <li>Implementa RAG y logging antes de producción</li>
+            <li>Corre red-teaming básico y documenta hallazgos</li>
+            <li>Añade disclaimers y flujos de aprobación en outputs públicos</li>
+          </ul>
+        </div>
+      </div>
+      <div style="background: rgba(255,255,255,0.15); padding: 20px; border-radius: 12px; margin-top: 20px;">
+        <h4 style="color: #fbbf24; margin-bottom: 15px;">📋 Lo que Aprendiste</h4>
+        <div class="grid-3" style="margin: 0;">
+          <div style="text-align: center; padding: 12px;"><span style="font-size: 1.8em;">✅</span><p style="color: #bfdbfe; font-size: 0.9em; margin-top: 8px;">Riesgos y principios de IA</p></div>
+          <div style="text-align: center; padding: 12px;"><span style="font-size: 1.8em;">✅</span><p style="color: #bfdbfe; font-size: 0.9em; margin-top: 8px;">Marcos legales y estándares</p></div>
+          <div style="text-align: center; padding: 12px;"><span style="font-size: 1.8em;">✅</span><p style="color: #bfdbfe; font-size: 0.9em; margin-top: 8px;">Controles y checklist</p></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="nav-buttons">
+      <a href="1_Introduccion_IA_GenAI.html" class="nav-btn secondary">← Volver a Módulo 1</a>
+      <a href="3_Aplicaciones_GenAI_Negocios.html" class="nav-btn">Siguiente: Aplicaciones GenAI en Negocios →</a>
+    </div>
+
+  </div>
+
+  <script>
+    function checkAnswer(element) {
+      const container = element.parentElement;
+      const options = container.querySelectorAll('.quiz-option');
+      const feedback = container.querySelector('.quiz-feedback');
+      const isCorrect = element.dataset.correct === 'true';
+
+      options.forEach(opt => {
+        opt.style.pointerEvents = 'none';
+        if (opt.dataset.correct === 'true') {
+          opt.classList.add('correct');
+        }
+        if (opt === element && !isCorrect) {
+          opt.classList.add('incorrect');
+        }
+      });
+
+      feedback.style.display = 'block';
+      if (isCorrect) {
+        feedback.style.background = 'rgba(34, 197, 94, 0.2)';
+        feedback.innerHTML = '✅ <strong>¡Correcto!</strong> Buena práctica ética.';
+      } else {
+        feedback.style.background = 'rgba(239, 68, 68, 0.2)';
+        feedback.innerHTML = '❌ <strong>Incorrecto.</strong> Revisa la sección correspondiente para reforzar el concepto.';
+      }
+    }
+  </script>
+</body>
+</html>

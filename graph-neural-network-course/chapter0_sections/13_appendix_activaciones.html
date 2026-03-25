@@ -1,0 +1,1206 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     APÉNDICE A: FUNCIONES DE ACTIVACIÓN A FONDO
+     Guía completa con visualizaciones interactivas
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="section" id="section-activaciones" style="background: linear-gradient(135deg, #1e1b4b, #312e81); color: #e0e7ff;">
+  <div class="section-header">
+    <div class="section-number" style="background: linear-gradient(135deg, #8b5cf6, #6366f1);">A</div>
+    <div class="section-title">
+      <h2 style="color: #e9d5ff;">Funciones de Activación: A Fondo</h2>
+      <p style="color: #c4b5fd;">Softmax, ReLU, saturación y el problema del vanishing gradient</p>
+    </div>
+  </div>
+
+  <p style="margin-bottom: 18px; color: #e0e7ff; font-size: 1.05em;">
+    Las funciones de activación son el <strong style="color: #fbbf24;">corazón de las redes neuronales</strong>. 
+    Sin ellas, no importa cuántas capas apiles: el resultado sería equivalente a una única transformación lineal. 
+    En esta sección exploraremos en profundidad cada función, sus derivadas, y por qué algunas 
+    causan problemas durante el entrenamiento.
+  </p>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════
+       PARTE 1: VISUALIZACIÓN INTERACTIVA DE TODAS LAS FUNCIONES
+       ═══════════════════════════════════════════════════════════════════════════ -->
+  <div style="margin-top: 20px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.1)); border: 2px solid rgba(139, 92, 246, 0.4); border-radius: 16px; padding: 20px;">
+    <div style="font-weight: bold; color: #a78bfa; font-size: 1.2em; margin-bottom: 14px;">📊 Comparador Interactivo de Activaciones</div>
+    <p style="color: #c4b5fd; font-size: 0.92em; margin-bottom: 16px;">
+      Selecciona funciones para comparar sus formas y derivadas. Observa cómo cada una transforma los valores de entrada.
+    </p>
+    
+    <!-- Selectores de funciones -->
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;">
+      <label style="display: flex; align-items: center; gap: 6px; background: rgba(15, 23, 42, 0.6); padding: 8px 12px; border-radius: 8px; cursor: pointer;">
+        <input type="checkbox" id="act-sigmoid" checked style="accent-color: #ef4444;">
+        <span style="color: #ef4444; font-weight: bold;">Sigmoid</span>
+      </label>
+      <label style="display: flex; align-items: center; gap: 6px; background: rgba(15, 23, 42, 0.6); padding: 8px 12px; border-radius: 8px; cursor: pointer;">
+        <input type="checkbox" id="act-tanh" checked style="accent-color: #3b82f6;">
+        <span style="color: #3b82f6; font-weight: bold;">Tanh</span>
+      </label>
+      <label style="display: flex; align-items: center; gap: 6px; background: rgba(15, 23, 42, 0.6); padding: 8px 12px; border-radius: 8px; cursor: pointer;">
+        <input type="checkbox" id="act-relu" checked style="accent-color: #22c55e;">
+        <span style="color: #22c55e; font-weight: bold;">ReLU</span>
+      </label>
+      <label style="display: flex; align-items: center; gap: 6px; background: rgba(15, 23, 42, 0.6); padding: 8px 12px; border-radius: 8px; cursor: pointer;">
+        <input type="checkbox" id="act-leaky" style="accent-color: #f59e0b;">
+        <span style="color: #f59e0b; font-weight: bold;">Leaky ReLU</span>
+      </label>
+      <label style="display: flex; align-items: center; gap: 6px; background: rgba(15, 23, 42, 0.6); padding: 8px 12px; border-radius: 8px; cursor: pointer;">
+        <input type="checkbox" id="act-softplus" style="accent-color: #ec4899;">
+        <span style="color: #ec4899; font-weight: bold;">Softplus</span>
+      </label>
+      <label style="display: flex; align-items: center; gap: 6px; background: rgba(15, 23, 42, 0.6); padding: 8px 12px; border-radius: 8px; cursor: pointer;">
+        <input type="checkbox" id="act-gelu" style="accent-color: #06b6d4;">
+        <span style="color: #06b6d4; font-weight: bold;">GELU</span>
+      </label>
+    </div>
+    
+    <!-- Toggle función/derivada -->
+    <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+      <button id="show-function" style="padding: 8px 16px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">📈 Función f(x)</button>
+      <button id="show-derivative" style="padding: 8px 16px; background: rgba(99, 102, 241, 0.3); color: #c4b5fd; border: 1px solid rgba(99, 102, 241, 0.5); border-radius: 6px; font-weight: bold; cursor: pointer;">📉 Derivada f'(x)</button>
+    </div>
+    
+    <!-- Canvas para gráfico -->
+    <div style="display: grid; grid-template-columns: 1fr 280px; gap: 16px;">
+      <div style="background: rgba(15, 23, 42, 0.8); border-radius: 12px; padding: 12px;">
+        <canvas id="activation-canvas" width="500" height="320" style="width: 100%; height: auto; display: block;"></canvas>
+      </div>
+      
+      <!-- Panel de información -->
+      <div style="background: rgba(15, 23, 42, 0.8); border-radius: 12px; padding: 14px;">
+        <div style="font-weight: bold; color: #fbbf24; margin-bottom: 10px;">📋 Propiedades</div>
+        <div id="activation-info" style="font-size: 0.85em; color: #e2e8f0;">
+          <div style="margin-bottom: 8px; padding: 8px; background: rgba(239, 68, 68, 0.15); border-radius: 6px; border-left: 3px solid #ef4444;">
+            <strong style="color: #ef4444;">Sigmoid</strong><br>
+            <span style="color: #94a3b8;">Rango: (0, 1)</span><br>
+            <span style="color: #94a3b8;">Derivada máx: 0.25</span>
+          </div>
+          <div style="margin-bottom: 8px; padding: 8px; background: rgba(59, 130, 246, 0.15); border-radius: 6px; border-left: 3px solid #3b82f6;">
+            <strong style="color: #3b82f6;">Tanh</strong><br>
+            <span style="color: #94a3b8;">Rango: (-1, 1)</span><br>
+            <span style="color: #94a3b8;">Derivada máx: 1.0</span>
+          </div>
+          <div style="padding: 8px; background: rgba(34, 197, 94, 0.15); border-radius: 6px; border-left: 3px solid #22c55e;">
+            <strong style="color: #22c55e;">ReLU</strong><br>
+            <span style="color: #94a3b8;">Rango: [0, ∞)</span><br>
+            <span style="color: #94a3b8;">Derivada: 0 ó 1</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Valor en punto específico -->
+    <div style="margin-top: 14px; background: rgba(30, 27, 75, 0.5); border-radius: 10px; padding: 12px;">
+      <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <span style="color: #c4b5fd; font-weight: bold;">Evaluar en x =</span>
+        <input type="range" id="eval-x" min="-5" max="5" step="0.1" value="0" style="flex: 1; min-width: 150px; accent-color: #a78bfa;">
+        <span id="eval-x-val" style="color: #fbbf24; font-weight: bold; min-width: 40px;">0.0</span>
+      </div>
+      <div id="eval-results" style="margin-top: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; font-size: 0.85em;">
+        <!-- Resultados dinámicos -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════
+       PARTE 2: SIGMOID EN DETALLE
+       ═══════════════════════════════════════════════════════════════════════════ -->
+  <div style="margin-top: 28px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(220, 38, 38, 0.08)); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 14px; padding: 18px;">
+    <div style="font-weight: bold; color: #f87171; font-size: 1.15em; margin-bottom: 12px;">🔴 Sigmoid (Función Logística)</div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <!-- Fórmula y propiedades -->
+      <div>
+        <div style="background: rgba(15, 23, 42, 0.7); border-radius: 10px; padding: 14px; margin-bottom: 12px;">
+          <div style="text-align: center; margin-bottom: 10px;">
+            <span style="font-size: 1.4em; color: #f87171; font-family: 'Times New Roman', serif;">
+              σ(x) = <span style="display: inline-block; text-align: center; vertical-align: middle;">
+                <span style="border-bottom: 2px solid #f87171; padding-bottom: 2px;">1</span><br>
+                <span>1 + e<sup>−x</sup></span>
+              </span>
+            </span>
+          </div>
+          <div style="text-align: center; color: #94a3b8; font-size: 0.85em;">
+            Derivada: <span style="color: #f87171;">σ'(x) = σ(x) · (1 − σ(x))</span>
+          </div>
+        </div>
+        
+        <div style="font-size: 0.9em; color: #e2e8f0; line-height: 1.6;">
+          <p style="margin: 0 0 8px 0;"><strong style="color: #f87171;">Características:</strong></p>
+          <ul style="margin: 0; padding-left: 18px;">
+            <li>Comprime cualquier valor a <strong>(0, 1)</strong></li>
+            <li>Ideal para <strong>probabilidades binarias</strong></li>
+            <li>Suave y diferenciable en todo punto</li>
+            <li>Centrada en 0.5, no en 0</li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Problema de saturación -->
+      <div style="background: rgba(15, 23, 42, 0.7); border-radius: 10px; padding: 14px;">
+        <div style="font-weight: bold; color: #fca5a5; margin-bottom: 8px;">⚠️ El Problema de Saturación</div>
+        <div style="font-size: 0.88em; color: #e2e8f0; line-height: 1.5;">
+          <p style="margin: 0 0 8px 0;">Cuando |x| es grande, σ(x) se <em>aplana</em>:</p>
+          <div style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px; font-family: monospace; font-size: 0.9em; margin-bottom: 8px;">
+            σ(5) = 0.9933 → σ'(5) = <span style="color: #f87171;">0.0066</span><br>
+            σ(10) = 0.99995 → σ'(10) = <span style="color: #f87171;">0.00005</span>
+          </div>
+          <p style="margin: 0; color: #fca5a5;">
+            <strong>Resultado:</strong> Los gradientes se vuelven minúsculos → las capas profundas apenas aprenden.
+          </p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Diagrama de saturación -->
+    <div style="margin-top: 14px; background: rgba(15, 23, 42, 0.6); border-radius: 10px; padding: 14px;">
+      <div style="font-weight: bold; color: #fca5a5; margin-bottom: 10px; font-size: 0.95em;">📉 Visualización de la Derivada de Sigmoid</div>
+      <canvas id="sigmoid-derivative-canvas" width="600" height="150" style="width: 100%; height: auto; display: block;"></canvas>
+      <div style="display: flex; justify-content: space-between; font-size: 0.8em; color: #94a3b8; margin-top: 6px;">
+        <span>← Zona saturada (gradiente ≈ 0)</span>
+        <span style="color: #4ade80;">Zona activa</span>
+        <span>Zona saturada (gradiente ≈ 0) →</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════
+       PARTE 3: TANH EN DETALLE
+       ═══════════════════════════════════════════════════════════════════════════ -->
+  <div style="margin-top: 24px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(37, 99, 235, 0.08)); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 14px; padding: 18px;">
+    <div style="font-weight: bold; color: #60a5fa; font-size: 1.15em; margin-bottom: 12px;">🔵 Tanh (Tangente Hiperbólica)</div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div>
+        <div style="background: rgba(15, 23, 42, 0.7); border-radius: 10px; padding: 14px; margin-bottom: 12px;">
+          <div style="text-align: center; margin-bottom: 10px;">
+            <span style="font-size: 1.3em; color: #60a5fa; font-family: 'Times New Roman', serif;">
+              tanh(x) = <span style="display: inline-block; text-align: center; vertical-align: middle;">
+                <span style="border-bottom: 2px solid #60a5fa; padding-bottom: 2px;">e<sup>x</sup> − e<sup>−x</sup></span><br>
+                <span>e<sup>x</sup> + e<sup>−x</sup></span>
+              </span>
+              = 2σ(2x) − 1
+            </span>
+          </div>
+          <div style="text-align: center; color: #94a3b8; font-size: 0.85em;">
+            Derivada: <span style="color: #60a5fa;">tanh'(x) = 1 − tanh²(x)</span>
+          </div>
+        </div>
+        
+        <div style="font-size: 0.9em; color: #e2e8f0; line-height: 1.6;">
+          <p style="margin: 0 0 8px 0;"><strong style="color: #60a5fa;">Ventajas sobre Sigmoid:</strong></p>
+          <ul style="margin: 0; padding-left: 18px;">
+            <li>Salida <strong>centrada en 0</strong> → mejor para capas ocultas</li>
+            <li>Derivada máxima = <strong>1.0</strong> (vs 0.25 de sigmoid)</li>
+            <li>Rango simétrico <strong>(-1, 1)</strong></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div style="background: rgba(15, 23, 42, 0.7); border-radius: 10px; padding: 14px;">
+        <div style="font-weight: bold; color: #93c5fd; margin-bottom: 8px;">🔄 Sigmoid vs Tanh</div>
+        <div style="font-size: 0.88em; color: #e2e8f0; line-height: 1.5;">
+          <p style="margin: 0 0 10px 0;">Tanh es simplemente una versión <em>reescalada y desplazada</em> de Sigmoid:</p>
+          <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; font-family: monospace; font-size: 0.85em;">
+            <span style="color: #60a5fa;">tanh(x)</span> = 2 · <span style="color: #f87171;">σ(2x)</span> − 1<br><br>
+            <span style="color: #94a3b8;"># En Python:</span><br>
+            tanh = 2 * torch.sigmoid(2*x) - 1
+          </div>
+          <p style="margin: 10px 0 0 0; color: #93c5fd;">
+            <strong>Aún sufre saturación</strong>, pero menos severa que sigmoid.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════
+       PARTE 4: ReLU Y EL PROBLEMA DEL VANISHING GRADIENT
+       ═══════════════════════════════════════════════════════════════════════════ -->
+  <div style="margin-top: 24px; background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(22, 163, 74, 0.08)); border: 1px solid rgba(34, 197, 94, 0.4); border-radius: 14px; padding: 18px;">
+    <div style="font-weight: bold; color: #4ade80; font-size: 1.15em; margin-bottom: 12px;">🟢 ReLU (Rectified Linear Unit)</div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div>
+        <div style="background: rgba(15, 23, 42, 0.7); border-radius: 10px; padding: 14px; margin-bottom: 12px;">
+          <div style="text-align: center; margin-bottom: 10px;">
+            <span style="font-size: 1.4em; color: #4ade80; font-family: 'Times New Roman', serif;">
+              ReLU(x) = max(0, x)
+            </span>
+          </div>
+          <div style="text-align: center; color: #94a3b8; font-size: 0.85em;">
+            Derivada: <span style="color: #4ade80;">ReLU'(x) = 0 si x &lt; 0, sino 1</span>
+          </div>
+        </div>
+        
+        <div style="font-size: 0.9em; color: #e2e8ff; line-height: 1.6;">
+          <p style="margin: 0 0 8px 0;"><strong style="color: #4ade80;">¿Por qué revolucionó deep learning?</strong></p>
+          <ul style="margin: 0; padding-left: 18px;">
+            <li><strong>Derivada = 1</strong> en zona positiva → sin saturación</li>
+            <li>Computacionalmente <strong>muy eficiente</strong></li>
+            <li>Induce <strong>sparsity</strong> (muchas neuronas en 0)</li>
+            <li>Permite entrenar redes <strong>muy profundas</strong></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div style="background: rgba(15, 23, 42, 0.7); border-radius: 10px; padding: 14px;">
+        <div style="font-weight: bold; color: #86efac; margin-bottom: 8px;">💀 El Problema de "Dead ReLU"</div>
+        <div style="font-size: 0.88em; color: #e2e8f0; line-height: 1.5;">
+          <p style="margin: 0 0 8px 0;">Si una neurona cae en zona negativa y se queda ahí:</p>
+          <div style="background: rgba(239, 68, 68, 0.15); padding: 10px; border-radius: 6px; border-left: 3px solid #ef4444; margin-bottom: 10px;">
+            <span style="color: #fca5a5;">Para x &lt; 0: ReLU(x) = 0<br>
+            Derivada = 0 → <strong>Gradiente = 0</strong><br>
+            → ¡La neurona nunca se actualiza!</span>
+          </div>
+          <p style="margin: 0; color: #86efac;">
+            <strong>Solución:</strong> Leaky ReLU, PReLU, ELU
+          </p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Diagrama comparativo Vanishing Gradient -->
+    <div style="margin-top: 16px; background: rgba(15, 23, 42, 0.7); border-radius: 12px; padding: 16px;">
+      <div style="font-weight: bold; color: #fbbf24; margin-bottom: 12px; font-size: 1em;">⚡ Por qué ReLU mitiga el Vanishing Gradient</div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <!-- Sigmoid chain -->
+        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 10px; padding: 12px;">
+          <div style="text-align: center; color: #f87171; font-weight: bold; margin-bottom: 10px;">❌ Con Sigmoid (5 capas)</div>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; font-size: 0.8em;">
+            <span style="background: #ef4444; color: white; padding: 4px 8px; border-radius: 4px;">∂L/∂a₅</span>
+            <span style="color: #94a3b8;">×</span>
+            <span style="background: rgba(239, 68, 68, 0.6); color: white; padding: 4px 6px; border-radius: 4px;">0.25</span>
+            <span style="color: #94a3b8;">×</span>
+            <span style="background: rgba(239, 68, 68, 0.4); color: white; padding: 4px 6px; border-radius: 4px;">0.25</span>
+            <span style="color: #94a3b8;">×</span>
+            <span style="background: rgba(239, 68, 68, 0.3); color: white; padding: 4px 6px; border-radius: 4px;">0.25</span>
+            <span style="color: #94a3b8;">×</span>
+            <span style="background: rgba(239, 68, 68, 0.2); color: white; padding: 4px 6px; border-radius: 4px;">0.25</span>
+          </div>
+          <div style="text-align: center; margin-top: 10px; font-size: 0.85em;">
+            <span style="color: #94a3b8;">Gradiente final: </span>
+            <span style="color: #f87171; font-weight: bold;">0.25⁴ = 0.004</span>
+            <span style="color: #f87171;"> (¡casi nada!)</span>
+          </div>
+        </div>
+        
+        <!-- ReLU chain -->
+        <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 10px; padding: 12px;">
+          <div style="text-align: center; color: #4ade80; font-weight: bold; margin-bottom: 10px;">✓ Con ReLU (5 capas)</div>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; font-size: 0.8em;">
+            <span style="background: #22c55e; color: white; padding: 4px 8px; border-radius: 4px;">∂L/∂a₅</span>
+            <span style="color: #94a3b8;">×</span>
+            <span style="background: rgba(34, 197, 94, 0.8); color: white; padding: 4px 6px; border-radius: 4px;">1</span>
+            <span style="color: #94a3b8;">×</span>
+            <span style="background: rgba(34, 197, 94, 0.8); color: white; padding: 4px 6px; border-radius: 4px;">1</span>
+            <span style="color: #94a3b8;">×</span>
+            <span style="background: rgba(34, 197, 94, 0.8); color: white; padding: 4px 6px; border-radius: 4px;">1</span>
+            <span style="color: #94a3b8;">×</span>
+            <span style="background: rgba(34, 197, 94, 0.8); color: white; padding: 4px 6px; border-radius: 4px;">1</span>
+          </div>
+          <div style="text-align: center; margin-top: 10px; font-size: 0.85em;">
+            <span style="color: #94a3b8;">Gradiente final: </span>
+            <span style="color: #4ade80; font-weight: bold;">1⁴ = 1</span>
+            <span style="color: #4ade80;"> (¡se preserva!)</span>
+          </div>
+        </div>
+      </div>
+      
+      <div style="margin-top: 12px; padding: 10px; background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 8px;">
+        <span style="color: #fbbf24; font-weight: bold;">💡 Clave:</span>
+        <span style="color: #fef3c7; font-size: 0.9em;"> En backpropagation, los gradientes se multiplican capa por capa. Con sigmoid, cada multiplicación por ~0.25 reduce el gradiente exponencialmente. Con ReLU (en zona positiva), multiplicar por 1 preserva el gradiente.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════
+       PARTE 5: VARIANTES DE ReLU
+       ═══════════════════════════════════════════════════════════════════════════ -->
+  <div style="margin-top: 24px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.08)); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 14px; padding: 18px;">
+    <div style="font-weight: bold; color: #fbbf24; font-size: 1.15em; margin-bottom: 14px;">🟡 Variantes de ReLU</div>
+    
+    <!-- Grid 2x2 para distribución uniforme -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+      
+      <!-- Leaky ReLU -->
+      <div style="background: rgba(15, 23, 42, 0.7); border-radius: 12px; padding: 14px;">
+        <div style="font-weight: bold; color: #f59e0b; margin-bottom: 8px; font-size: 1em;">Leaky ReLU</div>
+        <div style="text-align: center; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+          <span style="font-size: 1.1em; color: #f59e0b; font-family: monospace;">f(x) = max(αx, x)</span>
+          <br><span style="color: #94a3b8; font-size: 0.85em;">donde α ≈ 0.01</span>
+        </div>
+        <canvas id="leaky-relu-canvas" width="280" height="140" style="width: 100%; height: auto; display: block; margin-bottom: 10px; border-radius: 6px;"></canvas>
+        <ul style="margin: 0; padding-left: 16px; font-size: 0.85em; color: #e2e8f0;">
+          <li>Pendiente pequeña en x &lt; 0</li>
+          <li><strong style="color: #fbbf24;">Evita dead ReLUs</strong></li>
+          <li>Derivada nunca es exactamente 0</li>
+        </ul>
+      </div>
+      
+      <!-- PReLU -->
+      <div style="background: rgba(15, 23, 42, 0.7); border-radius: 12px; padding: 14px;">
+        <div style="font-weight: bold; color: #fb923c; margin-bottom: 8px; font-size: 1em;">PReLU (Parametric ReLU)</div>
+        <div style="text-align: center; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+          <span style="font-size: 1.1em; color: #fb923c; font-family: monospace;">f(x) = max(α·x, x)</span>
+          <br><span style="color: #94a3b8; font-size: 0.85em;">α es <strong style="color: #fb923c;">aprendible</strong></span>
+        </div>
+        <canvas id="prelu-canvas" width="280" height="140" style="width: 100%; height: auto; display: block; margin-bottom: 10px; border-radius: 6px;"></canvas>
+        <ul style="margin: 0; padding-left: 16px; font-size: 0.85em; color: #e2e8f0;">
+          <li>El parámetro α se <strong>aprende</strong></li>
+          <li>Cada neurona puede tener su propio α</li>
+          <li>Más flexible que Leaky ReLU</li>
+        </ul>
+      </div>
+      
+      <!-- ELU -->
+      <div style="background: rgba(15, 23, 42, 0.7); border-radius: 12px; padding: 14px;">
+        <div style="font-weight: bold; color: #a3e635; margin-bottom: 8px; font-size: 1em;">ELU (Exponential LU)</div>
+        <div style="text-align: center; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+          <div style="font-size: 1em; color: #a3e635; font-family: monospace;">
+            f(x) = <span style="color: #94a3b8;">{</span> x <span style="color: #94a3b8;">si</span> x ≥ 0
+          </div>
+          <div style="font-size: 1em; color: #a3e635; font-family: monospace;">
+            <span style="visibility: hidden;">f(x) = {</span> α(eˣ−1) <span style="color: #94a3b8;">si</span> x &lt; 0
+          </div>
+        </div>
+        <canvas id="elu-canvas" width="280" height="140" style="width: 100%; height: auto; display: block; margin-bottom: 10px; border-radius: 6px;"></canvas>
+        <ul style="margin: 0; padding-left: 16px; font-size: 0.85em; color: #e2e8f0;">
+          <li>Suave en x = 0 (diferenciable)</li>
+          <li>Salidas pueden ser <strong>negativas</strong></li>
+          <li>Converge más rápido que ReLU</li>
+        </ul>
+      </div>
+      
+      <!-- SELU -->
+      <div style="background: rgba(15, 23, 42, 0.7); border-radius: 12px; padding: 14px;">
+        <div style="font-weight: bold; color: #22d3ee; margin-bottom: 8px; font-size: 1em;">SELU (Scaled ELU)</div>
+        <div style="text-align: center; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+          <span style="font-size: 1em; color: #22d3ee; font-family: monospace;">f(x) = λ · ELU(x, α)</span>
+          <br><span style="color: #94a3b8; font-size: 0.8em;">λ ≈ 1.0507, α ≈ 1.6733</span>
+        </div>
+        <canvas id="selu-canvas" width="280" height="140" style="width: 100%; height: auto; display: block; margin-bottom: 10px; border-radius: 6px;"></canvas>
+        <ul style="margin: 0; padding-left: 16px; font-size: 0.85em; color: #e2e8f0;">
+          <li><strong style="color: #22d3ee;">Auto-normalizante</strong></li>
+          <li>Mantiene media ≈ 0 y varianza ≈ 1</li>
+          <li>No necesita BatchNorm</li>
+        </ul>
+      </div>
+    </div>
+    
+    <!-- Comparación visual -->
+    <div style="margin-top: 14px; background: rgba(0,0,0,0.25); padding: 12px; border-radius: 10px;">
+      <div style="font-size: 0.85em; color: #fcd34d; text-align: center; margin-bottom: 8px;">
+        <strong>💡 ¿Cuándo usar cada una?</strong>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; font-size: 0.75em; text-align: center;">
+        <div style="background: rgba(245, 158, 11, 0.15); padding: 8px; border-radius: 6px;">
+          <div style="color: #f59e0b; font-weight: bold;">Leaky ReLU</div>
+          <div style="color: #fef3c7;">Opción segura, simple</div>
+        </div>
+        <div style="background: rgba(251, 146, 60, 0.15); padding: 8px; border-radius: 6px;">
+          <div style="color: #fb923c; font-weight: bold;">PReLU</div>
+          <div style="color: #fed7aa;">Si tienes muchos datos</div>
+        </div>
+        <div style="background: rgba(163, 230, 53, 0.15); padding: 8px; border-radius: 6px;">
+          <div style="color: #a3e635; font-weight: bold;">ELU</div>
+          <div style="color: #ecfccb;">Redes profundas</div>
+        </div>
+        <div style="background: rgba(34, 211, 238, 0.15); padding: 8px; border-radius: 6px;">
+          <div style="color: #22d3ee; font-weight: bold;">SELU</div>
+          <div style="color: #a5f3fc;">MLPs sin BatchNorm</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════
+       PARTE 6: SOFTPLUS Y GELU
+       ═══════════════════════════════════════════════════════════════════════════ -->
+  <div style="margin-top: 24px; background: linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(14, 165, 233, 0.08)); border: 1px solid rgba(6, 182, 212, 0.4); border-radius: 14px; padding: 18px;">
+    <div style="font-weight: bold; color: #22d3ee; font-size: 1.15em; margin-bottom: 14px;">🔷 Activaciones Modernas: Softplus y GELU</div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <!-- Softplus -->
+      <div style="background: rgba(15, 23, 42, 0.7); border-radius: 12px; padding: 14px;">
+        <div style="font-weight: bold; color: #ec4899; margin-bottom: 8px;">Softplus</div>
+        <div style="text-align: center; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; margin-bottom: 10px;">
+          <span style="font-size: 1.2em; color: #ec4899; font-family: 'Times New Roman', serif;">
+            Softplus(x) = ln(1 + e<sup>x</sup>)
+          </span>
+        </div>
+        <div style="font-size: 0.88em; color: #e2e8f0; line-height: 1.5;">
+          <p style="margin: 0 0 8px 0;"><strong style="color: #f472b6;">Idea:</strong> Una versión "suave" de ReLU</p>
+          <ul style="margin: 0; padding-left: 16px;">
+            <li>Completamente diferenciable (sin esquina)</li>
+            <li>Siempre positiva</li>
+            <li>Se aproxima a ReLU cuando x → ∞</li>
+            <li>Derivada = σ(x) = Sigmoid</li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- GELU -->
+      <div style="background: rgba(15, 23, 42, 0.7); border-radius: 12px; padding: 14px;">
+        <div style="font-weight: bold; color: #06b6d4; margin-bottom: 8px;">GELU (Gaussian Error LU)</div>
+        <div style="text-align: center; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; margin-bottom: 10px;">
+          <span style="font-size: 1em; color: #06b6d4; font-family: 'Times New Roman', serif;">
+            GELU(x) = x · Φ(x)
+          </span>
+          <br><span style="color: #94a3b8; font-size: 0.8em;">donde Φ es la CDF de N(0,1)</span>
+        </div>
+        <div style="font-size: 0.88em; color: #e2e8f0; line-height: 1.5;">
+          <p style="margin: 0 0 8px 0;"><strong style="color: #22d3ee;">Usada en:</strong> GPT, BERT, Transformers</p>
+          <ul style="margin: 0; padding-left: 16px;">
+            <li>Combina propiedades de ReLU y dropout</li>
+            <li>Suave y no-monótona</li>
+            <li>Mejor para NLP y Transformers</li>
+            <li>Aproximación: 0.5x(1 + tanh(...))</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Gráfico comparativo -->
+    <div style="margin-top: 14px; background: rgba(15, 23, 42, 0.6); border-radius: 10px; padding: 14px;">
+      <div style="font-weight: bold; color: #a5f3fc; margin-bottom: 10px;">📊 ReLU vs Softplus vs GELU</div>
+      <canvas id="modern-activations-canvas" width="600" height="180" style="width: 100%; height: auto; display: block;"></canvas>
+      <div style="display: flex; justify-content: center; gap: 20px; margin-top: 8px; font-size: 0.85em;">
+        <span><span style="color: #22c55e;">━━</span> ReLU</span>
+        <span><span style="color: #ec4899;">━━</span> Softplus</span>
+        <span><span style="color: #06b6d4;">━━</span> GELU</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════
+       PARTE 7: TABLA RESUMEN
+       ═══════════════════════════════════════════════════════════════════════════ -->
+  <div style="margin-top: 24px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 14px; padding: 18px; overflow-x: auto;">
+    <div style="font-weight: bold; color: #c4b5fd; font-size: 1.15em; margin-bottom: 14px;">📋 Tabla Comparativa de Activaciones</div>
+    
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.85em; min-width: 700px;">
+      <thead>
+        <tr style="background: rgba(99, 102, 241, 0.2);">
+          <th style="padding: 10px; text-align: left; border-bottom: 2px solid #6366f1; color: #c4b5fd;">Función</th>
+          <th style="padding: 10px; text-align: left; border-bottom: 2px solid #6366f1; color: #c4b5fd;">Rango</th>
+          <th style="padding: 10px; text-align: left; border-bottom: 2px solid #6366f1; color: #c4b5fd;">Derivada</th>
+          <th style="padding: 10px; text-align: left; border-bottom: 2px solid #6366f1; color: #c4b5fd;">Pros</th>
+          <th style="padding: 10px; text-align: left; border-bottom: 2px solid #6366f1; color: #c4b5fd;">Contras</th>
+          <th style="padding: 10px; text-align: left; border-bottom: 2px solid #6366f1; color: #c4b5fd;">Uso típico</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid rgba(99, 102, 241, 0.2);">
+          <td style="padding: 8px; color: #ef4444; font-weight: bold;">Sigmoid</td>
+          <td style="padding: 8px; color: #e2e8f0;">(0, 1)</td>
+          <td style="padding: 8px; color: #e2e8f0;">≤ 0.25</td>
+          <td style="padding: 8px; color: #4ade80;">Probabilidad binaria</td>
+          <td style="padding: 8px; color: #f87171;">Vanishing gradient, no centrada</td>
+          <td style="padding: 8px; color: #94a3b8;">Salida binaria</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(99, 102, 241, 0.2); background: rgba(30, 27, 75, 0.3);">
+          <td style="padding: 8px; color: #3b82f6; font-weight: bold;">Tanh</td>
+          <td style="padding: 8px; color: #e2e8f0;">(-1, 1)</td>
+          <td style="padding: 8px; color: #e2e8f0;">≤ 1.0</td>
+          <td style="padding: 8px; color: #4ade80;">Centrada en 0</td>
+          <td style="padding: 8px; color: #f87171;">Saturación</td>
+          <td style="padding: 8px; color: #94a3b8;">RNNs, capas ocultas</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(99, 102, 241, 0.2);">
+          <td style="padding: 8px; color: #22c55e; font-weight: bold;">ReLU</td>
+          <td style="padding: 8px; color: #e2e8f0;">[0, ∞)</td>
+          <td style="padding: 8px; color: #e2e8f0;">0 ó 1</td>
+          <td style="padding: 8px; color: #4ade80;">Rápida, sin vanishing</td>
+          <td style="padding: 8px; color: #f87171;">Dead neurons</td>
+          <td style="padding: 8px; color: #94a3b8;">CNNs, default</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(99, 102, 241, 0.2); background: rgba(30, 27, 75, 0.3);">
+          <td style="padding: 8px; color: #f59e0b; font-weight: bold;">Leaky ReLU</td>
+          <td style="padding: 8px; color: #e2e8f0;">(-∞, ∞)</td>
+          <td style="padding: 8px; color: #e2e8f0;">α ó 1</td>
+          <td style="padding: 8px; color: #4ade80;">No dead neurons</td>
+          <td style="padding: 8px; color: #f87171;">α es hiperparámetro</td>
+          <td style="padding: 8px; color: #94a3b8;">Alternativa a ReLU</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(99, 102, 241, 0.2);">
+          <td style="padding: 8px; color: #ec4899; font-weight: bold;">Softplus</td>
+          <td style="padding: 8px; color: #e2e8f0;">(0, ∞)</td>
+          <td style="padding: 8px; color: #e2e8f0;">σ(x)</td>
+          <td style="padding: 8px; color: #4ade80;">Suave, diferenciable</td>
+          <td style="padding: 8px; color: #f87171;">Más lenta que ReLU</td>
+          <td style="padding: 8px; color: #94a3b8;">Casos especiales</td>
+        </tr>
+        <tr style="background: rgba(30, 27, 75, 0.3);">
+          <td style="padding: 8px; color: #06b6d4; font-weight: bold;">GELU</td>
+          <td style="padding: 8px; color: #e2e8f0;">≈(-0.17, ∞)</td>
+          <td style="padding: 8px; color: #e2e8f0;">Suave</td>
+          <td style="padding: 8px; color: #4ade80;">Mejor para Transformers</td>
+          <td style="padding: 8px; color: #f87171;">Computación extra</td>
+          <td style="padding: 8px; color: #94a3b8;">BERT, GPT</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Resumen final -->
+  <div class="highlight" style="margin-top: 24px; background: linear-gradient(135deg, #312e81, #3730a3); border-color: #818cf8;">
+    <div class="icon">🎓</div>
+    <div style="color: #e0e7ff;">
+      <strong style="color: #c4b5fd;">Reglas prácticas:</strong><br>
+      <span style="font-size: 0.95em;">
+        • <strong>Capas ocultas:</strong> Empieza con <span style="color: #4ade80;">ReLU</span>. Si tienes dead neurons, prueba <span style="color: #f59e0b;">Leaky ReLU</span> o <span style="color: #06b6d4;">GELU</span>.<br>
+        • <strong>Clasificación binaria (salida):</strong> <span style="color: #ef4444;">Sigmoid</span><br>
+        • <strong>Clasificación multiclase (salida):</strong> <span style="color: #c4b5fd;">Softmax</span><br>
+        • <strong>Transformers/NLP:</strong> <span style="color: #06b6d4;">GELU</span><br>
+        • <strong>RNNs/LSTMs:</strong> <span style="color: #3b82f6;">Tanh</span> (puertas) + <span style="color: #ef4444;">Sigmoid</span> (gates)
+      </span>
+    </div>
+  </div>
+</section>
+
+<script>
+(function() {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FUNCIONES DE ACTIVACIÓN
+  // ═══════════════════════════════════════════════════════════════════════════
+  function sigmoid(x) { return 1 / (1 + Math.exp(-x)); }
+  function sigmoidDeriv(x) { var s = sigmoid(x); return s * (1 - s); }
+  function tanh(x) { return Math.tanh(x); }
+  function tanhDeriv(x) { var t = Math.tanh(x); return 1 - t * t; }
+  function relu(x) { return Math.max(0, x); }
+  function reluDeriv(x) { return x > 0 ? 1 : 0; }
+  function leakyRelu(x, alpha) { alpha = alpha || 0.01; return x > 0 ? x : alpha * x; }
+  function leakyReluDeriv(x, alpha) { alpha = alpha || 0.01; return x > 0 ? 1 : alpha; }
+  function softplus(x) { return Math.log(1 + Math.exp(x)); }
+  function softplusDeriv(x) { return sigmoid(x); }
+  function gelu(x) {
+    return 0.5 * x * (1 + Math.tanh(Math.sqrt(2 / Math.PI) * (x + 0.044715 * x * x * x)));
+  }
+  function geluDeriv(x) {
+    var cdf = 0.5 * (1 + Math.tanh(Math.sqrt(2 / Math.PI) * (x + 0.044715 * x * x * x)));
+    var pdf = Math.exp(-0.5 * x * x) / Math.sqrt(2 * Math.PI);
+    return cdf + x * pdf;
+  }
+
+  var activations = {
+    sigmoid: { fn: sigmoid, deriv: sigmoidDeriv, color: '#ef4444', name: 'Sigmoid' },
+    tanh: { fn: tanh, deriv: tanhDeriv, color: '#3b82f6', name: 'Tanh' },
+    relu: { fn: relu, deriv: reluDeriv, color: '#22c55e', name: 'ReLU' },
+    leaky: { fn: leakyRelu, deriv: leakyReluDeriv, color: '#f59e0b', name: 'Leaky ReLU' },
+    softplus: { fn: softplus, deriv: softplusDeriv, color: '#ec4899', name: 'Softplus' },
+    gelu: { fn: gelu, deriv: geluDeriv, color: '#06b6d4', name: 'GELU' }
+  };
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // COMPARADOR PRINCIPAL
+  // ═══════════════════════════════════════════════════════════════════════════
+  var mainCanvas = document.getElementById('activation-canvas');
+  var mainCtx = mainCanvas ? mainCanvas.getContext('2d') : null;
+  var showDerivative = false;
+
+  var checkboxes = {
+    sigmoid: document.getElementById('act-sigmoid'),
+    tanh: document.getElementById('act-tanh'),
+    relu: document.getElementById('act-relu'),
+    leaky: document.getElementById('act-leaky'),
+    softplus: document.getElementById('act-softplus'),
+    gelu: document.getElementById('act-gelu')
+  };
+
+  var showFunctionBtn = document.getElementById('show-function');
+  var showDerivativeBtn = document.getElementById('show-derivative');
+  var evalXSlider = document.getElementById('eval-x');
+  var evalXVal = document.getElementById('eval-x-val');
+  var evalResults = document.getElementById('eval-results');
+
+  function getSelectedActivations() {
+    var selected = [];
+    for (var key in checkboxes) {
+      if (checkboxes[key] && checkboxes[key].checked) {
+        selected.push(key);
+      }
+    }
+    return selected;
+  }
+
+  function drawMainGraph() {
+    if (!mainCtx) return;
+    var w = mainCanvas.width;
+    var h = mainCanvas.height;
+    mainCtx.clearRect(0, 0, w, h);
+
+    // Background
+    mainCtx.fillStyle = '#0f172a';
+    mainCtx.fillRect(0, 0, w, h);
+
+    // Grid
+    mainCtx.strokeStyle = 'rgba(99, 102, 241, 0.2)';
+    mainCtx.lineWidth = 1;
+    var xScale = w / 10; // -5 to 5
+    var yScale = h / 6;  // -3 to 3
+    var xCenter = w / 2;
+    var yCenter = h / 2;
+
+    // Vertical grid lines
+    for (var i = -5; i <= 5; i++) {
+      var x = xCenter + i * xScale;
+      mainCtx.beginPath();
+      mainCtx.moveTo(x, 0);
+      mainCtx.lineTo(x, h);
+      mainCtx.stroke();
+    }
+    // Horizontal grid lines
+    for (var j = -3; j <= 3; j++) {
+      var y = yCenter - j * yScale;
+      mainCtx.beginPath();
+      mainCtx.moveTo(0, y);
+      mainCtx.lineTo(w, y);
+      mainCtx.stroke();
+    }
+
+    // Axes
+    mainCtx.strokeStyle = 'rgba(148, 163, 184, 0.6)';
+    mainCtx.lineWidth = 2;
+    mainCtx.beginPath();
+    mainCtx.moveTo(0, yCenter);
+    mainCtx.lineTo(w, yCenter);
+    mainCtx.stroke();
+    mainCtx.beginPath();
+    mainCtx.moveTo(xCenter, 0);
+    mainCtx.lineTo(xCenter, h);
+    mainCtx.stroke();
+
+    // Draw selected activations
+    var selected = getSelectedActivations();
+    for (var k = 0; k < selected.length; k++) {
+      var key = selected[k];
+      var act = activations[key];
+      var fn = showDerivative ? act.deriv : act.fn;
+
+      mainCtx.strokeStyle = act.color;
+      mainCtx.lineWidth = 2.5;
+      mainCtx.beginPath();
+
+      for (var px = 0; px < w; px++) {
+        var xVal = (px - xCenter) / xScale;
+        var yVal = fn(xVal);
+        var py = yCenter - yVal * yScale;
+        if (px === 0) {
+          mainCtx.moveTo(px, py);
+        } else {
+          mainCtx.lineTo(px, py);
+        }
+      }
+      mainCtx.stroke();
+    }
+
+    // Draw points at current x position from slider
+    var currentX = evalXSlider ? parseFloat(evalXSlider.value) : 0;
+    var pointPx = xCenter + currentX * xScale;
+    
+    // Vertical line at current x
+    mainCtx.strokeStyle = 'rgba(251, 191, 36, 0.4)';
+    mainCtx.lineWidth = 1;
+    mainCtx.setLineDash([5, 5]);
+    mainCtx.beginPath();
+    mainCtx.moveTo(pointPx, 0);
+    mainCtx.lineTo(pointPx, h);
+    mainCtx.stroke();
+    mainCtx.setLineDash([]);
+
+    // Draw points for each selected activation
+    for (var p = 0; p < selected.length; p++) {
+      var pKey = selected[p];
+      var pAct = activations[pKey];
+      var pFn = showDerivative ? pAct.deriv : pAct.fn;
+      var pYVal = pFn(currentX);
+      var pPy = yCenter - pYVal * yScale;
+
+      // Outer glow
+      mainCtx.beginPath();
+      mainCtx.arc(pointPx, pPy, 10, 0, 2 * Math.PI);
+      mainCtx.fillStyle = pAct.color.replace(')', ', 0.3)').replace('rgb', 'rgba').replace('#', '');
+      var gradient = mainCtx.createRadialGradient(pointPx, pPy, 0, pointPx, pPy, 12);
+      gradient.addColorStop(0, pAct.color);
+      gradient.addColorStop(0.4, pAct.color);
+      gradient.addColorStop(1, 'transparent');
+      mainCtx.fillStyle = gradient;
+      mainCtx.fill();
+
+      // Main point
+      mainCtx.beginPath();
+      mainCtx.arc(pointPx, pPy, 6, 0, 2 * Math.PI);
+      mainCtx.fillStyle = pAct.color;
+      mainCtx.fill();
+      mainCtx.strokeStyle = '#ffffff';
+      mainCtx.lineWidth = 2;
+      mainCtx.stroke();
+
+      // Inner highlight
+      mainCtx.beginPath();
+      mainCtx.arc(pointPx - 2, pPy - 2, 2, 0, 2 * Math.PI);
+      mainCtx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      mainCtx.fill();
+    }
+
+    // Labels
+    mainCtx.fillStyle = '#94a3b8';
+    mainCtx.font = '11px sans-serif';
+    mainCtx.fillText('x', w - 15, yCenter - 5);
+    mainCtx.fillText(showDerivative ? "f'(x)" : 'f(x)', xCenter + 5, 15);
+    mainCtx.fillText('-5', 5, yCenter + 15);
+    mainCtx.fillText('5', w - 18, yCenter + 15);
+    mainCtx.fillText('1', xCenter + 5, yCenter - yScale + 3);
+    mainCtx.fillText('-1', xCenter + 5, yCenter + yScale + 3);
+  }
+
+  function updateEvalResults() {
+    if (!evalResults || !evalXSlider) return;
+    var x = parseFloat(evalXSlider.value);
+    if (evalXVal) evalXVal.textContent = x.toFixed(1);
+
+    var selected = getSelectedActivations();
+    var html = '';
+    for (var i = 0; i < selected.length; i++) {
+      var key = selected[i];
+      var act = activations[key];
+      var fn = showDerivative ? act.deriv : act.fn;
+      var val = fn(x);
+      html += '<div style="background: rgba(15, 23, 42, 0.6); padding: 6px 10px; border-radius: 6px; border-left: 3px solid ' + act.color + ';">';
+      html += '<span style="color: ' + act.color + '; font-weight: bold;">' + act.name + '</span><br>';
+      html += '<span style="color: #e2e8f0;">' + val.toFixed(4) + '</span>';
+      html += '</div>';
+    }
+    evalResults.innerHTML = html;
+  }
+
+  // Event listeners
+  for (var key in checkboxes) {
+    if (checkboxes[key]) {
+      checkboxes[key].addEventListener('change', function() {
+        drawMainGraph();
+        updateEvalResults();
+      });
+    }
+  }
+
+  if (showFunctionBtn) {
+    showFunctionBtn.addEventListener('click', function() {
+      showDerivative = false;
+      showFunctionBtn.style.background = 'linear-gradient(135deg, #6366f1, #8b5cf6)';
+      showFunctionBtn.style.border = 'none';
+      showFunctionBtn.style.color = 'white';
+      showDerivativeBtn.style.background = 'rgba(99, 102, 241, 0.3)';
+      showDerivativeBtn.style.border = '1px solid rgba(99, 102, 241, 0.5)';
+      showDerivativeBtn.style.color = '#c4b5fd';
+      drawMainGraph();
+      updateEvalResults();
+    });
+  }
+
+  if (showDerivativeBtn) {
+    showDerivativeBtn.addEventListener('click', function() {
+      showDerivative = true;
+      showDerivativeBtn.style.background = 'linear-gradient(135deg, #6366f1, #8b5cf6)';
+      showDerivativeBtn.style.border = 'none';
+      showDerivativeBtn.style.color = 'white';
+      showFunctionBtn.style.background = 'rgba(99, 102, 241, 0.3)';
+      showFunctionBtn.style.border = '1px solid rgba(99, 102, 241, 0.5)';
+      showFunctionBtn.style.color = '#c4b5fd';
+      drawMainGraph();
+      updateEvalResults();
+    });
+  }
+
+  if (evalXSlider) {
+    evalXSlider.addEventListener('input', function() {
+      drawMainGraph();
+      updateEvalResults();
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GRÁFICO DE DERIVADA DE SIGMOID
+  // ═══════════════════════════════════════════════════════════════════════════
+  var sigmoidDerivCanvas = document.getElementById('sigmoid-derivative-canvas');
+  if (sigmoidDerivCanvas) {
+    var ctx = sigmoidDerivCanvas.getContext('2d');
+    var w = sigmoidDerivCanvas.width;
+    var h = sigmoidDerivCanvas.height;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, w, h);
+
+    // Zonas saturadas (background)
+    ctx.fillStyle = 'rgba(239, 68, 68, 0.15)';
+    ctx.fillRect(0, 0, w * 0.25, h);
+    ctx.fillRect(w * 0.75, 0, w * 0.25, h);
+
+    // Zona activa
+    ctx.fillStyle = 'rgba(34, 197, 94, 0.15)';
+    ctx.fillRect(w * 0.25, 0, w * 0.5, h);
+
+    // Dibujar derivada de sigmoid
+    ctx.strokeStyle = '#f87171';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+
+    var xScale = w / 12; // -6 to 6
+    var yScale = h / 0.3;
+    var xCenter = w / 2;
+
+    for (var px = 0; px < w; px++) {
+      var xVal = (px - xCenter) / xScale;
+      var yVal = sigmoidDeriv(xVal);
+      var py = h - yVal * yScale - 10;
+      if (px === 0) {
+        ctx.moveTo(px, py);
+      } else {
+        ctx.lineTo(px, py);
+      }
+    }
+    ctx.stroke();
+
+    // Línea de máximo (0.25)
+    ctx.strokeStyle = 'rgba(251, 191, 36, 0.6)';
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(0, h - 0.25 * yScale - 10);
+    ctx.lineTo(w, h - 0.25 * yScale - 10);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Labels
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = '11px sans-serif';
+    ctx.fillText('máx = 0.25', w - 75, h - 0.25 * yScale - 15);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GRÁFICO LEAKY ReLU
+  // ═══════════════════════════════════════════════════════════════════════════
+  var leakyCanvas = document.getElementById('leaky-relu-canvas');
+  if (leakyCanvas) {
+    var ctx = leakyCanvas.getContext('2d');
+    var w = leakyCanvas.width;
+    var h = leakyCanvas.height;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, w, h);
+
+    var xScale = w / 6;
+    var yScale = h / 4;
+    var xCenter = w / 2;
+    var yCenter = h * 0.7;
+
+    // Grid
+    ctx.strokeStyle = 'rgba(99, 102, 241, 0.2)';
+    ctx.beginPath();
+    ctx.moveTo(0, yCenter);
+    ctx.lineTo(w, yCenter);
+    ctx.moveTo(xCenter, 0);
+    ctx.lineTo(xCenter, h);
+    ctx.stroke();
+
+    // ReLU (para comparar)
+    ctx.strokeStyle = 'rgba(34, 197, 94, 0.4)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (var px = 0; px < w; px++) {
+      var xVal = (px - xCenter) / xScale;
+      var yVal = relu(xVal);
+      var py = yCenter - yVal * yScale;
+      if (px === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Leaky ReLU
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    for (var px = 0; px < w; px++) {
+      var xVal = (px - xCenter) / xScale;
+      var yVal = leakyRelu(xVal, 0.1);
+      var py = yCenter - yVal * yScale;
+      if (px === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Label
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = '10px sans-serif';
+    ctx.fillText('α=0.1', 15, h - 10);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GRÁFICO ELU
+  // ═══════════════════════════════════════════════════════════════════════════
+  var eluCanvas = document.getElementById('elu-canvas');
+  if (eluCanvas) {
+    var ctx = eluCanvas.getContext('2d');
+    var w = eluCanvas.width;
+    var h = eluCanvas.height;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, w, h);
+
+    var xScale = w / 6;
+    var yScale = h / 4;
+    var xCenter = w / 2;
+    var yCenter = h * 0.55;
+
+    // Grid
+    ctx.strokeStyle = 'rgba(99, 102, 241, 0.2)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, yCenter);
+    ctx.lineTo(w, yCenter);
+    ctx.moveTo(xCenter, 0);
+    ctx.lineTo(xCenter, h);
+    ctx.stroke();
+
+    function elu(x, alpha) {
+      alpha = alpha || 1;
+      return x >= 0 ? x : alpha * (Math.exp(x) - 1);
+    }
+
+    // ReLU para comparar
+    ctx.strokeStyle = 'rgba(34, 197, 94, 0.4)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (var px = 0; px < w; px++) {
+      var xVal = (px - xCenter) / xScale;
+      var yVal = relu(xVal);
+      var py = yCenter - yVal * yScale;
+      py = Math.max(5, Math.min(h - 5, py));
+      if (px === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // ELU
+    ctx.strokeStyle = '#a3e635';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    for (var px = 0; px < w; px++) {
+      var xVal = (px - xCenter) / xScale;
+      var yVal = elu(xVal, 1);
+      var py = yCenter - yVal * yScale;
+      py = Math.max(5, Math.min(h - 5, py));
+      if (px === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Asymptote at -α (typically -1)
+    ctx.strokeStyle = 'rgba(163, 230, 53, 0.4)';
+    ctx.setLineDash([4, 4]);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, yCenter + yScale);
+    ctx.lineTo(xCenter, yCenter + yScale);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Legend
+    ctx.font = '9px sans-serif';
+    ctx.fillStyle = 'rgba(34, 197, 94, 0.6)';
+    ctx.fillText('ReLU', 8, 15);
+    ctx.fillStyle = '#a3e635';
+    ctx.fillText('ELU', 8, 28);
+    ctx.fillStyle = 'rgba(163, 230, 53, 0.6)';
+    ctx.fillText('límite: -α', 8, h - 8);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GRÁFICO PReLU (múltiples alphas)
+  // ═══════════════════════════════════════════════════════════════════════════
+  var preluCanvas = document.getElementById('prelu-canvas');
+  if (preluCanvas) {
+    var ctx = preluCanvas.getContext('2d');
+    var w = preluCanvas.width;
+    var h = preluCanvas.height;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, w, h);
+
+    var xScale = w / 6;
+    var yScale = h / 4;
+    var xCenter = w / 2;
+    var yCenter = h * 0.65;
+
+    // Grid
+    ctx.strokeStyle = 'rgba(99, 102, 241, 0.2)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, yCenter);
+    ctx.lineTo(w, yCenter);
+    ctx.moveTo(xCenter, 0);
+    ctx.lineTo(xCenter, h);
+    ctx.stroke();
+
+    // Mostrar diferentes valores de alpha aprendidos
+    var alphas = [
+      { val: 0.05, color: 'rgba(251, 146, 60, 0.4)', label: 'α=0.05' },
+      { val: 0.2, color: 'rgba(251, 146, 60, 0.6)', label: 'α=0.2' },
+      { val: 0.4, color: '#fb923c', label: 'α=0.4 (aprendido)' }
+    ];
+
+    for (var a = 0; a < alphas.length; a++) {
+      ctx.strokeStyle = alphas[a].color;
+      ctx.lineWidth = a === 2 ? 3 : 2;
+      ctx.beginPath();
+      for (var px = 0; px < w; px++) {
+        var xVal = (px - xCenter) / xScale;
+        var yVal = xVal >= 0 ? xVal : alphas[a].val * xVal;
+        var py = yCenter - yVal * yScale;
+        py = Math.max(5, Math.min(h - 5, py));
+        if (px === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    }
+
+    // Legend
+    ctx.fillStyle = '#fb923c';
+    ctx.font = '9px sans-serif';
+    ctx.fillText('α varía por neurona', 8, h - 8);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GRÁFICO SELU
+  // ═══════════════════════════════════════════════════════════════════════════
+  var seluCanvas = document.getElementById('selu-canvas');
+  if (seluCanvas) {
+    var ctx = seluCanvas.getContext('2d');
+    var w = seluCanvas.width;
+    var h = seluCanvas.height;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, w, h);
+
+    var xScale = w / 6;
+    var yScale = h / 5;
+    var xCenter = w / 2;
+    var yCenter = h * 0.55;
+
+    // Grid
+    ctx.strokeStyle = 'rgba(99, 102, 241, 0.2)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, yCenter);
+    ctx.lineTo(w, yCenter);
+    ctx.moveTo(xCenter, 0);
+    ctx.lineTo(xCenter, h);
+    ctx.stroke();
+
+    var lambda = 1.0507;
+    var alphaSelu = 1.6733;
+
+    function selu(x) {
+      return x >= 0 ? lambda * x : lambda * alphaSelu * (Math.exp(x) - 1);
+    }
+
+    // ELU para comparar
+    ctx.strokeStyle = 'rgba(163, 230, 53, 0.4)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (var px = 0; px < w; px++) {
+      var xVal = (px - xCenter) / xScale;
+      var yVal = elu(xVal, 1);
+      var py = yCenter - yVal * yScale;
+      py = Math.max(5, Math.min(h - 5, py));
+      if (px === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // SELU
+    ctx.strokeStyle = '#22d3ee';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    for (var px = 0; px < w; px++) {
+      var xVal = (px - xCenter) / xScale;
+      var yVal = selu(xVal);
+      var py = yCenter - yVal * yScale;
+      py = Math.max(5, Math.min(h - 5, py));
+      if (px === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Legend
+    ctx.font = '9px sans-serif';
+    ctx.fillStyle = 'rgba(163, 230, 53, 0.6)';
+    ctx.fillText('ELU', 8, 15);
+    ctx.fillStyle = '#22d3ee';
+    ctx.fillText('SELU (escalado)', 8, 28);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GRÁFICO MODERNO (ReLU vs Softplus vs GELU)
+  // ═══════════════════════════════════════════════════════════════════════════
+  var modernCanvas = document.getElementById('modern-activations-canvas');
+  if (modernCanvas) {
+    var ctx = modernCanvas.getContext('2d');
+    var w = modernCanvas.width;
+    var h = modernCanvas.height;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, w, h);
+
+    var xScale = w / 8;
+    var yScale = h / 4;
+    var xCenter = w / 2;
+    var yCenter = h * 0.75;
+
+    // Grid
+    ctx.strokeStyle = 'rgba(99, 102, 241, 0.2)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, yCenter);
+    ctx.lineTo(w, yCenter);
+    ctx.moveTo(xCenter, 0);
+    ctx.lineTo(xCenter, h);
+    ctx.stroke();
+
+    var funcs = [
+      { fn: relu, color: '#22c55e', name: 'ReLU' },
+      { fn: softplus, color: '#ec4899', name: 'Softplus' },
+      { fn: gelu, color: '#06b6d4', name: 'GELU' }
+    ];
+
+    for (var f = 0; f < funcs.length; f++) {
+      ctx.strokeStyle = funcs[f].color;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+
+      for (var px = 0; px < w; px++) {
+        var xVal = (px - xCenter) / xScale;
+        var yVal = funcs[f].fn(xVal);
+        var py = yCenter - yVal * yScale;
+        py = Math.max(5, Math.min(h - 5, py));
+        if (px === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    }
+
+    // Labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px sans-serif';
+    ctx.fillText('-4', xCenter - 4 * xScale - 5, yCenter + 15);
+    ctx.fillText('4', xCenter + 4 * xScale - 5, yCenter + 15);
+    ctx.fillText('2', xCenter + 5, yCenter - 2 * yScale + 4);
+  }
+
+  // Inicializar
+  drawMainGraph();
+  updateEvalResults();
+})();
+</script>

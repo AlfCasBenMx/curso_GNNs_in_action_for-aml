@@ -1,0 +1,112 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECCIÓN 10: EL LOOP DE ENTRENAMIENTO
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-number">10</div>
+    <div class="section-title">
+      <h2>El Loop de Entrenamiento Completo</h2>
+      <p>Juntando todas las piezas</p>
+    </div>
+  </div>
+
+  <div style="background: #020617; padding: 14px 16px; border-radius: 12px; margin: 16px 0; border: 1px solid #1f2937;">
+    <h3 style="color: #e5e7eb; margin: 0 0 6px; font-size: 0.98em;">✅ Al terminar esta sección deberías poder:</h3>
+    <ul style="color: #9ca3af; font-size: 0.9em; margin: 0 0 0 18px; line-height: 1.6;">
+      <li>Escribir el loop de entrenamiento estándar: <code>zero_grad()</code> → forward → cálculo de loss → <code>backward()</code> → <code>step()</code>.</li>
+      <li>Identificar en un fragmento de código qué líneas corresponden a cada una de esas etapas.</li>
+      <li>Ajustar el número de épocas y observar cómo evolucionan el loss y la exactitud a lo largo del entrenamiento.</li>
+    </ul>
+  </div>
+
+  <div class="exec-prompt" style="background: linear-gradient(135deg, #1e293b, #334155); border-left-color: #fbbf24; color: #e2e8f0;">
+    <span class="icon">🏁</span>
+    <div>
+      <strong style="color: #fbbf24;">Ahora vas a montar el loop de entrenamiento completo en tu propio notebook.</strong>
+      <div class="sub" style="color: #cbd5e1;">Copia y pega el bloque de <strong>c&oacute;digo para copiar y pegar</strong> de abajo, ejec&uacute;talo y luego experim&eacute;ntalo cambiando el modelo, los datos o el n&uacute;mero de &eacute;pocas.</div>
+    </div>
+  </div>
+
+  <div style="background: linear-gradient(135deg, #1e293b, #334155); border-radius: 16px; padding: 25px; margin: 25px 0;">
+    <h4 style="text-align: center; color: white; margin-bottom: 20px;">🔄 El Ciclo de Aprendizaje</h4>
+    <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 8px;">
+      <div style="background: #ef4444; color: white; padding: 10px 16px; border-radius: 10px; text-align: center;"><strong>1</strong><br><span style="font-size: 0.8em;">zero_grad()</span></div>
+      <span style="color: #fbbf24; font-size: 1.3em;">→</span>
+      <div style="background: #f59e0b; color: white; padding: 10px 16px; border-radius: 10px; text-align: center;"><strong>2</strong><br><span style="font-size: 0.8em;">Forward</span></div>
+      <span style="color: #fbbf24; font-size: 1.3em;">→</span>
+      <div style="background: #10b981; color: white; padding: 10px 16px; border-radius: 10px; text-align: center;"><strong>3</strong><br><span style="font-size: 0.8em;">Loss</span></div>
+      <span style="color: #fbbf24; font-size: 1.3em;">→</span>
+      <div style="background: #3b82f6; color: white; padding: 10px 16px; border-radius: 10px; text-align: center;"><strong>4</strong><br><span style="font-size: 0.8em;">backward()</span></div>
+      <span style="color: #fbbf24; font-size: 1.3em;">→</span>
+      <div style="background: #a855f7; color: white; padding: 10px 16px; border-radius: 10px; text-align: center;"><strong>5</strong><br><span style="font-size: 0.8em;">step()</span></div>
+      <span style="color: #fbbf24; font-size: 1.3em;">↺</span>
+    </div>
+  </div>
+
+  <div style="background: #020617; padding: 18px 20px; border-radius: 12px; margin: 20px 0; border: 1px solid #1f2937;">
+    <h4 style="color: #e5e7eb; margin: 0 0 8px;">📋 Código para copiar y pegar: loop de entrenamiento completo</h4>
+    <p style="color: #9ca3af; font-size: 0.9em; margin: 0 0 8px;">
+      Este ejemplo construye un <strong>dataset sint&eacute;tico</strong>, define un modelo sencillo de clasificaci&oacute;n binaria
+      y recorre el loop: <strong>forward → loss → backward → step</strong>, imprimiendo el loss y la exactitud.
+    </p>
+    <div style="background: #0b1120; border-radius: 10px; padding: 10px 12px; border: 1px solid #1e293b; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.8em; color: #e5e7eb; overflow-x: auto;">
+      <pre style="margin: 0;"><code># Dataset de ejemplo: puntos 2D + etiquetas 0/1
+N = 200
+X_train = torch.randn(N, 2)
+
+w_true = torch.tensor([[2.0, -3.0]]).t()
+b_true = torch.tensor([0.5])
+
+logits_true = X_train @ w_true + b_true
+y_train = (logits_true &gt; 0).float().unsqueeze(1)
+
+print("Proporci&oacute;n clase 1:", y_train.mean().item())
+
+# Modelo: neurona log&iacute;stica 2 -&gt; 1
+modelo = nn.Sequential(
+    nn.Linear(2, 1),
+    nn.Sigmoid()
+)
+
+criterio = nn.BCELoss()
+opt = torch.optim.SGD(modelo.parameters(), lr=0.1)
+
+for epoca in range(200):
+    # 1. Forward
+    y_pred = modelo(X_train)
+    loss = criterio(y_pred, y_train)
+
+    # 2. Backward
+    opt.zero_grad()
+    loss.backward()
+    opt.step()
+
+    if epoca % 20 == 0:
+        print(f"Epoch {epoca} | Loss = {loss.item():.4f}")
+
+with torch.no_grad():
+    probs = modelo(X_train)
+    preds = (probs &gt;= 0.5).float()
+    acc = (preds == y_train).float().mean().item()
+
+print(f"Exactitud final: {acc:.3f}")</code></pre>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <pre><span class="keyword">for</span> epoch <span class="keyword">in</span> range(<span class="number">100</span>):
+    optimizer.zero_grad()          <span class="comment"># 1. Limpiar gradientes</span>
+    predictions = model(X_train)   <span class="comment"># 2. Forward pass</span>
+    loss = criterion(predictions, y_train)  <span class="comment"># 3. Calcular loss</span>
+    loss.backward()                <span class="comment"># 4. Backward pass</span>
+    optimizer.step()               <span class="comment"># 5. Actualizar pesos</span>
+    
+    <span class="keyword">if</span> epoch % <span class="number">10</span> == <span class="number">0</span>:
+        print(<span class="string">f'Epoch {epoch} | Loss: {loss.item():.4f}'</span>)</pre>
+  </div>
+
+  <div class="highlight success">
+    <div class="icon">🎉</div>
+    <div><strong>¡Eso es todo!</strong> Con estos conceptos, estás listo para las <strong>Graph Neural Networks</strong>. La GCN añade que los datos están conectados en un grafo, pero la estructura de entrenamiento es igual.</div>
+  </div>
+</section>

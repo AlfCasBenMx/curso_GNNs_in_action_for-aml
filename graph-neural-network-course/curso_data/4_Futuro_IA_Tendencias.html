@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Módulo 4: Futuro de la Inteligencia Artificial</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1f2937 100%); color: #e0e0e0; line-height: 1.6; }
+    .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+    .hero { text-align: center; padding: 60px 20px; background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); border-radius: 20px; margin-bottom: 30px; box-shadow: 0 10px 40px rgba(79,70,229,0.35); }
+    .hero h1 { font-size: 2.5em; margin-bottom: 12px; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+    .hero p { font-size: 1.1em; opacity: 0.95; color: white; }
+    .section { background: #1f2436; border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    .section-header { display: flex; align-items: center; gap: 15px; margin-bottom: 18px; }
+    .section-number { width: 45px; height: 45px; background: linear-gradient(135deg, #7c3aed, #4f46e5); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3em; font-weight: bold; color: white; }
+    .section-title h2 { font-size: 1.35em; color: #c4b5fd; }
+    .section-title p { font-size: 0.9em; color: #9ca3af; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 18px 0; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 18px 0; }
+    @media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+    .card { background: linear-gradient(135deg, #111827, #0b1020); padding: 18px; border-radius: 12px; border: 1px solid rgba(124,58,237,0.25); }
+    .card h4 { color: #c084fc; margin-bottom: 10px; font-size: 1.05em; }
+    .pill { display: inline-block; padding: 6px 10px; border-radius: 999px; background: rgba(124,58,237,0.18); color: #e9d5ff; font-size: 0.85em; margin-right: 6px; margin-bottom: 6px; }
+    .year-tag { display: inline-block; padding: 4px 9px; border-radius: 8px; background: rgba(34,197,94,0.18); color: #bbf7d0; font-size: 0.8em; margin: 6px 0 10px; border: 1px solid rgba(34,197,94,0.35); }
+    .highlight { display: flex; gap: 12px; padding: 16px; border-radius: 12px; border-left: 4px solid; margin: 16px 0; }
+    .highlight.info { background: rgba(59,130,246,0.1); border-color: #3b82f6; }
+    .highlight.warning { background: rgba(251,191,36,0.15); border-color: #f59e0b; }
+    .highlight.success { background: rgba(34,197,94,0.15); border-color: #22c55e; }
+    .comparison-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.95em; }
+    .comparison-table th { background: linear-gradient(135deg, #7c3aed, #4f46e5); color: white; padding: 10px 12px; text-align: left; }
+    .comparison-table td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .comparison-table tr:nth-child(even) { background: rgba(255,255,255,0.03); }
+    .quiz-container { background: linear-gradient(135deg, #0f172a, #111827); border-radius: 12px; padding: 20px; margin: 16px 0; border: 1px solid rgba(124,58,237,0.25); }
+    .quiz-question { color: #c4b5fd; font-size: 1.02em; margin-bottom: 12px; }
+    .quiz-option { display: block; background: rgba(255,255,255,0.04); border: 2px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 12px; margin: 8px 0; cursor: pointer; transition: all 0.15s; }
+    .quiz-option:hover { border-color: #7c3aed; background: rgba(124,58,237,0.1); }
+    .quiz-option.correct { border-color: #22c55e; background: rgba(34,197,94,0.18); }
+    .quiz-option.incorrect { border-color: #ef4444; background: rgba(239,68,68,0.18); }
+    .nav-buttons { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 32px; }
+    .nav-btn { text-decoration: none; padding: 12px 24px; border-radius: 10px; font-weight: bold; color: white; background: linear-gradient(135deg, #3b82f6, #2563eb); box-shadow: 0 4px 15px rgba(59,130,246,0.35); }
+    .nav-btn.secondary { background: linear-gradient(135deg, #6b7280, #4b5563); box-shadow: 0 4px 15px rgba(107,114,128,0.35); }
+    .timeline-layout { display: grid; grid-template-columns: 260px 1fr; gap: 18px; align-items: start; }
+    .timeline-nav { background: #111827; border: 1px solid rgba(124,58,237,0.2); border-radius: 12px; padding: 14px; position: sticky; top: 20px; }
+    .timeline-nav h4 { color: #c4b5fd; margin-bottom: 10px; }
+    .timeline-nav a { display: block; padding: 8px 10px; margin: 6px 0; border-radius: 8px; color: #e5e7eb; text-decoration: none; background: rgba(124,58,237,0.08); border: 1px solid transparent; }
+    .timeline-nav a:hover { border-color: #7c3aed; background: rgba(124,58,237,0.16); }
+    .timeline-nav a.active { border-color: #c084fc; background: rgba(192,132,252,0.2); color: #ffffff; }
+    .timeline-card { background: linear-gradient(135deg, #111827, #0b1020); padding: 16px; border-radius: 12px; border: 1px solid rgba(124,58,237,0.25); margin-bottom: 14px; }
+    @media (max-width: 900px) { .timeline-layout { grid-template-columns: 1fr; } .timeline-nav { position: relative; top: auto; } }
+    .page-nav { position: fixed; right: 12px; top: 120px; background: #111827; border: 1px solid rgba(124,58,237,0.2); border-radius: 12px; padding: 14px; width: 200px; z-index: 12; box-shadow: 0 8px 24px rgba(0,0,0,0.35); }
+    .page-nav h4 { color: #c4b5fd; margin-bottom: 10px; font-size: 0.95em; }
+    .page-nav a { display: block; padding: 8px 10px; margin: 6px 0; border-radius: 8px; color: #e5e7eb; text-decoration: none; background: rgba(124,58,237,0.08); border: 1px solid transparent; font-size: 0.9em; }
+    .page-nav a:hover { border-color: #7c3aed; background: rgba(124,58,237,0.16); }
+    .page-nav a.active { border-color: #c084fc; background: rgba(192,132,252,0.2); color: #ffffff; }
+    @media (max-width: 900px) { .page-nav { display: none; } }
+  </style>
+</head>
+<body>
+  <div class="page-nav">
+    <h4>Secciones</h4>
+    <a href="#timeline">Línea de tiempo</a>
+    <a href="#s1">1. Evolución de modelos</a>
+    <a href="#s2">2. Agentes y tool-use</a>
+    <a href="#s3">3. Eficiencia y edge</a>
+    <a href="#s4">4. Seguridad y regulación</a>
+    <a href="#s5">5. Casos emergentes</a>
+    <a href="#s6">6. Riesgos emergentes</a>
+    <a href="#s7">7. Roadmap 12-24m</a>
+    <a href="#s8">8. Checklist</a>
+    <a href="#s9">9. Cómo no abrumarse</a>
+    <a href="#quiz">Quiz</a>
+    <a href="#resumen">Resumen</a>
+  </div>
+  <div class="container">
+    <div class="hero">
+      <h1>🔮 Módulo 4</h1>
+      <h2 style="font-size: 1.9em; margin-bottom: 12px; color: white;">Futuro de la Inteligencia Artificial: Tendencias y Predicciones</h2>
+      <p>Hacia dónde va la IA en los próximos 3-5 años</p>
+      <div style="margin-top: 18px; padding: 12px 18px; background: rgba(255,255,255,0.2); border-radius: 10px; display: inline-block;">
+        <span style="font-size: 1.05em;">⏱️ Tiempo estimado: <strong>45-60 minutos</strong></span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-number">📋</div>
+        <div class="section-title">
+          <h2>Objetivos de Aprendizaje</h2>
+          <p>Lo que lograrás al finalizar</p>
+        </div>
+      </div>
+      <div style="background: #0b1020; padding: 14px 16px; border-radius: 12px; border: 1px solid #1f2937;">
+        <h3 style="color: #e5e7eb; margin: 0 0 6px; font-size: 1em;">✅ Al terminar este módulo podrás:</h3>
+        <ul style="color: #9ca3af; font-size: 0.92em; margin: 0 0 0 18px; line-height: 1.9;">
+          <li>Reconocer tendencias clave en modelos (que combinan texto, imagen y audio; modelos más eficientes; más memoria)</li>
+          <li>Entender el auge de asistentes IA que pueden usar herramientas y tomar acciones</li>
+          <li>Evaluar el papel de la IA en dispositivos móviles y cómo reducir costos</li>
+          <li>Anticipar cambios regulatorios y su impacto en productos</li>
+          <li>Identificar riesgos emergentes (videos falsos, datos contaminados, cadena de suministro)</li>
+          <li>Definir un plan de 12-24 meses para tu organización</li>
+        </ul>
+      </div>
+    </div>
+
+    <section class="section" id="timeline">
+      <div class="section-header">
+        <div class="section-number">🗺️</div>
+        <div class="section-title">
+          <h2>Línea de Tiempo 0-5 Años</h2>
+          <p>Predicciones y aplicaciones concretas</p>
+        </div>
+      </div>
+      <div class="timeline-layout">
+        <div class="timeline-nav">
+          <h4>Saltos por año</h4>
+          <a href="#y0">Año 0 (hoy)</a>
+          <a href="#y1">Año 1</a>
+          <a href="#y2">Año 2</a>
+          <a href="#y3">Año 3</a>
+          <a href="#y4">Año 4</a>
+          <a href="#y5">Año 5</a>
+        </div>
+        <div>
+          <div class="timeline-card" id="y0">
+            <h4 style="color: #c084fc;">Año 0 (Actualidad)</h4>
+            <ul style="margin-left: 16px; line-height: 1.8; color: #cbd5f5;">
+              <li>Películas cortas generadas con pipelines de imagen+audio (storyboards → vídeo)</li>
+              <li>Comics rápidos: guion + paneles generados y editados con controles de estilo</li>
+              <li>Universidades pilotean material generativo por curso (resúmenes y quizzes adaptativos)</li>
+              <li>Empresas usan copilots de conocimiento con <strong>RAG (Retrieval-Augmented Generation - Generación Aumentada por Recuperación)</strong>: sistema que busca información en bases de datos propias antes de generar respuestas, con citas obligatorias a las fuentes</li>
+            </ul>
+            <div class="highlight info" style="margin-top: 12px; background: rgba(59,130,246,0.1); border-color: #3b82f6;">
+              <div>📍 <strong>Estamos aquí:</strong> La IA generativa ya es mainstream. El enfoque está en probar casos de uso, aprender qué funciona y establecer políticas básicas. Muchas empresas aún están en fase de experimentación.</div>
+            </div>
+          </div>
+          <div class="timeline-card" id="y1">
+            <h4 style="color: #c084fc;">Año 1</h4>
+            <ul style="margin-left: 16px; line-height: 1.8; color: #cbd5f5;">
+              <li>Películas cortas completas con doblaje multilenguaje y voces sintéticas a medida</li>
+              <li>Libros → cómics en un clic con layouts consistentes y control de personajes</li>
+              <li>Currículos universitarios con rutas personalizadas por alumno (learning graphs)</li>
+              <li>Agentes con tool-use limitado para flujos de oficina (tickets, <strong>CRM - Customer Relationship Management / Gestión de Relaciones con Clientes</strong>, hojas de cálculo)</li>
+            </ul>
+            <div class="highlight success" style="margin-top: 12px; background: rgba(34,197,94,0.15); border-color: #22c55e;">
+              <div>🎬 <strong>Impacto democratizador:</strong> Las producciones indie van a explotar. Tendremos muchos grandes directores de cine y escritores cuyos trabajos jamás hubieran visto la luz sin estas herramientas. La barrera de entrada baja drásticamente: de necesitar millones de dólares a solo talento creativo y una computadora.</div>
+            </div>
+          </div>
+          <div class="timeline-card" id="y2">
+            <h4 style="color: #c084fc;">Año 2</h4>
+            <ul style="margin-left: 16px; line-height: 1.8; color: #cbd5f5;">
+              <li>Largometrajes indie híbridos (humano + IA) con coherencia de personajes y iluminación</li>
+              <li>Cursos enteros regenerables según progreso del alumno (multimodal: texto, video, simulación)</li>
+              <li>Evaluaciones dinámicas: exámenes adaptativos generados bajo políticas de dificultad</li>
+              <li>Asistentes financieros con simulación y recomendaciones citadas, auditables</li>
+            </ul>
+            <div class="highlight warning" style="margin-top: 12px; background: rgba(251,191,36,0.15); border-color: #f59e0b;">
+              <div>⚠️ <strong>Punto de inflexión:</strong> Aquí empiezan las disrupciones serias. Los modelos ya no son herramientas auxiliares, son co-creadores. Las profesiones creativas y educativas se transforman radicalmente. Las empresas que no hayan adoptado IA estarán en desventaja competitiva significativa.</div>
+            </div>
+          </div>
+          <div class="timeline-card" id="y3">
+            <h4 style="color: #c084fc;">Año 3</h4>
+            <ul style="margin-left: 16px; line-height: 1.8; color: #cbd5f5;">
+              <li>Producción audiovisual casi íntegra por IA con directores humanos curando el corte final</li>
+              <li>Plataformas educativas con agentes tutores multimodales y simulaciones inmersivas</li>
+              <li>Materiales de clase regenerados en tiempo real según desempeño de cohortes</li>
+              <li>Normativas más estrictas: marcas de agua obligatorias y trazabilidad de datasets</li>
+            </ul>
+            <div class="highlight info" style="margin-top: 12px; background: rgba(59,130,246,0.1); border-color: #3b82f6;">
+              <div>🏛️ <strong>Era de la regulación:</strong> Gobiernos implementan leyes estrictas (EU AI Act en pleno vigor, regulaciones sectoriales). Las empresas necesitan equipos de compliance para IA. La trazabilidad y auditoría de modelos se vuelve estándar, no opcional.</div>
+            </div>
+          </div>
+          <div class="timeline-card" id="y4">
+            <h4 style="color: #c084fc;">Año 4</h4>
+            <ul style="margin-left: 16px; line-height: 1.8; color: #cbd5f5;">
+              <li>Cadenas de producción de contenido end-to-end con QA automático y estilo de marca</li>
+              <li>Universidades con planes “siempre verdes”: contenido se recalibra con papers recientes</li>
+              <li>Certificaciones profesionales con simulaciones generativas y feedback individualizado</li>
+              <li>Agentes orquestando sistemas físicos (robots ligeros) en entornos controlados</li>
+            </ul>            <div class="highlight success" style="margin-top: 12px; background: rgba(34,197,94,0.15); border-color: #22c55e;">
+              <div>🤖 <strong>IA + mundo físico:</strong> Los agentes empiezan a salir del software puro y controlar hardware. Esto marca el inicio de la automatización física inteligente a escala. La frontera entre "digital" y "físico" se difumina.</div>
+            </div>          </div>
+          <div class="timeline-card" id="y5">
+            <h4 style="color: #c084fc;">Año 5</h4>
+            <ul style="margin-left: 16px; line-height: 1.8; color: #cbd5f5;">
+              <li>Películas AAA con pipelines IA-humanos estándar; localización y doblaje automáticos</li>
+              <li>Libros vivos: narrativas que se adaptan a lector, con modos cómic/novela/audio bajo demanda</li>
+              <li>Universidades “copiloteadas”: tutor multimodal personal, currículos regenerativos y evaluación continua</li>
+              <li>Agentes multi-herramienta regulados, con licencias y auditoría de acciones</li>
+            </ul>            <div class="highlight warning" style="margin-top: 12px; background: rgba(251,191,36,0.15); border-color: #f59e0b;">
+              <div>🌍 <strong>Nueva normalidad:</strong> Lo que hoy parece ciencia ficción será cotidiano. Las nuevas generaciones crecerán con tutores IA personalizados, contenido adaptativo y asistentes autónomos. El desafío será mantener habilidades humanas fundamentales (pensamiento crítico, creatividad original, empatía) en un mundo donde la IA puede hacer casi todo.</div>
+            </div>          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="s1">
+      <div class="section-header">
+        <div class="section-number">1</div>
+        <div class="section-title">
+          <h2>Evolución de Modelos</h2>
+          <p>De LLMs a sistemas composables</p>
+        </div>
+      </div>
+      <div class="timeline-layout">
+        <div class="timeline-nav">
+          <h4>Por año</h4>
+          <a href="#s1-multimodal">Año 0-1: Multimodal</a>
+          <a href="#s1-context">Año 0-1: Contextos largos</a>
+          <a href="#s1-moe">Año 1-2: MoE</a>
+        </div>
+        <div>
+          <div class="timeline-card" id="s1-multimodal">
+            <h4 style="color: #c084fc;">Año 0-1: Modelos Multimodales</h4>
+            <p style="line-height: 1.7;"><strong>Multimodal:</strong> Un solo modelo de IA que entiende múltiples formatos (texto, imágenes, audio y video) simultáneamente, en lugar de necesitar un modelo diferente para cada tipo de información.</p>
+            <p style="line-height: 1.7; margin-top: 10px;"><strong>Casos de uso prácticos:</strong></p>
+            <ul style="margin-left: 16px; line-height: 1.7; color: #cbd5f5; font-size: 0.95em;">
+              <li>Asistente que ve tu pantalla en reuniones y toma notas automáticas</li>
+              <li>Análisis de planos técnicos con preguntas en lenguaje natural</li>
+              <li>Inspección de fotos de productos y generación de reportes</li>
+              <li>Transcripción de videos con análisis visual del contenido</li>
+            </ul>
+            <div><span class="pill">VLM (Vision-Language Model)</span><span class="pill">Audio</span></div>
+          </div>
+          <div class="timeline-card" id="s1-context">
+            <h4 style="color: #c084fc;">Año 0-1: Contextos Largos (Long Context)</h4>
+            <p style="line-height: 1.7;"><strong>Context Window (Ventana de contexto):</strong> La cantidad de información que el modelo puede "recordar" simultáneamente. Antes: ~4,000 palabras. Ahora: 128,000+ palabras (libros enteros).</p>
+            <p style="line-height: 1.7; margin-top: 10px;"><strong>Qué permite:</strong></p>
+            <ul style="margin-left: 16px; line-height: 1.7; color: #cbd5f5; font-size: 0.95em;">
+              <li>Analizar repositorios de código completos sin perder el contexto</li>
+              <li>Revisar contratos de 100+ páginas y responder preguntas específicas</li>
+              <li>Procesar historiales médicos o expedientes legales completos</li>
+              <li>Comparar múltiples documentos largos simultáneamente</li>
+            </ul>
+            <div><span class="pill">128k+ tokens</span><span class="pill">Long-Context Window</span></div>
+          </div>
+          <div class="timeline-card" id="s1-moe">
+            <h4 style="color: #c084fc;">Año 1-2: MoE (Mixture of Experts)</h4>
+            <p style="line-height: 1.7;"><strong>MoE:</strong> Arquitectura con múltiples "expertos" especializados dentro del mismo modelo. Un router decide qué expertos activar para cada tarea, usando solo una fracción del modelo en cada ejecución.</p>
+            <p style="line-height: 1.7; margin-top: 10px;"><strong>Beneficios:</strong></p>
+            <ul style="margin-left: 16px; line-height: 1.7; color: #cbd5f5; font-size: 0.95em;">
+              <li><strong>Eficiencia:</strong> Costo 2-4x menor que modelos tradicionales del mismo tamaño</li>
+              <li><strong>Especialización:</strong> Expertos dedicados a código, matemáticas, idiomas, etc.</li>
+              <li><strong>Escalabilidad:</strong> Puedes añadir más expertos sin aumentar latencia</li>
+            </ul>
+            <div><span class="pill">MoE</span><span class="pill">Routing dinámico</span></div>
+          </div>
+          <div class="highlight info" style="margin-top: 14px;">
+            <div>💡 Tendencia: usar modelos pequeños, medianos o grandes según la complejidad de la tarea y el presupuesto.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="s2">
+      <div class="section-header">
+        <div class="section-number">2</div>
+        <div class="section-title">
+          <h2>Agentes y Tool-Use</h2>
+          <p>IA que actúa, no solo predice</p>
+        </div>
+      </div>
+      <div class="timeline-layout">
+        <div class="timeline-nav">
+          <h4>Por año</h4>
+          <a href="#s2-patrones">Año 0-1: Patrones</a>
+          <a href="#s2-riesgos">Año 1-2: Riesgos</a>
+        </div>
+        <div>
+          <div class="timeline-card" id="s2-patrones">
+            <h4 style="color: #c084fc;">Año 0-1: Agentes con Herramientas (Tool Use)</h4>
+            <p style="line-height: 1.7;"><strong>Agent (Agente):</strong> Sistema de IA que puede tomar decisiones, planificar pasos y ejecutar acciones, no solo generar texto.</p>
+            <ul style="margin-left: 16px; line-height: 1.8; color: #cbd5f5; font-size: 0.95em;">
+              <li><strong>CoT (Chain of Thought):</strong> El modelo "piensa en voz alta" antes de actuar, mejorando la precisión</li>
+              <li><strong>Tool Use:</strong> Puede usar calculadoras, hacer búsquedas web, ejecutar código, consultar bases de datos</li>
+              <li><strong>Routing:</strong> Sistemas que eligen automáticamente el mejor modelo o herramienta según la tarea</li>
+              <li><strong>Workflows orquestados:</strong> Combinar múltiples LLMs y herramientas en flujos complejos</li>
+            </ul>
+          </div>
+          <div class="timeline-card" id="s2-riesgos">
+            <h4 style="color: #c084fc;">Año 1-2: Riesgos y Controles</h4>
+            <p style="line-height: 1.7;">Los agentes autónomos requieren controles estrictos:</p>
+            <ul style="margin-left: 16px; line-height: 1.8; color: #cbd5f5; font-size: 0.95em;">
+              <li><strong>HIL (Human-in-the-Loop):</strong> Supervisión humana obligatoria para acciones críticas</li>
+              <li><strong>Permisos granulares:</strong> Control fino de qué puede y no puede hacer el agente</li>
+              <li><strong>Max steps (límite de pasos):</strong> Evitar ciclos infinitos estableciendo un máximo de acciones</li>
+              <li><strong>Watchdogs:</strong> Sistemas de monitoreo que detectan comportamientos anómalos</li>
+              <li><strong>Context isolation:</strong> Separar información sensible del contexto del agente</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="s3">
+      <div class="section-header">
+        <div class="section-number">3</div>
+        <div class="section-title">
+          <h2>Eficiencia y Edge AI</h2>
+          <p>Modelos más ligeros y cercanos al usuario</p>
+        </div>
+      </div>
+      <div class="timeline-layout">
+        <div class="timeline-nav">
+          <h4>Por año</h4>
+          <a href="#s3-device">Año 0-1: On-device</a>
+          <a href="#s3-quant">Año 1-2: Quantization</a>
+          <a href="#s3-sparse">Año 2-3: Sparsity</a>
+        </div>
+        <div>
+          <div class="timeline-card" id="s3-device">
+            <h4 style="color: #c084fc;">Año 0-1: Edge AI / On-Device</h4>
+            <p style="line-height: 1.7;"><strong>Edge AI:</strong> IA que corre en tu dispositivo (móvil, PC, tablet) en lugar de en servidores en la nube. Sin conexión a internet necesaria.</p>
+            <p style="line-height: 1.7; margin-top: 10px;"><strong>Ventajas clave:</strong></p>
+            <ul style="margin-left: 16px; line-height: 1.7; color: #cbd5f5; font-size: 0.95em;">
+              <li><strong>Privacidad:</strong> Tus datos nunca salen del dispositivo</li>
+              <li><strong>Latencia ultra-baja:</strong> Respuestas en milisegundos, no segundos</li>
+              <li><strong>Sin costos de API:</strong> No pagas por cada consulta</li>
+              <li><strong>Funciona offline:</strong> Sin internet, sin problema</li>
+            </ul>
+            <div><span class="pill">Edge Computing</span><span class="pill">Low Latency</span></div>
+          </div>
+          <div class="timeline-card" id="s3-quant">
+            <h4 style="color: #c084fc;">Año 1-2: Quantization y Distillation</h4>
+            <p style="line-height: 1.7;"><strong>Quantization (Cuantización):</strong> Reducir la precisión numérica del modelo (de 32 bits a 8, 4, o incluso 2 bits) para ahorrar memoria y acelerar inferencia.</p>
+            <p style="line-height: 1.7; margin-top: 10px;"><strong>Distillation (Destilación):</strong> Entrenar un modelo pequeño "estudiante" que imita a un modelo grande "profesor", conservando ~90% de la calidad con 10x menos parámetros.</p>
+            <ul style="margin-left: 16px; line-height: 1.7; color: #cbd5f5; font-size: 0.95em;">
+              <li><strong>INT8/INT4:</strong> Formatos de precisión reducida (vs FP32 original)</li>
+              <li><strong>GPTQ, AWQ, GGUF:</strong> Métodos populares de quantization</li>
+              <li>Reducción de tamaño: 4-8x más pequeño, 2-5x más rápido</li>
+            </ul>
+            <div><span class="pill">INT4/INT8</span><span class="pill">Model Compression</span></div>
+          </div>
+          <div class="timeline-card" id="s3-sparse">
+            <h4 style="color: #c084fc;">Año 2-3: Sparsity y KV Caching</h4>
+            <p style="line-height: 1.7;"><strong>Sparsity (Dispersión):</strong> Solo calcular las conexiones más importantes del modelo, "apagando" el 80-90% de las neuronas sin perder precisión.</p>
+            <p style="line-height: 1.7; margin-top: 10px;"><strong>KV Caching:</strong> Reutilizar cálculos intermedios (keys y values) para no recalcular todo en cada token generado.</p>
+            <ul style="margin-left: 16px; line-height: 1.7; color: #cbd5f5; font-size: 0.95em;">
+              <li><strong>Throughput:</strong> Número de tokens procesados por segundo</li>
+              <li><strong>Batch processing:</strong> Procesar múltiples solicitudes simultáneamente</li>
+              <li><strong>vLLM, TGI:</strong> Motores de inferencia optimizados que usan estas técnicas</li>
+              <li>Resultado: 5-10x más solicitudes con el mismo hardware</li>
+            </ul>
+            <div><span class="pill">Sparse Attention</span><span class="pill">High Throughput</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="s4">
+      <div class="section-header">
+        <div class="section-number">4</div>
+        <div class="section-title">
+          <h2>Seguridad, Alignment y Regulación</h2>
+          <p>Cómo se equilibran innovación y riesgo</p>
+        </div>
+      </div>
+      <div class="timeline-layout">
+        <div class="timeline-nav">
+          <h4>Por año</h4>
+          <a href="#s4-evals">Año 0-1: Evaluaciones</a>
+          <a href="#s4-pi">Año 0-2: Propiedad Int.</a>
+          <a href="#s4-align">Año 1-2: Alignment</a>
+          <a href="#s4-reg">Año 1-3: Regulación</a>
+        </div>
+        <div>
+          <div class="timeline-card" id="s4-evals">
+            <h4 style="color: #c084fc;">Año 0-1: Evals y Red Teaming</h4>
+            <p style="line-height: 1.7;"><strong>Evals (Evaluations):</strong> Tests automáticos que miden calidad, seguridad y rendimiento del modelo de forma continua.</p>
+            <ul style="margin-left: 16px; line-height: 1.7; color: #cbd5f5; font-size: 0.95em;">
+              <li><strong>Benchmarks:</strong> Conjuntos de preguntas estándar para comparar modelos (MMLU, HumanEval, etc.)</li>
+              <li><strong>Red Teaming:</strong> Equipos que intentan "romper" el modelo buscando comportamientos peligrosos</li>
+              <li><strong>CI/CD para IA:</strong> Ejecutar evals antes de cada despliegue, como tests unitarios</li>
+              <li><strong>Golden datasets:</strong> Casos de prueba curados manualmente de alta calidad</li>
+            </ul>
+          </div>
+          <div class="timeline-card" id="s4-pi">
+            <h4 style="color: #c084fc;">Año 0-2: Propiedad intelectual</h4>
+            <p style="line-height: 1.7;">Filtrar datos de entrenamiento para evitar violar derechos de autor. Marcas invisibles en contenido generado para rastrear su origen y evitar fraudes.</p>
+          </div>
+          <div class="timeline-card" id="s4-align">
+            <h4 style="color: #c084fc;">Año 1-2: Alignment (Alineación)</h4>
+            <p style="line-height: 1.7;"><strong>Alignment:</strong> Asegurar que el modelo hace lo que queremos, de la forma que queremos, respetando valores humanos.</p>
+            <ul style="margin-left: 16px; line-height: 1.7; color: #cbd5f5; font-size: 0.95em;">
+              <li><strong>RLHF (Reinforcement Learning from Human Feedback):</strong> Entrenar con preferencias humanas reales</li>
+              <li><strong>RLAIF (RL from AI Feedback):</strong> Usar otro modelo de IA como "juez" para escalar feedback</li>
+              <li><strong>Constitutional AI:</strong> Dar al modelo una "constitución" de reglas y principios a seguir</li>
+              <li><strong>Safety layers:</strong> Filtros adicionales para rechazar contenido peligroso</li>
+            </ul>
+          </div>
+          <div class="timeline-card" id="s4-reg">
+            <h4 style="color: #c084fc;">Año 1-3: Regulación</h4>
+            <p style="line-height: 1.7;">Leyes europeas y sectoriales (salud, finanzas) que exigen documentar cómo funciona la IA, rastrear decisiones y tener controles.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="s5">
+      <div class="section-header">
+        <div class="section-number">5</div>
+        <div class="section-title">
+          <h2>Casos Emergentes</h2>
+          <p>Dónde veremos más impacto</p>
+        </div>
+      </div>
+      <div class="timeline-layout">
+        <div class="timeline-nav">
+          <h4>Por año</h4>
+          <a href="#s5-industria">Año 0-2: Industria</a>
+          <a href="#s5-finanzas">Año 1-2: Finanzas</a>
+          <a href="#s5-salud">Año 1-3: Salud</a>
+        </div>
+        <div>
+          <div class="timeline-card" id="s5-industria">
+            <h4 style="color: #c084fc;">Año 0-2: Industria y Manufacturing</h4>
+            <ul style="margin-left: 16px; line-height: 1.7; color: #cbd5f5; font-size: 0.95em;">
+              <li><strong>QC Vision AI (Quality Control):</strong> Inspección visual automatizada detectando defectos con >99% precisión</li>
+              <li><strong>Predictive Maintenance:</strong> Modelos multimodales analizando sensores + imágenes + logs para predecir fallas</li>
+              <li><strong>Digital Twins + LLM:</strong> Gemelos digitales con interfaz conversacional</li>
+              <li><strong>Copilots de planta:</strong> Asistentes que guían a operadores paso a paso con AR</li>
+            </ul>
+            <div><span class="pill">Computer Vision</span><span class="pill">IoT + IA</span></div>
+          </div>
+          <div class="timeline-card" id="s5-finanzas">
+            <h4 style="color: #c084fc;">Año 1-2: Finanzas</h4>
+            <ul style="margin-left: 16px; line-height: 1.7; color: #cbd5f5; font-size: 0.95em;">
+              <li><strong>RAG (Retrieval-Augmented Generation - Generación Aumentada por Recuperación):</strong> Sistema que primero busca información relevante en bases de datos actualizadas (Bloomberg, SEC filings, earnings calls) y luego usa esa información para generar respuestas precisas y actualizadas</li>
+              <li><strong>AML (Anti-Money Laundering - Anti-Lavado de Dinero):</strong> Sistemas que detectan transacciones sospechosas automáticamente</li>
+              <li><strong>KYC (Know Your Customer - Conoce a tu Cliente):</strong> Verificación automática de identidad de clientes usando NLP (Procesamiento de Lenguaje Natural)</li>
+              <li><strong>Risk modeling copilots:</strong> Asistentes para construcción de modelos de riesgo crediticio/mercado</li>
+              <li><strong>Covenants compliance:</strong> Monitoreo automático de cumplimiento de cláusulas contractuales</li>
+            </ul>
+            <div><span class="pill">RAG</span><span class="pill">Compliance AI</span></div>
+          </div>
+          <div class="timeline-card" id="s5-salud">
+            <h4 style="color: #c084fc;">Año 1-3: Salud</h4>
+            <p style="line-height: 1.7;">Asistentes que leen historiales médicos completos, resumen expedientes, combinan imágenes médicas con texto para ayudar en diagnósticos.</p>
+            <div><span class="pill">Historial médico</span><span class="pill">Imágenes</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="s6">
+      <div class="section-header">
+        <div class="section-number">6</div>
+        <div class="section-title">
+          <h2>Riesgos Emergentes</h2>
+          <p>Mirar hacia adelante</p>
+        </div>
+      </div>
+      <div class="timeline-layout">
+        <div class="timeline-nav">
+          <h4>Por año</h4>
+          <a href="#s6-deep">Año 0-2: Deepfakes</a>
+          <a href="#s6-steal">Año 0-2: Model stealing</a>
+          <a href="#s6-poison">Año 1-3: Data poisoning</a>
+          <a href="#s6-auto">Año 2-4: Autonomía</a>
+        </div>
+        <div>
+          <div class="timeline-card" id="s6-deep">
+            <h4 style="color: #c084fc;">Año 0-2: Videos y audios falsos</h4>
+            <p style="line-height: 1.7;">Videos y audios falsos muy realistas difíciles de distinguir. Solución: detectores automáticos, marcas de agua, verificación de identidad.</p>
+          </div>
+          <div class="timeline-card" id="s6-steal">
+            <h4 style="color: #c084fc;">Año 0-2: Robo de modelos / Eludir controles</h4>
+            <p style="line-height: 1.7;">Intentos de copiar modelos o hacerles hacer cosas prohibidas. Solución: límites de uso, marcas, monitoreo de patrones sospechosos.</p>
+          </div>
+          <div class="timeline-card" id="s6-poison">
+            <h4 style="color: #c084fc;">Año 1-3: Datos contaminados y cadena de suministro</h4>
+            <p style="line-height: 1.7;">Datos de entrenamiento envenenados o código malicioso. Solución: validar todas las fuentes, inventario de componentes, firmas digitales.</p>
+          </div>
+          <div class="timeline-card" id="s6-auto">
+            <h4 style="color: #c084fc;">Año 2-4: Demasiada autonomía</h4>
+            <p style="line-height: 1.7;">Asistentes que actúan sin supervisión humana. Solución: requerir aprobación humana, permisos estrictos, límites claros de acciones.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="s7">
+      <div class="section-header">
+        <div class="section-number">7</div>
+        <div class="section-title">
+          <h2>Roadmap 12-24 Meses</h2>
+          <p>Cómo prepararte</p>
+        </div>
+      </div>
+      <div class="timeline-layout">
+        <div class="timeline-nav">
+          <h4>Por año</h4>
+          <a href="#s7-12m">Año 0-1: 12 meses</a>
+          <a href="#s7-24m">Año 1-2: 24 meses</a>
+        </div>
+        <div>
+          <div class="timeline-card" id="s7-12m">
+            <h4 style="color: #c084fc;">Año 0-1: Primeros 12 meses</h4>
+            <ul style="margin-left: 16px; line-height: 1.8; color: #cbd5f5; font-size: 0.95em;">
+              <li><strong>Pilotos multimodales + RAG (Retrieval-Augmented Generation):</strong> Proyectos con modelos VLM (Vision-Language Model) conectados a tu base de conocimiento (Vector DB - Base de Datos Vectorial para búsqueda semántica)</li>
+              <li><strong>Canary deployments (Despliegues canario):</strong> Lanzamientos graduales de agentes a <5% usuarios con permisos muy limitados, para detectar problemas antes del rollout completo</li>
+              <li><strong>Observability stack (Pila de observabilidad):</strong> LangSmith, Phoenix, o similar para traces (trazas), logs (registros) y métricas en tiempo real</li>
+              <li><strong>Evals CI/CD:</strong> Suite de evaluaciones automáticas en cada cambio (Continuous Integration/Continuous Deployment - Integración Continua/Despliegue Continuo)</li>
+              <li><strong>Data governance (Gobernanza de datos):</strong> Política clara de PII (Personally Identifiable Information - Información Personal Identificable), licencias de datos/modelos, y uso ético</li>
+            </ul>
+          </div>
+          <div class="timeline-card" id="s7-24m">
+            <h4 style="color: #c084fc;">Año 1-2: Hasta 24 meses</h4>
+            <ul style="margin-left: 16px; line-height: 1.8; color: #cbd5f5; font-size: 0.95em;">
+              <li><strong>MLOps para LLMs:</strong> Pipelines automatizados para fine-tuning, eval, y deploy con A/B testing</li>
+              <li><strong>Edge deployment:</strong> Modelos quantizados (INT4) corriendo on-device para casos de alta privacidad/latencia</li>
+              <li><strong>Multi-agent systems:</strong> Orquestación de agentes especializados con herramientas (LangGraph, CrewAI, AutoGen)</li>
+              <li><strong>Compliance ready:</strong> Documentación completa para EU AI Act, SOC2, ISO 42001 (IA)</li>
+              <li><strong>FinOps IA:</strong> Optimización de costos con routing inteligente (GPT-4 solo cuando necesario)</li>
+            </ul>
+          </div>
+          <div class="highlight success" style="margin-top: 14px;">
+            <div>✅ Consejo: empieza con proyectos donde tengas tus propios datos, el beneficio sea claro y los riesgos se puedan controlar. Documenta todo desde el principio.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="s8">
+      <div class="section-header">
+        <div class="section-number">8</div>
+        <div class="section-title">
+          <h2>Checklist de Preparación</h2>
+          <p>Para no llegar tarde</p>
+        </div>
+      </div>
+      <div class="timeline-layout">
+        <div class="timeline-nav">
+          <h4>Por año</h4>
+          <a href="#s8-prod">Año 0-1: Producto</a>
+          <a href="#s8-tech">Año 0-2: Tech/ML</a>
+          <a href="#s8-legal">Año 1-3: Riesgo/Legal</a>
+        </div>
+        <div>
+          <div class="timeline-card" id="s8-prod">
+            <h4 style="color: #c084fc;">Año 0-1: Producto</h4>
+            <p style="line-height: 1.7;">Lista de casos de uso priorizados, experiencias que combinen texto/imagen/audio, mecanismos para recoger opiniones de usuarios.</p>
+          </div>
+          <div class="timeline-card" id="s8-tech">
+            <h4 style="color: #c084fc;">Año 0-2: Tech/ML Stack</h4>
+            <ul style="margin-left: 16px; line-height: 1.7; color: #cbd5f5; font-size: 0.95em;">
+              <li><strong>Vector DB (Vector Database - Base de Datos Vectorial):</strong> Pinecone, Weaviate, Qdrant para RAG (Retrieval-Augmented Generation - búsqueda semántica por significado, no por palabras exactas)</li>
+              <li><strong>Tool-use sandbox (Entorno aislado):</strong> Sandbox = espacio seguro donde agentes ejecuten código/comandos sin riesgo al sistema principal</li>
+              <li><strong>Observability (Observabilidad):</strong> LangSmith, Weights & Biases, Phoenix para tracing end-to-end (seguimiento completo de cada ejecución)</li>
+              <li><strong>Model routing (Enrutamiento de modelos):</strong> Lógica para elegir GPT-4o/Claude/Llama según complejidad y costo (usar el modelo más barato que resuelva el problema)</li>
+              <li><strong>Prompt management (Gestión de prompts):</strong> Versionado de prompts, A/B testing (pruebas comparativas), rollback (revertir a versión anterior) - Herramientas: Promptfoo, Helicone</li>
+            </ul>
+          </div>
+          <div class="timeline-card" id="s8-legal">
+            <h4 style="color: #c084fc;">Año 1-3: Riesgo/Legal</h4>
+            <p style="line-height: 1.7;">Política de datos personales, licencias claras de datos y modelos, procesos de revisión y supervisión humana obligatoria.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="s9" style="background: linear-gradient(135deg, #1e1b4b, #312e81);">
+      <div class="section-header">
+        <div class="section-number" style="background: linear-gradient(135deg, #f59e0b, #d97706);">💪</div>
+        <div class="section-title">
+          <h2 style="color: #fcd34d;">Cómo No Abrumarse y Disfrutar el Viaje</h2>
+          <p style="color: #fde68a;">Mantén la perspectiva y crece con la IA</p>
+        </div>
+      </div>
+      <div class="timeline-layout">
+        <div class="timeline-nav">
+          <h4>Estrategias</h4>
+          <a href="#s9-mentalidad">Mentalidad</a>
+          <a href="#s9-aprender">Aprender bien</a>
+          <a href="#s9-competitivo">Ser competitivo</a>
+          <a href="#s9-disfrutar">Disfrutar</a>
+        </div>
+        <div>
+          <div class="timeline-card" id="s9-mentalidad">
+            <h4 style="color: #fbbf24;">🧠 Cambia tu mentalidad</h4>
+            <ul style="margin-left: 16px; line-height: 1.8; color: #fef3c7; font-size: 0.95em;">
+              <li><strong>No necesitas saberlo todo:</strong> Nadie domina toda la IA. Enfócate en tu área y aprende lo justo para tu contexto.</li>
+              <li><strong>El cambio es constante:</strong> En lugar de resistirte, acepta que siempre habrá algo nuevo. Eso es parte del juego.</li>
+              <li><strong>FOMO es normal:</strong> Todos sienten miedo de quedarse atrás. No estás solo. Lo importante es avanzar a tu ritmo.</li>
+              <li><strong>Progreso > Perfección:</strong> Mejor un proyecto pequeño terminado que un curso completo sin aplicar.</li>
+            </ul>
+          </div>
+          <div class="timeline-card" id="s9-aprender">
+            <h4 style="color: #fbbf24;">📚 Aprende de forma sostenible</h4>
+            <ul style="margin-left: 16px; line-height: 1.8; color: #fef3c7; font-size: 0.95em;">
+              <li><strong>20% que da 80% de valor:</strong> Aprende primero lo básico que se usa en el 80% de casos (prompts, APIs, evals simples).</li>
+              <li><strong>Construye mientras aprendes:</strong> Lee un tutorial, aplícalo a un problema real tuyo. La teoría sola se olvida.</li>
+              <li><strong>Comunidad > Soledad:</strong> Únete a grupos, comparte dudas. Aprender en comunidad es más rápido y motivador.</li>
+              <li><strong>Curación inteligente:</strong> Sigue 2-3 fuentes clave (newsletters, canales). Evita saturarte con 50 feeds.</li>
+            </ul>
+          </div>
+          <div class="timeline-card" id="s9-competitivo">
+            <h4 style="color: #fbbf24;">🏆 Mantente competitivo sin quemarte</h4>
+            <ul style="margin-left: 16px; line-height: 1.8; color: #fef3c7; font-size: 0.95em;">
+              <li><strong>Especialízate estratégicamente:</strong> Ser "experto en IA" es imposible. Sé experto en "IA para finanzas" o "IA en salud".</li>
+              <li><strong>Proyectos > Certificados:</strong> Un portfolio de 3 proyectos reales vale más que 10 certificados sin aplicación.</li>
+              <li><strong>Habilidades híbridas:</strong> IA + dominio específico + comunicación = combinación imbatible.</li>
+              <li><strong>Experimenta rápido:</strong> Prueba herramientas nuevas en fines de semana. Si no funciona, descarta y sigue.</li>
+            </ul>
+          </div>
+          <div class="timeline-card" id="s9-disfrutar">
+            <h4 style="color: #fbbf24;">🎉 Disfruta el proceso</h4>
+            <ul style="margin-left: 16px; line-height: 1.8; color: #fef3c7; font-size: 0.95em;">
+              <li><strong>Celebra pequeños logros:</strong> ¿Hiciste tu primer chatbot? ¡Celebra! No esperes a "ser experto" para sentirte bien.</li>
+              <li><strong>Curiosidad infantil:</strong> Pregúntate "¿qué pasa si...?" en lugar de "tengo que aprender X". La curiosidad motiva más que la obligación.</li>
+              <li><strong>Descansos activos:</strong> Si te sientes saturado, cambia de actividad (lee ciencia ficción, ve charlas inspiradoras). No te fuerces.</li>
+              <li><strong>Perspectiva histórica:</strong> Vivimos la revolución de la IA en tiempo real. Eso es emocionante. Disfrútalo como espectador y protagonista.</li>
+            </ul>
+          </div>
+          <div class="highlight warning" style="margin-top: 14px; background: rgba(245,158,11,0.15); border-color: #f59e0b;">
+            <div>⚡ Recuerda: La IA no te reemplazará, pero alguien que use IA mejor que tú, sí podría. La clave no es saberlo todo, sino saber aplicar lo justo en el momento justo.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="quiz">
+      <div class="section-header">
+        <div class="section-number">🎯</div>
+        <div class="section-title">
+          <h2>Quiz Futuro de la IA</h2>
+          <p>Evalúa tu comprensión</p>
+        </div>
+      </div>
+
+      <div class="quiz-container">
+        <p class="quiz-question">1. ¿Qué ventaja aporta Mixture-of-Experts?</p>
+        <div class="quiz-option" data-correct="true" onclick="checkAnswer(this)">Eficiencia: activar pocos expertos por token</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">Usar siempre todos los expertos</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">Reduce el contexto disponible</div>
+        <div class="quiz-feedback" style="display:none; margin-top: 10px; padding: 12px; border-radius: 8px;"></div>
+      </div>
+
+      <div class="quiz-container">
+        <p class="quiz-question">2. ¿Por qué importa el on-device?</p>
+        <div class="quiz-option" data-correct="true" onclick="checkAnswer(this)">Mejor privacidad y menor latencia</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">Porque es más caro</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">Solo para marketing</div>
+        <div class="quiz-feedback" style="display:none; margin-top: 10px; padding: 12px; border-radius: 8px;"></div>
+      </div>
+
+      <div class="quiz-container">
+        <p class="quiz-question">3. ¿Qué riesgo aumenta con deepfakes?</p>
+        <div class="quiz-option" data-correct="true" onclick="checkAnswer(this)">Desinformación y fraude de identidad</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">Menor creatividad</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">Reducción de costos</div>
+        <div class="quiz-feedback" style="display:none; margin-top: 10px; padding: 12px; border-radius: 8px;"></div>
+      </div>
+
+      <div class="quiz-container">
+        <p class="quiz-question">4. ¿Qué hacer antes de desplegar asistentes IA?</p>
+        <div class="quiz-option" data-correct="true" onclick="checkAnswer(this)">Permisos detallados, límites de pasos y supervisión humana</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">Dar acceso total sin registros</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">Subir la temperatura al máximo</div>
+        <div class="quiz-feedback" style="display:none; margin-top: 10px; padding: 12px; border-radius: 8px;"></div>
+      </div>
+
+      <div class="quiz-container">
+        <p class="quiz-question">5. ¿Cuál es un paso clave del roadmap 12-24 meses?</p>
+        <div class="quiz-option" data-correct="true" onclick="checkAnswer(this)">Industrializar pipelines y adoptar edge/on-device</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">Ignorar regulación</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">No medir nada</div>
+        <div class="quiz-feedback" style="display:none; margin-top: 10px; padding: 12px; border-radius: 8px;"></div>
+      </div>
+    </section>
+
+    <section class="section" id="resumen" style="background: linear-gradient(135deg, #0f172a, #312e81);">
+      <div class="section-header">
+        <div class="section-number" style="background: linear-gradient(135deg, #22c55e, #16a34a);">✓</div>
+        <div class="section-title">
+          <h2 style="color: #c4b5fd;">Resumen del Módulo</h2>
+          <p style="color: #e0e7ff;">Claves para anticipar el futuro</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card" style="background: rgba(255,255,255,0.06);">
+          <h4 style="color: #c084fc;">📌 Conceptos</h4>
+          <ul style="margin-left: 16px; line-height: 1.8; color: #e0e7ff; font-size: 0.95em;">
+            <li>Modelos que entienden múltiples formatos, más eficientes y con mayor memoria</li>
+            <li>Asistentes que usan herramientas con controles estrictos</li>
+            <li>IA en dispositivos y técnicas de optimización para reducir costos</li>
+            <li>Riesgos emergentes: videos falsos, datos contaminados, demasiada autonomía</li>
+            <li>Regulación y documentación como ventaja competitiva</li>
+          </ul>
+        </div>
+        <div class="card" style="background: rgba(255,255,255,0.06);">
+          <h4 style="color: #c084fc;">🚀 Próximos pasos</h4>
+          <ul style="margin-left: 16px; line-height: 1.8; color: #e0e7ff; font-size: 0.95em;">
+            <li>Definir proyectos piloto con modelos de múltiples formatos y asistentes con permisos limitados</li>
+            <li>Implementar herramientas de monitoreo y evaluación automática</li>
+            <li>Preparar políticas de datos y licencias claras</li>
+            <li>Plan para usar IA en dispositivos cuando se necesite privacidad o velocidad</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <div class="nav-buttons">
+      <a href="3_Aplicaciones_GenAI_Negocios.html" class="nav-btn secondary">← Volver a Módulo 3</a>
+      <a href="1_Introduccion_IA_GenAI.html" class="nav-btn">Ir a Módulo 1</a>
+    </div>
+
+  </div>
+
+  <script>
+    function checkAnswer(element) {
+      const container = element.parentElement;
+      const options = container.querySelectorAll('.quiz-option');
+      const feedback = container.querySelector('.quiz-feedback');
+      const isCorrect = element.dataset.correct === 'true';
+      options.forEach(opt => {
+        opt.style.pointerEvents = 'none';
+        if (opt.dataset.correct === 'true') { opt.classList.add('correct'); }
+        if (opt === element && !isCorrect) { opt.classList.add('incorrect'); }
+      });
+      feedback.style.display = 'block';
+      if (isCorrect) {
+        feedback.style.background = 'rgba(34,197,94,0.2)';
+        feedback.innerHTML = '✅ ¡Correcto!';
+      } else {
+        feedback.style.background = 'rgba(239,68,68,0.2)';
+        feedback.innerHTML = '❌ Revisa la sección para mejorar.';
+      }
+    }
+
+    // Scrollspy para la barra lateral de años
+    const yearIds = ['y0','y1','y2','y3','y4','y5'];
+    const navLinks = Array.from(document.querySelectorAll('.timeline-nav a'));
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const id = entry.target.id;
+        const link = navLinks.find(l => l.getAttribute('href') === '#' + id);
+        if (link) {
+          if (entry.isIntersecting) {
+            navLinks.forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+          }
+        }
+      });
+    }, { rootMargin: '-30% 0px -50% 0px', threshold: 0.1 });
+
+    yearIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    // Scrollspy para la navegación global de secciones
+    const sectionIds = ['timeline','s1','s2','s3','s4','s5','s6','s7','s8','s9','quiz','resumen'];
+    const sectionLinks = Array.from(document.querySelectorAll('.page-nav a'));
+    const sectionObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const id = entry.target.id;
+        const link = sectionLinks.find(l => l.getAttribute('href') === '#' + id);
+        if (link) {
+          if (entry.isIntersecting) {
+            sectionLinks.forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+          }
+        }
+      });
+    }, { rootMargin: '-30% 0px -50% 0px', threshold: 0.1 });
+
+    sectionIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) sectionObserver.observe(el);
+    });
+  </script>
+</body>
+</html>

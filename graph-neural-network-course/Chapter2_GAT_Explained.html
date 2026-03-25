@@ -1,0 +1,3343 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>📘 Capítulo 2: Graph Attention Networks - Explicación Detallada</title>
+  <!-- KaTeX para renderizar ecuaciones LaTeX -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true},{left: '$', right: '$', display: false}]});"></script>
+  <style>
+    :root {
+      --primary: #667eea;
+      --primary-dark: #5a67d8;
+      --secondary: #764ba2;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text: #1e293b;
+      --text-light: #64748b;
+      --bg: #f8fafc;
+      --group0: #3b82f6;
+      --group1: #f472b6;
+      --group2: #34d399;
+      --group3: #fbbf24;
+      --group4: #a78bfa;
+      --group5: #f87171;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.8;
+      font-size: 17px;
+    }
+
+    /* HERO */
+    .hero {
+      background: linear-gradient(135deg, #e11d48 0%, #9333ea 50%, var(--primary) 100%);
+      color: white;
+      padding: 80px 24px;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: 2.8rem;
+      margin: 0 0 15px;
+      font-weight: 300;
+    }
+
+    .hero h1 strong { font-weight: 700; color: #fbbf24; }
+
+    .hero p {
+      font-size: 1.2rem;
+      opacity: 0.95;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: #fbbf24;
+      color: #000;
+      padding: 10px 25px;
+      border-radius: 25px;
+      font-weight: 700;
+      margin-top: 25px;
+    }
+
+    /* MAIN */
+    main {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 50px 24px;
+    }
+
+    /* SECTION */
+    .section {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      border: 1px solid #e5e7eb;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .section-number {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #e11d48 0%, #9333ea 100%);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      color: var(--primary-dark);
+      font-size: 1.6rem;
+    }
+
+    .section-title p {
+      margin: 5px 0 0;
+      color: var(--text-light);
+      font-size: 0.95rem;
+    }
+
+    /* CODE BLOCK */
+    .code-block {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 20px 25px;
+      margin: 20px 0;
+      overflow-x: auto;
+    }
+
+    .code-block pre {
+      margin: 0;
+      color: #e2e8f0;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .code-block .comment { color: #6b7280; }
+    .code-block .keyword { color: #c084fc; }
+    .code-block .function { color: #60a5fa; }
+    .code-block .string { color: #34d399; }
+    .code-block .number { color: #fbbf24; }
+
+    /* EXPLANATION BOX */
+    .explain-box {
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      border-radius: 16px;
+      padding: 25px 30px;
+      margin: 25px 0;
+      border-left: 5px solid var(--primary);
+    }
+
+    .explain-box h4 {
+      margin: 0 0 10px;
+      color: #1e40af;
+      font-size: 1.1rem;
+    }
+
+    .explain-box p {
+      margin: 0;
+      color: #1e3a5f;
+    }
+
+    /* WARNING BOX */
+    .warning-box {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border-radius: 16px;
+      padding: 25px 30px;
+      margin: 25px 0;
+      border-left: 5px solid var(--warning);
+    }
+
+    .warning-box h4 {
+      margin: 0 0 10px;
+      color: #92400e;
+    }
+
+    .warning-box p {
+      margin: 0;
+      color: #78350f;
+    }
+
+    /* SUCCESS BOX */
+    .success-box {
+      background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+      border-radius: 16px;
+      padding: 25px 30px;
+      margin: 25px 0;
+      border-left: 5px solid var(--success);
+    }
+
+    .success-box h4 {
+      margin: 0 0 10px;
+      color: #047857;
+    }
+
+    .success-box p {
+      margin: 0;
+      color: #166534;
+    }
+
+    /* VISUAL DIAGRAM */
+    .diagram {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      border-radius: 16px;
+      padding: 30px;
+      margin: 25px 0;
+      text-align: center;
+    }
+
+    .diagram svg {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .diagram .caption {
+      margin-top: 15px;
+      font-size: 0.9rem;
+      color: var(--text-light);
+      font-style: italic;
+    }
+
+    /* FLOW STEPS */
+    .flow-steps {
+      display: flex;
+      gap: 15px;
+      margin: 25px 0;
+      flex-wrap: wrap;
+    }
+
+    .flow-step {
+      flex: 1;
+      min-width: 200px;
+      background: white;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      position: relative;
+    }
+
+    .flow-step::after {
+      content: '→';
+      position: absolute;
+      right: -20px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.5rem;
+      color: var(--primary);
+    }
+
+    .flow-step:last-child::after {
+      display: none;
+    }
+
+    .flow-step .icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    .flow-step h5 {
+      margin: 0 0 5px;
+      color: var(--primary-dark);
+    }
+
+    .flow-step p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--text-light);
+    }
+
+    /* OUTPUT BOX */
+    .output-box {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 15px 20px;
+      margin: 15px 0;
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: #475569;
+    }
+
+    .output-box .label {
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 8px;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    /* TABLE */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+
+    .data-table th, .data-table td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .data-table th {
+      background: linear-gradient(135deg, #e11d48, #9333ea);
+      color: white;
+      font-weight: 600;
+    }
+
+    .data-table tr:hover {
+      background: #f8fafc;
+    }
+
+    /* ARCHITECTURE */
+    .architecture {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      margin: 30px 0;
+      flex-wrap: wrap;
+    }
+
+    .arch-block {
+      background: linear-gradient(135deg, #e11d48 0%, #9333ea 100%);
+      color: white;
+      padding: 25px 30px;
+      border-radius: 15px;
+      text-align: center;
+      min-width: 150px;
+    }
+
+    .arch-block h5 {
+      margin: 0 0 5px;
+      font-size: 1.1rem;
+    }
+
+    .arch-block p {
+      margin: 0;
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+
+    .arch-arrow {
+      font-size: 2rem;
+      color: #9333ea;
+    }
+
+    /* HIGHLIGHT QUOTE */
+    .highlight {
+      background: linear-gradient(135deg, #e11d48 0%, #9333ea 100%);
+      color: white;
+      padding: 35px;
+      border-radius: 16px;
+      text-align: center;
+      margin: 30px 0;
+    }
+
+    .highlight .icon { font-size: 2.5rem; margin-bottom: 15px; }
+    .highlight p { font-size: 1.2rem; margin: 0; }
+    .highlight strong { color: #fbbf24; }
+
+    /* GRID */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin: 25px 0;
+    }
+
+    .grid-item {
+      background: white;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 25px;
+    }
+
+    .grid-item h4 {
+      margin: 0 0 10px;
+      color: var(--primary-dark);
+    }
+
+    /* FOOTER */
+    footer {
+      background: #1e293b;
+      color: white;
+      text-align: center;
+      padding: 40px 24px;
+      margin-top: 50px;
+    }
+
+    footer a {
+      color: #fbbf24;
+      text-decoration: none;
+    }
+
+    /* ANIMATIONS */
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+
+    @keyframes flowRight {
+      0% { transform: translateX(0); opacity: 1; }
+      50% { transform: translateX(10px); opacity: 0.5; }
+      100% { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-pulse { animation: pulse 2s infinite; }
+    .animate-flow { animation: flowRight 1.5s infinite; }
+
+    /* SCROLL REVEAL */
+    .section {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+    .section.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* HOVER EFFECTS */
+    .comparison-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .comparison-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    }
+
+    .flow-step {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .flow-step:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    }
+
+    .grid-item {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .grid-item:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+
+    .deep-dive-card {
+      transition: transform 0.3s ease, background 0.3s ease;
+    }
+    .deep-dive-card:hover {
+      transform: translateY(-4px);
+      background: rgba(255,255,255,0.18);
+    }
+
+    .arch-block {
+      transition: transform 0.3s ease;
+    }
+    .arch-block:hover {
+      transform: scale(1.05);
+    }
+
+    .layer-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .layer-card:hover {
+      transform: translateX(5px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+
+    /* DEEP DIVE SECTION */
+    .deep-dive {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+      border-radius: 20px;
+      padding: 40px;
+      margin: 30px 0;
+      color: white;
+    }
+
+    .deep-dive h3 {
+      color: #fbbf24;
+      margin-top: 0;
+    }
+
+    .deep-dive-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 25px;
+    }
+
+    .deep-dive-card {
+      background: rgba(255,255,255,0.1);
+      border-radius: 15px;
+      padding: 25px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .deep-dive-card h4 {
+      color: #fbbf24;
+      margin: 0 0 15px;
+      font-size: 1.1rem;
+    }
+
+    .deep-dive-card p {
+      color: rgba(255,255,255,0.9);
+      margin: 0;
+      line-height: 1.7;
+    }
+
+    /* FORMULA BOX */
+    .formula-box {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: center;
+      font-family: 'Georgia', serif;
+    }
+
+    .formula-box .formula {
+      font-size: 1.3rem;
+      color: #fbbf24;
+      margin: 10px 0;
+    }
+
+    .formula-box .description {
+      font-size: 0.9rem;
+      color: #94a3b8;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    /* COMPARISON */
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin: 25px 0;
+    }
+
+    .comparison-card {
+      border-radius: 16px;
+      padding: 25px;
+      border: 3px solid;
+    }
+
+    .comparison-card.gcn {
+      background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+      border-color: #3b82f6;
+    }
+
+    .comparison-card.gat {
+      background: linear-gradient(135deg, #fce7f3 0%, #fdf2f8 100%);
+      border-color: #e11d48;
+    }
+
+    .comparison-card h4 {
+      margin: 0 0 15px;
+    }
+
+    /* ATTENTION WEIGHT VISUAL */
+    .attention-demo {
+      background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
+      border-radius: 16px;
+      padding: 30px;
+      margin: 25px 0;
+      border: 2px solid #f472b6;
+    }
+
+    /* LAYER CARD */
+    .layer-card {
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      margin: 20px 0;
+      border: 2px solid #e5e7eb;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .layer-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 6px;
+      height: 100%;
+      background: var(--layer-color, var(--primary));
+    }
+
+    .layer-card h4 {
+      color: var(--layer-color, var(--primary));
+      margin: 0 0 15px;
+      font-size: 1.3rem;
+    }
+
+    .layer-card .dimensions {
+      display: inline-block;
+      background: var(--layer-color, var(--primary));
+      color: white;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      margin-bottom: 15px;
+    }
+
+    /* HERO SVG ANIMATIONS */
+    @keyframes attentionPulse {
+      0%, 100% { r: 25; opacity: 1; }
+      50% { r: 28; opacity: 0.85; }
+    }
+    @keyframes edgeFlow {
+      0% { stroke-dashoffset: 0; }
+      100% { stroke-dashoffset: -20; }
+    }
+    @keyframes nodeGlow {
+      0%, 100% { filter: drop-shadow(0 0 3px rgba(251,191,36,0.3)); }
+      50% { filter: drop-shadow(0 0 10px rgba(251,191,36,0.8)); }
+    }
+    .hero-target-node {
+      animation: attentionPulse 2.5s ease-in-out infinite;
+    }
+    .hero svg {
+      animation: nodeGlow 3s ease-in-out infinite;
+    }
+    .hero-edge-animated {
+      stroke-dasharray: 8, 4;
+      animation: edgeFlow 1.5s linear infinite;
+    }
+
+    /* DATA TABLE ROW HIGHLIGHT */
+    .data-table tr {
+      transition: background 0.2s ease;
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2rem; }
+      .comparison-grid { grid-template-columns: 1fr; }
+      .flow-steps { flex-direction: column; }
+      .flow-step::after { display: none; }
+      .section { opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- BANNER DE PRERREQUISITO -->
+<div style="background: linear-gradient(135deg, #fef3c7, #fde68a); padding: 15px 24px; text-align: center; border-bottom: 3px solid #f59e0b;">
+  <span style="font-size: 1.1em;">
+    📋 <strong>¿Vienes del capítulo anterior?</strong> 
+    Asegúrate de haber leído el <a href="Chapter1_GCN_Explained.html" style="color: #92400e; font-weight: bold;">Capítulo 1: Graph Convolutional Networks</a> 
+    para entender GCNConv, message passing y la estructura de grafos.
+  </span>
+</div>
+
+<!-- HERO -->
+<header class="hero">
+  <h1>📘 Capítulo 2: <strong>Graph Attention Networks</strong></h1>
+  <p>¡Hola! 👋 Vamos a descubrir cómo los mecanismos de <strong>atención</strong> revolucionan las GNNs. <br>En lugar de usar pesos fijos basados en el grado (como GCN), aprenderemos a darle <strong>más peso a los vecinos más relevantes</strong>.</p>
+  <div class="hero-badge">🎯 Dataset: CiteSeer (3,327 nodos, 6 clases) | ⏱️ ~40 minutos</div>
+  
+  <!-- GRAFO INTERACTIVO EN EL HERO con pesos de atención -->
+  <svg viewBox="0 0 500 300" style="max-width: 600px; margin-top: 30px;">
+    <!-- Edges con diferentes grosores (representando pesos de atención) -->
+    <g fill="none">
+      <line x1="250" y1="150" x2="150" y2="80" stroke="rgba(255,255,255,0.9)" stroke-width="6" class="hero-edge-animated"/>
+      <line x1="250" y1="150" x2="350" y2="80" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>
+      <line x1="250" y1="150" x2="150" y2="220" stroke="rgba(255,255,255,0.6)" stroke-width="4" class="hero-edge-animated"/>
+      <line x1="250" y1="150" x2="350" y2="220" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+      <line x1="250" y1="150" x2="100" y2="150" stroke="rgba(255,255,255,0.7)" stroke-width="5" class="hero-edge-animated"/>
+      <line x1="250" y1="150" x2="400" y2="150" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+    </g>
+    
+    <!-- Nodo central con animación -->
+    <circle cx="250" cy="150" r="25" fill="#fbbf24" stroke="white" stroke-width="3" class="hero-target-node"/>
+    <text x="250" y="155" text-anchor="middle" fill="#1e293b" font-size="12" font-weight="bold">Target</text>
+    
+    <!-- Vecinos con diferentes importancias -->
+    <circle cx="150" cy="80" r="18" fill="#3b82f6" stroke="white" stroke-width="2"/>
+    <text x="150" y="85" text-anchor="middle" fill="white" font-size="9" font-weight="bold">α=0.35</text>
+    
+    <circle cx="350" cy="80" r="14" fill="#f472b6" stroke="white" stroke-width="2"/>
+    <text x="350" y="85" text-anchor="middle" fill="white" font-size="8">α=0.08</text>
+    
+    <circle cx="150" cy="220" r="16" fill="#34d399" stroke="white" stroke-width="2"/>
+    <text x="150" y="225" text-anchor="middle" fill="white" font-size="8">α=0.22</text>
+    
+    <circle cx="350" cy="220" r="12" fill="#a78bfa" stroke="white" stroke-width="2"/>
+    <text x="350" y="225" text-anchor="middle" fill="white" font-size="8">α=0.05</text>
+    
+    <circle cx="100" cy="150" r="17" fill="#f87171" stroke="white" stroke-width="2"/>
+    <text x="100" y="155" text-anchor="middle" fill="white" font-size="8">α=0.25</text>
+    
+    <circle cx="400" cy="150" r="11" fill="#64748b" stroke="white" stroke-width="2"/>
+    <text x="400" y="155" text-anchor="middle" fill="white" font-size="8">α=0.05</text>
+    
+    <!-- Leyenda -->
+    <rect x="140" y="268" width="220" height="25" rx="12" fill="rgba(0,0,0,0.3)"/>
+    <text x="250" y="285" text-anchor="middle" fill="white" font-size="10">Grosor de línea = peso de atención α</text>
+  </svg>
+</header>
+
+<main>
+
+<!-- INSTRUCCIONES PARA ALUMNOS -->
+<section class="section" style="background: linear-gradient(135deg, #fce7f3 0%, #ede9fe 100%); border: 2px solid #e11d48;">
+  <div class="section-header">
+    <div class="section-number">📋</div>
+    <div class="section-title">
+      <h2>¿Cómo usar esta guía?</h2>
+      <p>Lee esto antes de empezar</p>
+    </div>
+  </div>
+
+  <div class="explain-box" style="background: white;">
+    <h4>🎯 El plan de trabajo:</h4>
+    <p>
+      1️⃣ <strong>Abre dos ventanas:</strong> Este HTML en tu navegador + el notebook <code>2_Graph_Attention_Network.ipynb</code> en VS Code<br><br>
+      2️⃣ <strong>Sigue el ritmo:</strong> Cada sección tiene un indicador <span style="background: #fef3c7; padding: 2px 8px; border-radius: 4px;">▶️ ¡Ejecuta la Celda X!</span> que te dice cuándo correr código<br><br>
+      3️⃣ <strong>Lee → Ejecuta → Compara:</strong> Lee la explicación, ejecuta la celda, y compara tu output con el esperado<br><br>
+      4️⃣ <strong>Diferencia clave con Cap 1:</strong> Aquí vamos a <strong>comparar GCN vs GAT</strong> lado a lado — ¡verás la ventaja de la atención!
+    </p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px;">
+    <div style="background: white; padding: 15px; border-radius: 10px; text-align: center; border: 2px solid #10b981;">
+      <div style="font-size: 2rem;">⏱️</div>
+      <strong style="color: #047857;">~40 minutos</strong>
+      <p style="font-size: 0.85rem; color: #64748b; margin: 5px 0 0;">Tiempo estimado</p>
+    </div>
+    <div style="background: white; padding: 15px; border-radius: 10px; text-align: center; border: 2px solid #f59e0b;">
+      <div style="font-size: 2rem;">🔢</div>
+      <strong style="color: #d97706;">~16 celdas</strong>
+      <p style="font-size: 0.85rem; color: #64748b; margin: 5px 0 0;">En el notebook</p>
+    </div>
+    <div style="background: white; padding: 15px; border-radius: 10px; text-align: center; border: 2px solid #e11d48;">
+      <div style="font-size: 2rem;">🧠</div>
+      <strong style="color: #e11d48;">Atención > Fijo</strong>
+      <p style="font-size: 0.85rem; color: #64748b; margin: 5px 0 0;">Lo que demostraremos</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECCIÓN 0: IDEA CENTRAL — ¿Por qué Atención?
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-number">0</div>
+    <div class="section-title">
+      <h2>La Gran Idea: ¿Por qué necesitamos Atención?</h2>
+      <p>Del Capítulo 1 al Capítulo 2 — La evolución clave</p>
+    </div>
+  </div>
+
+  <div class="highlight" style="margin-bottom: 25px;">
+    <div class="icon">💡</div>
+    <p>
+      En el <strong>Capítulo 1 (GCN)</strong>, cada nodo agregaba la información de sus vecinos con pesos <strong>fijos basados en el grado</strong> (normalización $\frac{1}{\sqrt{\hat{d}_i \cdot \hat{d}_j}}$).<br>
+      En el <strong>Capítulo 2 (GAT)</strong>, cada nodo aprende <strong>pesos adaptativos</strong> — decide cuánto escuchar a cada vecino según el contenido.
+    </p>
+  </div>
+
+  <!-- ANALOGÍA VISUAL: GCN vs GAT -->
+  <div class="diagram">
+    <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+      <rect width="800" height="400" fill="#f8fafc" rx="15"/>
+      
+      <text x="400" y="30" text-anchor="middle" font-size="18" fill="#1e293b" font-weight="700">GCN vs GAT — La Diferencia Fundamental</text>
+      
+      <!-- GCN SIDE -->
+      <rect x="20" y="50" width="370" height="330" rx="15" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+      <text x="205" y="80" text-anchor="middle" font-size="16" fill="#1e40af" font-weight="700">🔵 GCN (Capítulo 1)</text>
+      <text x="205" y="100" text-anchor="middle" font-size="12" fill="#64748b">"Pesos fijos por grado"</text>
+      
+      <!-- GCN Graph -->
+      <g transform="translate(205, 220)">
+        <!-- Edges con pesos fijos por normalización de grado -->
+        <line x1="0" y1="0" x2="-80" y2="-60" stroke="#3b82f6" stroke-width="3"/>
+        <line x1="0" y1="0" x2="80" y2="-60" stroke="#3b82f6" stroke-width="3"/>
+        <line x1="0" y1="0" x2="-80" y2="60" stroke="#3b82f6" stroke-width="3"/>
+        <line x1="0" y1="0" x2="80" y2="60" stroke="#3b82f6" stroke-width="3"/>
+        
+        <!-- Peso labels: fijos por 1/√(di·dj) -->
+        <rect x="-60" y="-50" width="50" height="18" rx="4" fill="white" stroke="#3b82f6"/>
+        <text x="-35" y="-37" text-anchor="middle" font-size="7" fill="#3b82f6" font-weight="bold">1/√(d·d)</text>
+        
+        <rect x="25" y="-50" width="50" height="18" rx="4" fill="white" stroke="#3b82f6"/>
+        <text x="50" y="-37" text-anchor="middle" font-size="7" fill="#3b82f6" font-weight="bold">1/√(d·d)</text>
+        
+        <rect x="-60" y="32" width="50" height="18" rx="4" fill="white" stroke="#3b82f6"/>
+        <text x="-35" y="45" text-anchor="middle" font-size="7" fill="#3b82f6" font-weight="bold">1/√(d·d)</text>
+        
+        <rect x="25" y="32" width="50" height="18" rx="4" fill="white" stroke="#3b82f6"/>
+        <text x="50" y="45" text-anchor="middle" font-size="7" fill="#3b82f6" font-weight="bold">1/√(d·d)</text>
+        
+        <!-- Nodo central -->
+        <circle cx="0" cy="0" r="22" fill="#3b82f6" stroke="#1e40af" stroke-width="3"/>
+        <text x="0" y="5" text-anchor="middle" fill="white" font-size="11" font-weight="bold">v</text>
+        
+        <!-- Vecinos -->
+        <circle cx="-80" cy="-60" r="15" fill="#93c5fd"/>
+        <circle cx="80" cy="-60" r="15" fill="#93c5fd"/>
+        <circle cx="-80" cy="60" r="15" fill="#93c5fd"/>
+        <circle cx="80" cy="60" r="15" fill="#93c5fd"/>
+      </g>
+      
+      <text x="205" y="330" text-anchor="middle" font-size="11" fill="#64748b">Pesos fijos según la estructura del grafo</text>
+      <text x="205" y="350" text-anchor="middle" font-size="11" fill="#1e40af" font-weight="600">= Normalización por grado (no aprendida)</text>
+      
+      <!-- GAT SIDE -->
+      <rect x="410" y="50" width="370" height="330" rx="15" fill="#fce7f3" stroke="#e11d48" stroke-width="2"/>
+      <text x="595" y="80" text-anchor="middle" font-size="16" fill="#be123c" font-weight="700">🔴 GAT (Capítulo 2)</text>
+      <text x="595" y="100" text-anchor="middle" font-size="12" fill="#64748b">"Escucho más a los importantes"</text>
+      
+      <!-- GAT Graph -->
+      <g transform="translate(595, 220)">
+        <!-- Edges con diferentes grosores -->
+        <line x1="0" y1="0" x2="-80" y2="-60" stroke="#e11d48" stroke-width="7"/>
+        <line x1="0" y1="0" x2="80" y2="-60" stroke="#e11d48" stroke-width="2"/>
+        <line x1="0" y1="0" x2="-80" y2="60" stroke="#e11d48" stroke-width="5"/>
+        <line x1="0" y1="0" x2="80" y2="60" stroke="#e11d48" stroke-width="1"/>
+        
+        <!-- Peso labels -->
+        <rect x="-60" y="-50" width="35" height="18" rx="4" fill="white" stroke="#e11d48"/>
+        <text x="-42" y="-37" text-anchor="middle" font-size="9" fill="#e11d48" font-weight="bold">45%</text>
+        
+        <rect x="25" y="-50" width="35" height="18" rx="4" fill="white" stroke="#e11d48"/>
+        <text x="43" y="-37" text-anchor="middle" font-size="9" fill="#e11d48" font-weight="bold">10%</text>
+        
+        <rect x="-60" y="32" width="35" height="18" rx="4" fill="white" stroke="#e11d48"/>
+        <text x="-42" y="45" text-anchor="middle" font-size="9" fill="#e11d48" font-weight="bold">35%</text>
+        
+        <rect x="25" y="32" width="35" height="18" rx="4" fill="white" stroke="#e11d48"/>
+        <text x="43" y="45" text-anchor="middle" font-size="9" fill="#e11d48" font-weight="bold">10%</text>
+        
+        <!-- Nodo central -->
+        <circle cx="0" cy="0" r="22" fill="#e11d48" stroke="#be123c" stroke-width="3"/>
+        <text x="0" y="5" text-anchor="middle" fill="white" font-size="11" font-weight="bold">v</text>
+        
+        <!-- Vecinos (diferentes tamaños = importancia) -->
+        <circle cx="-80" cy="-60" r="20" fill="#fb7185"/>
+        <circle cx="80" cy="-60" r="11" fill="#fda4af"/>
+        <circle cx="-80" cy="60" r="17" fill="#fb7185"/>
+        <circle cx="80" cy="60" r="9" fill="#fecdd3"/>
+      </g>
+      
+      <text x="595" y="330" text-anchor="middle" font-size="11" fill="#64748b">Cada vecino tiene un peso aprendido α</text>
+      <text x="595" y="350" text-anchor="middle" font-size="11" fill="#be123c" font-weight="600">= Promedio ponderado por atención</text>
+    </svg>
+  </div>
+
+  <div class="explain-box">
+    <h4>🎭 Analogía: La reunión de trabajo</h4>
+    <p>
+      <strong>GCN</strong> = Estás en una reunión y dejas hablar a TODOS. Para que nadie domine, <strong>normalizas</strong>: al que habla mucho (nodo de alto grado) le bajas el volumen, para que su voz pese igual que la de los demás. Los pesos son <strong>fijos por la estructura</strong> del grafo, no por lo que dicen. 📊<br><br>
+      <strong>GAT</strong> = Estás en la misma reunión, pero en lugar de normalizar por cargo, <strong>escuchas el contenido</strong> de lo que dice cada persona y decides cuánto peso darle. Alguien con pocas conexiones pero que dice algo brillante recibe más atención. El peso se <strong>aprende</strong>. 🎯<br><br>
+      <strong>¿Resultado?</strong> El GAT toma mejores decisiones porque pondera la información según su <strong>relevancia real</strong>, no solo por la topología del grafo.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECCIÓN 1: INSTALACIÓN Y LIBRERÍAS
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-number">1</div>
+    <div class="section-title">
+      <h2>Instalación y Librerías</h2>
+      <p>Preparando nuestro entorno de trabajo</p>
+    </div>
+  </div>
+
+  <div class="highlight" style="margin-bottom: 20px;">
+    <div class="icon">▶️</div>
+    <p><strong>¡Ejecuta la Celda 1 del notebook!</strong> Esta celda instala las dependencias y carga las librerías.</p>
+  </div>
+
+  <div class="code-block">
+    <pre><span class="comment"># Asumimos que PyTorch ya está instalado</span>
+<span class="keyword">import</span> torch
+torchversion = torch.__version__
+
+<span class="comment"># Instalar PyTorch Scatter, Sparse y Geometric</span>
+!pip install -q torch-scatter -f https://data.pyg.org/whl/torch-{torchversion}.html
+!pip install -q torch-sparse -f https://data.pyg.org/whl/torch-{torchversion}.html
+!pip install -q git+https://github.com/pyg-team/pytorch_geometric.git
+
+<span class="comment"># Librerías de soporte</span>
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+np.random.seed(<span class="number">0</span>)
+<span class="keyword">import</span> networkx <span class="keyword">as</span> nx
+<span class="keyword">from</span> sklearn.manifold <span class="keyword">import</span> TSNE
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt</pre>
+  </div>
+
+  <div class="explain-box">
+    <h4>💡 ¿Qué hay de nuevo respecto al Capítulo 1?</h4>
+    <p>
+      Dos nuevas herramientas se suman a nuestra caja:<br><br>
+      <strong>🔧 sklearn.manifold.TSNE:</strong> Reduce dimensiones altas a 2D para visualizar embeddings — ¡veremos los clusters de nodos!<br>
+      <strong>🔧 torch-scatter / torch-sparse:</strong> Operaciones eficientes sobre grafos dispersos que necesita PyTorch Geometric.<br><br>
+      Las demás librerías son las mismas del Capítulo 1 (torch, numpy, networkx, matplotlib).
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECCIÓN 2: CARGAR EL DATASET - CITESEER
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-number">2</div>
+    <div class="section-title">
+      <h2>Cargar el Dataset: CiteSeer</h2>
+      <p>¡Un dataset mucho más grande y realista que Karate Club!</p>
+    </div>
+  </div>
+
+  <div class="highlight" style="margin-bottom: 20px;">
+    <div class="icon">▶️</div>
+    <p><strong>¡Ejecuta la Celda 2!</strong> Cargamos el dataset CiteSeer desde PyTorch Geometric.</p>
+  </div>
+
+  <div class="code-block">
+    <pre><span class="keyword">from</span> torch_geometric.datasets <span class="keyword">import</span> Planetoid
+
+<span class="comment"># Importar dataset desde PyTorch Geometric</span>
+dataset = Planetoid(root=<span class="string">"."</span>, name=<span class="string">"CiteSeer"</span>)
+data = dataset[<span class="number">0</span>]
+
+<span class="comment"># Información sobre el dataset</span>
+<span class="function">print</span>(<span class="string">f'Dataset: {dataset}'</span>)
+<span class="function">print</span>(<span class="string">f'Number of graphs: {len(dataset)}'</span>)
+<span class="function">print</span>(<span class="string">f'Number of nodes: {data.x.shape[0]}'</span>)
+<span class="function">print</span>(<span class="string">f'Number of features: {dataset.num_features}'</span>)
+<span class="function">print</span>(<span class="string">f'Number of classes: {dataset.num_classes}'</span>)
+
+<span class="comment"># Información sobre el grafo</span>
+<span class="function">print</span>(<span class="string">f'Edges are directed: {data.is_directed()}'</span>)
+<span class="function">print</span>(<span class="string">f'Graph has isolated nodes: {data.has_isolated_nodes()}'</span>)
+<span class="function">print</span>(<span class="string">f'Graph has loops: {data.has_self_loops()}'</span>)</pre>
+  </div>
+
+  <div class="output-box">
+    <div class="label">📤 ¿Qué deberías ver en tu notebook?</div>
+    Dataset: CiteSeer()<br>
+    -------------------<br>
+    Number of graphs: 1 <span style="color: #64748b;">← Un solo grafo de citas</span><br>
+    Number of nodes: 3327 <span style="color: #64748b;">← ¡3,327 artículos científicos!</span><br>
+    Number of features: 3703 <span style="color: #64748b;">← 3,703 palabras únicas como features</span><br>
+    Number of classes: 6 <span style="color: #64748b;">← 6 categorías de artículos</span><br><br>
+    Graph:<br>
+    ------<br>
+    Edges are directed: False<br>
+    Graph has isolated nodes: True <span style="color: #ef4444;">← ¡Ojo! Hay nodos aislados</span><br>
+    Graph has loops: False
+  </div>
+
+  <!-- COMPARACIÓN KARATE CLUB vs CITESEER -->
+  <div class="diagram">
+    <svg viewBox="0 0 800 280" xmlns="http://www.w3.org/2000/svg">
+      <rect width="800" height="280" fill="#f8fafc" rx="15"/>
+      
+      <text x="400" y="30" text-anchor="middle" font-size="16" fill="#1e293b" font-weight="700">📊 Karate Club (Cap. 1) vs CiteSeer (Cap. 2)</text>
+      
+      <!-- Karate Club -->
+      <rect x="30" y="50" width="350" height="210" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+      <text x="205" y="75" text-anchor="middle" font-size="14" fill="#1e40af" font-weight="600">🥋 Karate Club</text>
+      
+      <g transform="translate(60, 95)">
+        <text x="0" y="0" font-size="12" fill="#64748b">Nodos:</text>
+        <text x="120" y="0" font-size="12" fill="#1e40af" font-weight="bold">34</text>
+        <rect x="150" y="-12" width="30" height="14" rx="3" fill="#3b82f6" opacity="0.1"/>
+        
+        <text x="0" y="28" font-size="12" fill="#64748b">Features:</text>
+        <text x="120" y="28" font-size="12" fill="#1e40af" font-weight="bold">34</text>
+        <text x="150" y="28" font-size="10" fill="#94a3b8">(identidad)</text>
+        
+        <text x="0" y="56" font-size="12" fill="#64748b">Clases:</text>
+        <text x="120" y="56" font-size="12" fill="#1e40af" font-weight="bold">4</text>
+        
+        <text x="0" y="84" font-size="12" fill="#64748b">Edges:</text>
+        <text x="120" y="84" font-size="12" fill="#1e40af" font-weight="bold">156</text>
+        
+        <text x="0" y="112" font-size="12" fill="#64748b">Aislados:</text>
+        <text x="120" y="112" font-size="12" fill="#10b981" font-weight="bold">No</text>
+        
+        <text x="0" y="140" font-size="12" fill="#64748b">Contexto:</text>
+        <text x="120" y="140" font-size="11" fill="#64748b">Club de karate</text>
+      </g>
+      
+      <!-- Flecha VS -->
+      <circle cx="400" cy="160" r="25" fill="#fbbf24" stroke="#d97706" stroke-width="2"/>
+      <text x="400" y="166" text-anchor="middle" font-size="14" fill="#1e293b" font-weight="bold">VS</text>
+      
+      <!-- CiteSeer -->
+      <rect x="420" y="50" width="350" height="210" rx="12" fill="#fce7f3" stroke="#e11d48" stroke-width="2"/>
+      <text x="595" y="75" text-anchor="middle" font-size="14" fill="#be123c" font-weight="600">📚 CiteSeer</text>
+      
+      <g transform="translate(450, 95)">
+        <text x="0" y="0" font-size="12" fill="#64748b">Nodos:</text>
+        <text x="120" y="0" font-size="12" fill="#be123c" font-weight="bold">3,327</text>
+        <rect x="185" y="-12" width="100" height="14" rx="3" fill="#e11d48" opacity="0.2"/>
+        <text x="235" y="-1" text-anchor="middle" font-size="8" fill="#e11d48">¡×98 más!</text>
+        
+        <text x="0" y="28" font-size="12" fill="#64748b">Features:</text>
+        <text x="120" y="28" font-size="12" fill="#be123c" font-weight="bold">3,703</text>
+        <text x="185" y="28" font-size="10" fill="#94a3b8">(bag of words)</text>
+        
+        <text x="0" y="56" font-size="12" fill="#64748b">Clases:</text>
+        <text x="120" y="56" font-size="12" fill="#be123c" font-weight="bold">6</text>
+        
+        <text x="0" y="84" font-size="12" fill="#64748b">Edges:</text>
+        <text x="120" y="84" font-size="12" fill="#be123c" font-weight="bold">~9,000</text>
+        
+        <text x="0" y="112" font-size="12" fill="#64748b">Aislados:</text>
+        <text x="120" y="112" font-size="12" fill="#ef4444" font-weight="bold">Sí ⚠️</text>
+        
+        <text x="0" y="140" font-size="12" fill="#64748b">Contexto:</text>
+        <text x="120" y="140" font-size="11" fill="#64748b">Artículos científicos</text>
+      </g>
+    </svg>
+  </div>
+
+  <div class="explain-box">
+    <h4>📚 ¿Qué es CiteSeer?</h4>
+    <p>
+      Es una red de <strong>citas académicas</strong>. Cada nodo es un artículo científico y cada arista significa que un artículo cita a otro.<br><br>
+      <strong>🧑‍🔬 Nodos (3,327):</strong> Artículos académicos de computer science<br>
+      <strong>🔗 Aristas:</strong> Si el artículo A cita al artículo B, hay una conexión A↔B<br>
+      <strong>📋 Features (3,703):</strong> Cada artículo se representa con un vector binario de "bag of words" — indica qué palabras aparecen en el artículo<br>
+      <strong>🏷️ Clases (6):</strong> Agents, AI, DB, IR, ML, HCI — la subárea del artículo<br><br>
+      <strong>🎯 El reto:</strong> Predecir la categoría de cada artículo usando sus palabras y sus conexiones de citación.
+    </p>
+  </div>
+
+  <!-- DETALLE DE LAS 6 CATEGORÍAS -->
+  <div class="deep-dive" style="margin-bottom: 25px;">
+    <h3>🏷️ Las 6 Categorías de CiteSeer — ¿Qué significa cada una?</h3>
+    <p style="margin-bottom: 20px;">Cada artículo en el dataset pertenece a una de estas 6 subáreas de <strong>Computer Science</strong>. Las etiquetas reflejan la taxonomía clásica usada por la biblioteca digital CiteSeer:</p>
+    
+    <div class="deep-dive-grid">
+      <div class="deep-dive-card">
+        <h4>🤖 Agents</h4>
+        <p>
+          <strong>Sistemas Multi-Agente y Agentes Inteligentes.</strong><br>
+          Investigación sobre entidades autónomas que perciben su entorno y actúan para alcanzar objetivos. Incluye agentes cooperativos, negociación entre agentes, y sistemas distribuidos inteligentes.<br><br>
+          <em>Ejemplo:</em> "Negotiation strategies in multi-agent supply chain systems"
+        </p>
+      </div>
+      
+      <div class="deep-dive-card">
+        <h4>🧠 AI (Artificial Intelligence)</h4>
+        <p>
+          <strong>Inteligencia Artificial general.</strong><br>
+          El campo amplio: razonamiento lógico, planificación, representación del conocimiento, sistemas expertos, procesamiento de lenguaje natural, y resolución de problemas.<br><br>
+          <em>Ejemplo:</em> "Knowledge representation using ontologies for natural language understanding"
+        </p>
+      </div>
+      
+      <div class="deep-dive-card">
+        <h4>🗄️ DB (Databases)</h4>
+        <p>
+          <strong>Bases de Datos.</strong><br>
+          Diseño, optimización y consulta de sistemas de bases de datos. Incluye modelos relacionales, indexación, data warehousing, integración de datos y bases de datos distribuidas.<br><br>
+          <em>Ejemplo:</em> "Efficient query optimization in distributed relational databases"
+        </p>
+      </div>
+      
+      <div class="deep-dive-card">
+        <h4>🔍 IR (Information Retrieval)</h4>
+        <p>
+          <strong>Recuperación de Información.</strong><br>
+          Cómo buscar y encontrar documentos relevantes en grandes colecciones. Los motores de búsqueda (Google, Bing) nacieron de esta área. Incluye ranking, filtrado, y sistemas de recomendación.<br><br>
+          <em>Ejemplo:</em> "Probabilistic models for document ranking in web search engines"
+        </p>
+      </div>
+      
+      <div class="deep-dive-card">
+        <h4>⚙️ ML (Machine Learning)</h4>
+        <p>
+          <strong>Aprendizaje Automático.</strong><br>
+          Algoritmos que aprenden patrones de los datos: clasificación, regresión, clustering, redes neuronales, árboles de decisión, y aprendizaje por refuerzo. ¡El campo donde vivimos nosotros!<br><br>
+          <em>Ejemplo:</em> "Ensemble methods for boosting decision tree classification accuracy"
+        </p>
+      </div>
+      
+      <div class="deep-dive-card">
+        <h4>🖥️ HCI (Human-Computer Interaction)</h4>
+        <p>
+          <strong>Interacción Humano-Computadora.</strong><br>
+          Cómo las personas usan la tecnología: diseño de interfaces, usabilidad, accesibilidad, experiencia de usuario (UX), visualización de datos y realidad virtual/aumentada.<br><br>
+          <em>Ejemplo:</em> "Eye-tracking studies for evaluating mobile interface usability"
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="explain-box" style="background: linear-gradient(135deg, #fce7f3 0%, #fdf2f8 100%); border-color: #e11d48;">
+    <h4>🤔 ¿Por qué se eligió CiteSeer para este capítulo?</h4>
+    <p>
+      CiteSeer no es una elección aleatoria — es el dataset perfecto para demostrar la ventaja de GAT:<br><br>
+      1️⃣ <strong>Tamaño real:</strong> Con 3,327 nodos es lo suficientemente grande para ser un reto real, pero lo suficientemente pequeño para entrenar en segundos. Karate Club (34 nodos) era demasiado "de juguete".<br><br>
+      2️⃣ <strong>Ambigüedad entre clases:</strong> Las 6 categorías se traslapan — un paper de "machine learning para bases de datos" podría ser ML o DB. Aquí es donde la <strong>atención</strong> brilla: mirando LAS CITAS del artículo, el GAT puede desambiguar a qué área pertenece realmente.<br><br>
+      3️⃣ <strong>Estructura de citación rica:</strong> Los artículos tienden a citar papers de su misma área (homofilia), pero hay citas cruzadas entre áreas. El GAT aprende a dar <strong>más peso a las citas del mismo campo</strong> y menos a las citas interdisciplinarias — exactamente lo que necesitamos.<br><br>
+      4️⃣ <strong>Benchmark estándar:</strong> Junto con Cora y PubMed, CiteSeer es uno de los 3 datasets clásicos del paquete <code>Planetoid</code> para evaluar GNNs. Los papers originales de GCN (Kipf 2017) y GAT (Veličković 2018) lo usaron para reportar resultados.<br><br>
+      5️⃣ <strong>Analogía con AML:</strong> La estructura "nodos con features + conexiones entre ellos + clasificar cada nodo" es <strong>idéntica</strong> al problema de anti-lavado de dinero: transacciones (features) + red de transferencias (aristas) + clasificar si es sospechoso (clases). ¡Por eso lo estudiamos!
+    </p>
+  </div>
+
+  <div class="warning-box">
+    <h4>⚠️ ¡Nodos aislados detectados!</h4>
+    <p>
+      A diferencia del Karate Club, CiteSeer tiene <strong>nodos aislados</strong> — artículos que no son citados por nadie ni citan a nadie en el dataset.
+      Esto es un problema porque las GNNs aprenden de los vecinos. <strong>¡Sin vecinos, no hay información para propagar!</strong>
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECCIÓN 3: NODOS AISLADOS
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-number">3</div>
+    <div class="section-title">
+      <h2>Nodos Aislados — El Talón de Aquiles de las GNNs</h2>
+      <p>¿Cuántos nodos están solos y por qué importa?</p>
+    </div>
+  </div>
+
+  <div class="highlight" style="margin-bottom: 20px;">
+    <div class="icon">▶️</div>
+    <p><strong>¡Ejecuta la Celda 3!</strong> Vamos a contar los nodos que no tienen conexiones.</p>
+  </div>
+
+  <div class="code-block">
+    <pre><span class="keyword">from</span> torch_geometric.utils <span class="keyword">import</span> remove_isolated_nodes
+
+isolated = (remove_isolated_nodes(data[<span class="string">'edge_index'</span>])[<span class="number">2</span>] == <span class="keyword">False</span>).sum(dim=<span class="number">0</span>).item()
+<span class="function">print</span>(<span class="string">f'Number of isolated nodes = {isolated}'</span>)</pre>
+  </div>
+
+  <div class="output-box">
+    <div class="label">📤 ¿Qué deberías ver?</div>
+    Number of isolated nodes = 15<br><br>
+    <span style="color: #64748b;">¡15 artículos sin ninguna conexión! (~0.45% del total)</span>
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 700 250" xmlns="http://www.w3.org/2000/svg">
+      <rect width="700" height="250" fill="#f8fafc" rx="15"/>
+      
+      <text x="350" y="30" text-anchor="middle" font-size="16" fill="#1e293b" font-weight="700">Nodos Conectados vs Nodos Aislados</text>
+      
+      <!-- Connected nodes cluster -->
+      <g transform="translate(200, 140)">
+        <circle cx="0" cy="0" r="80" fill="#dcfce7" stroke="#10b981" stroke-width="2" stroke-dasharray="5,3"/>
+        
+        <line x1="-30" y1="-20" x2="20" y2="-40" stroke="#94a3b8" stroke-width="1"/>
+        <line x1="-30" y1="-20" x2="-10" y2="20" stroke="#94a3b8" stroke-width="1"/>
+        <line x1="20" y1="-40" x2="40" y2="0" stroke="#94a3b8" stroke-width="1"/>
+        <line x1="-10" y1="20" x2="40" y2="0" stroke="#94a3b8" stroke-width="1"/>
+        <line x1="-50" y1="10" x2="-30" y2="-20" stroke="#94a3b8" stroke-width="1"/>
+        <line x1="-50" y1="10" x2="-10" y2="20" stroke="#94a3b8" stroke-width="1"/>
+        <line x1="40" y1="0" x2="55" y2="30" stroke="#94a3b8" stroke-width="1"/>
+        <line x1="-10" y1="20" x2="-30" y2="50" stroke="#94a3b8" stroke-width="1"/>
+        
+        <circle cx="-30" cy="-20" r="10" fill="#10b981"/>
+        <circle cx="20" cy="-40" r="10" fill="#10b981"/>
+        <circle cx="-10" cy="20" r="10" fill="#10b981"/>
+        <circle cx="40" cy="0" r="10" fill="#10b981"/>
+        <circle cx="-50" cy="10" r="8" fill="#34d399"/>
+        <circle cx="55" cy="30" r="8" fill="#34d399"/>
+        <circle cx="-30" cy="50" r="8" fill="#34d399"/>
+        <circle cx="10" cy="50" r="7" fill="#34d399"/>
+        <circle cx="-60" cy="-30" r="7" fill="#34d399"/>
+      </g>
+      
+      <text x="200" y="235" text-anchor="middle" font-size="12" fill="#047857" font-weight="600">3,312 nodos conectados ✅</text>
+      <text x="200" y="248" text-anchor="middle" font-size="10" fill="#64748b">Pueden aprender de sus vecinos</text>
+      
+      <!-- Isolated nodes -->
+      <g transform="translate(500, 140)">
+        <circle cx="0" cy="0" r="80" fill="#fee2e2" stroke="#ef4444" stroke-width="2" stroke-dasharray="5,3"/>
+        
+        <circle cx="-40" cy="-30" r="10" fill="#ef4444"/>
+        <circle cx="20" cy="-40" r="10" fill="#ef4444"/>
+        <circle cx="-20" cy="20" r="10" fill="#ef4444"/>
+        <circle cx="40" cy="10" r="10" fill="#ef4444"/>
+        <circle cx="0" cy="45" r="8" fill="#f87171"/>
+        <circle cx="-50" cy="20" r="8" fill="#f87171"/>
+        <circle cx="50" cy="-20" r="8" fill="#f87171"/>
+        
+        <!-- No edges! -->
+        <text x="0" y="-5" text-anchor="middle" font-size="20">🚫</text>
+      </g>
+      
+      <text x="500" y="235" text-anchor="middle" font-size="12" fill="#dc2626" font-weight="600">15 nodos aislados ⚠️</text>
+      <text x="500" y="248" text-anchor="middle" font-size="10" fill="#64748b">Solo pueden usar sus propios features</text>
+    </svg>
+  </div>
+
+  <div class="explain-box">
+    <h4>💡 ¿Por qué los nodos aislados son un problema?</h4>
+    <p>
+      Las GNNs funcionan por <strong>message passing</strong> — cada nodo recoge información de sus vecinos.<br><br>
+      <strong>Un nodo sin vecinos</strong> es como un estudiante que va al examen sin poder hablar con nadie. Solo puede usar lo que ya sabe (sus features propios), pero no se beneficia de la estructura del grafo.<br><br>
+      <strong>Consecuencia:</strong> Los nodos aislados suelen tener <strong>peor accuracy</strong> porque la GNN no puede aprovechar las conexiones para clasificarlos. ¡Veremos esto al final del capítulo cuando analicemos accuracy por grado!
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECCIÓN 4: VISUALIZAR EL GRAFO
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-number">4</div>
+    <div class="section-title">
+      <h2>Visualizar el Grafo CiteSeer</h2>
+      <p>¡Vamos a ver la red de citas académicas!</p>
+    </div>
+  </div>
+
+  <div class="highlight" style="margin-bottom: 20px;">
+    <div class="icon">▶️</div>
+    <p><strong>¡Ejecuta la Celda 4!</strong> Vamos a dibujar los 3,327 nodos y sus conexiones con NetworkX.</p>
+  </div>
+
+  <div class="code-block">
+    <pre><span class="keyword">from</span> torch_geometric.utils <span class="keyword">import</span> to_networkx
+
+G = to_networkx(data, to_undirected=<span class="keyword">True</span>)
+plt.figure(figsize=(<span class="number">18</span>,<span class="number">18</span>))
+plt.axis(<span class="string">'off'</span>)
+nx.draw_networkx(G,
+                pos=nx.spring_layout(G, seed=<span class="number">0</span>),
+                with_labels=<span class="keyword">False</span>,
+                node_size=<span class="number">50</span>,
+                node_color=data.y,
+                width=<span class="number">2</span>,
+                edge_color=<span class="string">"grey"</span>)
+plt.show()</pre>
+  </div>
+
+  <!-- OUTPUT VISUAL: Simulación del grafo CiteSeer -->
+  <div class="diagram" style="background: #1e293b; padding: 20px; border: 2px solid #475569;">
+    <div style="color: #94a3b8; font-size: 0.85rem; text-align: left; margin-bottom: 10px; font-family: monospace;">📤 Output esperado (representación aproximada):</div>
+    <svg viewBox="0 0 700 700" xmlns="http://www.w3.org/2000/svg">
+      <rect width="700" height="700" fill="#1e293b" rx="10"/>
+      
+      <!-- ═══ CLUSTER 1: Agents (morado) — arriba izquierda ═══ -->
+      <g opacity="0.9">
+        <line x1="120" y1="130" x2="150" y2="110" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="120" y1="130" x2="100" y2="160" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="150" y1="110" x2="170" y2="140" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="100" y1="160" x2="130" y2="170" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="170" y1="140" x2="130" y2="170" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="90" y1="120" x2="120" y2="130" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="90" y1="120" x2="100" y2="160" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="140" y1="90" x2="150" y2="110" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="140" y1="90" x2="120" y2="130" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="160" y1="170" x2="130" y2="170" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="160" y1="170" x2="170" y2="140" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="80" y1="145" x2="100" y2="160" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="80" y1="145" x2="90" y2="120" stroke="#6b7280" stroke-width="0.5"/>
+        <circle cx="120" cy="130" r="4" fill="#8b5cf6"/>
+        <circle cx="150" cy="110" r="4" fill="#8b5cf6"/>
+        <circle cx="100" cy="160" r="4" fill="#8b5cf6"/>
+        <circle cx="170" cy="140" r="4" fill="#8b5cf6"/>
+        <circle cx="130" cy="170" r="4" fill="#8b5cf6"/>
+        <circle cx="90" cy="120" r="3" fill="#a78bfa"/>
+        <circle cx="140" cy="90" r="3" fill="#a78bfa"/>
+        <circle cx="160" cy="170" r="3" fill="#a78bfa"/>
+        <circle cx="80" cy="145" r="3" fill="#a78bfa"/>
+        <circle cx="110" cy="100" r="2.5" fill="#a78bfa"/>
+        <circle cx="145" cy="155" r="2.5" fill="#8b5cf6"/>
+        <circle cx="175" cy="115" r="2.5" fill="#a78bfa"/>
+      </g>
+
+      <!-- ═══ CLUSTER 2: AI (azul) — arriba centro-derecha ═══ -->
+      <g opacity="0.9">
+        <line x1="380" y1="100" x2="410" y2="120" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="410" y1="120" x2="430" y2="90" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="430" y1="90" x2="460" y2="110" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="380" y1="100" x2="400" y2="140" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="410" y1="120" x2="400" y2="140" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="460" y1="110" x2="440" y2="140" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="430" y1="90" x2="410" y2="120" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="440" y1="140" x2="400" y2="140" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="370" y1="130" x2="380" y2="100" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="370" y1="130" x2="400" y2="140" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="480" y1="100" x2="460" y2="110" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="390" y1="80" x2="380" y2="100" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="390" y1="80" x2="410" y2="120" stroke="#6b7280" stroke-width="0.5"/>
+        <circle cx="380" cy="100" r="4" fill="#3b82f6"/>
+        <circle cx="410" cy="120" r="4" fill="#3b82f6"/>
+        <circle cx="430" cy="90" r="4" fill="#3b82f6"/>
+        <circle cx="460" cy="110" r="4" fill="#60a5fa"/>
+        <circle cx="400" cy="140" r="4" fill="#3b82f6"/>
+        <circle cx="440" cy="140" r="3" fill="#60a5fa"/>
+        <circle cx="370" cy="130" r="3" fill="#3b82f6"/>
+        <circle cx="480" cy="100" r="3" fill="#60a5fa"/>
+        <circle cx="390" cy="80" r="2.5" fill="#3b82f6"/>
+        <circle cx="450" cy="130" r="2.5" fill="#60a5fa"/>
+        <circle cx="420" cy="75" r="2.5" fill="#3b82f6"/>
+      </g>
+
+      <!-- ═══ CLUSTER 3: DB (verde) — centro izquierda ═══ -->
+      <g opacity="0.9">
+        <line x1="140" y1="320" x2="170" y2="300" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="170" y1="300" x2="200" y2="330" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="140" y1="320" x2="120" y2="350" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="200" y1="330" x2="180" y2="360" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="120" y1="350" x2="180" y2="360" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="160" y1="340" x2="140" y2="320" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="160" y1="340" x2="200" y2="330" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="160" y1="340" x2="180" y2="360" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="110" y1="300" x2="140" y2="320" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="110" y1="300" x2="170" y2="300" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="210" y1="350" x2="200" y2="330" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="210" y1="350" x2="180" y2="360" stroke="#6b7280" stroke-width="0.5"/>
+        <circle cx="140" cy="320" r="4" fill="#10b981"/>
+        <circle cx="170" cy="300" r="4" fill="#10b981"/>
+        <circle cx="200" cy="330" r="4" fill="#34d399"/>
+        <circle cx="120" cy="350" r="4" fill="#10b981"/>
+        <circle cx="180" cy="360" r="4" fill="#34d399"/>
+        <circle cx="160" cy="340" r="3" fill="#10b981"/>
+        <circle cx="110" cy="300" r="3" fill="#34d399"/>
+        <circle cx="210" cy="350" r="3" fill="#10b981"/>
+        <circle cx="150" cy="280" r="2.5" fill="#34d399"/>
+        <circle cx="190" cy="375" r="2.5" fill="#10b981"/>
+      </g>
+
+      <!-- ═══ CLUSTER 4: IR (naranja/amarillo) — centro derecha ═══ -->
+      <g opacity="0.9">
+        <line x1="450" y1="300" x2="480" y2="280" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="480" y1="280" x2="510" y2="310" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="510" y1="310" x2="490" y2="340" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="450" y1="300" x2="470" y2="330" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="470" y1="330" x2="490" y2="340" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="480" y1="280" x2="470" y2="330" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="520" y1="280" x2="510" y2="310" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="520" y1="280" x2="480" y2="280" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="440" y1="330" x2="450" y2="300" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="440" y1="330" x2="470" y2="330" stroke="#6b7280" stroke-width="0.5"/>
+        <circle cx="450" cy="300" r="4" fill="#f59e0b"/>
+        <circle cx="480" cy="280" r="4" fill="#fbbf24"/>
+        <circle cx="510" cy="310" r="4" fill="#f59e0b"/>
+        <circle cx="490" cy="340" r="4" fill="#fbbf24"/>
+        <circle cx="470" cy="330" r="3" fill="#f59e0b"/>
+        <circle cx="520" cy="280" r="3" fill="#fbbf24"/>
+        <circle cx="440" cy="330" r="3" fill="#f59e0b"/>
+        <circle cx="500" cy="270" r="2.5" fill="#fbbf24"/>
+        <circle cx="460" cy="350" r="2.5" fill="#f59e0b"/>
+      </g>
+
+      <!-- ═══ CLUSTER 5: ML (rojo/rosado) — abajo izquierda ═══ -->
+      <g opacity="0.9">
+        <line x1="180" y1="500" x2="210" y2="480" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="210" y1="480" x2="240" y2="510" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="180" y1="500" x2="160" y2="530" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="240" y1="510" x2="220" y2="540" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="160" y1="530" x2="220" y2="540" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="200" y1="520" x2="180" y2="500" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="200" y1="520" x2="240" y2="510" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="200" y1="520" x2="220" y2="540" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="250" y1="530" x2="240" y2="510" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="250" y1="530" x2="220" y2="540" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="150" y1="510" x2="160" y2="530" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="150" y1="510" x2="180" y2="500" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="230" y1="470" x2="210" y2="480" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="230" y1="470" x2="240" y2="510" stroke="#6b7280" stroke-width="0.5"/>
+        <circle cx="180" cy="500" r="4" fill="#ef4444"/>
+        <circle cx="210" cy="480" r="4" fill="#f87171"/>
+        <circle cx="240" cy="510" r="4" fill="#ef4444"/>
+        <circle cx="160" cy="530" r="4" fill="#f87171"/>
+        <circle cx="220" cy="540" r="4" fill="#ef4444"/>
+        <circle cx="200" cy="520" r="3" fill="#f87171"/>
+        <circle cx="250" cy="530" r="3" fill="#ef4444"/>
+        <circle cx="150" cy="510" r="3" fill="#f87171"/>
+        <circle cx="230" cy="470" r="3" fill="#ef4444"/>
+        <circle cx="170" cy="550" r="2.5" fill="#f87171"/>
+        <circle cx="260" cy="510" r="2.5" fill="#ef4444"/>
+      </g>
+
+      <!-- ═══ CLUSTER 6: HCI (cian/turquesa) — abajo derecha ═══ -->
+      <g opacity="0.9">
+        <line x1="460" y1="500" x2="490" y2="480" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="490" y1="480" x2="520" y2="510" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="460" y1="500" x2="440" y2="530" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="520" y1="510" x2="500" y2="540" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="440" y1="530" x2="500" y2="540" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="480" y1="520" x2="460" y2="500" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="480" y1="520" x2="520" y2="510" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="530" y1="530" x2="520" y2="510" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="530" y1="530" x2="500" y2="540" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="450" y1="470" x2="460" y2="500" stroke="#6b7280" stroke-width="0.5"/>
+        <line x1="450" y1="470" x2="490" y2="480" stroke="#6b7280" stroke-width="0.5"/>
+        <circle cx="460" cy="500" r="4" fill="#06b6d4"/>
+        <circle cx="490" cy="480" r="4" fill="#22d3ee"/>
+        <circle cx="520" cy="510" r="4" fill="#06b6d4"/>
+        <circle cx="440" cy="530" r="4" fill="#22d3ee"/>
+        <circle cx="500" cy="540" r="4" fill="#06b6d4"/>
+        <circle cx="480" cy="520" r="3" fill="#22d3ee"/>
+        <circle cx="530" cy="530" r="3" fill="#06b6d4"/>
+        <circle cx="450" cy="470" r="3" fill="#22d3ee"/>
+        <circle cx="510" cy="550" r="2.5" fill="#06b6d4"/>
+        <circle cx="470" cy="550" r="2.5" fill="#22d3ee"/>
+      </g>
+
+      <!-- ═══ PUENTES entre clusters (citas interdisciplinarias) ═══ -->
+      <g stroke="#4b5563" stroke-width="0.4" opacity="0.5">
+        <line x1="170" y1="140" x2="370" y2="130"/>
+        <line x1="200" y1="330" x2="450" y2="300"/>
+        <line x1="240" y1="510" x2="440" y2="530"/>
+        <line x1="130" y1="170" x2="140" y2="320"/>
+        <line x1="460" y1="110" x2="480" y2="280"/>
+        <line x1="410" y1="120" x2="210" y2="480"/>
+        <line x1="520" y1="310" x2="520" y2="510"/>
+        <line x1="120" y1="350" x2="160" y2="530"/>
+      </g>
+
+      <!-- ═══ NODOS AISLADOS (flotando solos) ═══ -->
+      <g opacity="0.7">
+        <circle cx="50" cy="250" r="3" fill="#8b5cf6"/>
+        <circle cx="600" cy="200" r="3" fill="#3b82f6"/>
+        <circle cx="330" cy="600" r="3" fill="#10b981"/>
+        <circle cx="580" cy="420" r="3" fill="#f59e0b"/>
+        <circle cx="320" cy="50" r="3" fill="#ef4444"/>
+        <circle cx="50" cy="450" r="3" fill="#06b6d4"/>
+        <circle cx="620" cy="550" r="3" fill="#8b5cf6"/>
+        <circle cx="310" cy="400" r="3" fill="#3b82f6"/>
+        <circle cx="600" cy="80" r="3" fill="#f59e0b"/>
+        <circle cx="40" cy="580" r="3" fill="#ef4444"/>
+        <circle cx="580" cy="600" r="3" fill="#10b981"/>
+        <circle cx="350" cy="200" r="3" fill="#06b6d4"/>
+        <circle cx="280" cy="420" r="3" fill="#8b5cf6"/>
+        <circle cx="630" cy="350" r="3" fill="#3b82f6"/>
+        <circle cx="60" cy="70" r="3" fill="#f59e0b"/>
+      </g>
+
+      <!-- Leyenda -->
+      <rect x="20" y="640" width="660" height="45" rx="8" fill="rgba(255,255,255,0.08)"/>
+      <circle cx="55" cy="660" r="5" fill="#8b5cf6"/><text x="65" y="664" font-size="9" fill="#d1d5db">Agents</text>
+      <circle cx="135" cy="660" r="5" fill="#3b82f6"/><text x="145" y="664" font-size="9" fill="#d1d5db">AI</text>
+      <circle cx="195" cy="660" r="5" fill="#10b981"/><text x="205" y="664" font-size="9" fill="#d1d5db">DB</text>
+      <circle cx="255" cy="660" r="5" fill="#f59e0b"/><text x="265" y="664" font-size="9" fill="#d1d5db">IR</text>
+      <circle cx="315" cy="660" r="5" fill="#ef4444"/><text x="325" y="664" font-size="9" fill="#d1d5db">ML</text>
+      <circle cx="385" cy="660" r="5" fill="#06b6d4"/><text x="395" y="664" font-size="9" fill="#d1d5db">HCI</text>
+      <text x="480" y="664" font-size="9" fill="#9ca3af">● nodos aislados flotando sin edges</text>
+    </svg>
+    <div class="caption" style="color: #94a3b8;">Representación aproximada del grafo CiteSeer con spring_layout. Los colores representan las 6 categorías.</div>
+  </div>
+
+  <div class="explain-box">
+    <h4>💡 ¿Qué deberías ver?</h4>
+    <p>
+      Una red grande y compleja con <strong>6 colores diferentes</strong> (uno por cada categoría de artículo).
+      A diferencia del Karate Club que era muy limpio y separado, CiteSeer es mucho más caótico:<br><br>
+      🔵 Verás <strong>clusters densos</strong> donde artículos del mismo tema se citan entre sí<br>
+      🔗 Verás <strong>puentes</strong> entre clusters (artículos interdisciplinarios)<br>
+      🟡 Verás <strong>puntos aislados</strong> flotando solos (los 15 nodos sin conexiones)<br><br>
+      <strong>Nota:</strong> El layout <code>spring_layout</code> posiciona nodos conectados cerca — ¡por eso los clusters aparecen naturalmente!
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECCIÓN 5: DISTRIBUCIÓN DE GRADOS
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-number">5</div>
+    <div class="section-title">
+      <h2>Distribución de Grados de los Nodos</h2>
+      <p>¿Cuántas conexiones tiene cada artículo?</p>
+    </div>
+  </div>
+
+  <div class="highlight" style="margin-bottom: 20px;">
+    <div class="icon">▶️</div>
+    <p><strong>¡Ejecuta la Celda 5!</strong> Vamos a ver el histograma de grados — cuántas citas tiene cada artículo.</p>
+  </div>
+
+  <div class="code-block">
+    <pre><span class="keyword">from</span> torch_geometric.utils <span class="keyword">import</span> degree
+<span class="keyword">from</span> collections <span class="keyword">import</span> Counter
+
+<span class="comment"># Obtener el grado de cada nodo</span>
+degrees = degree(data.edge_index[<span class="number">0</span>]).numpy()
+
+<span class="comment"># Contar cuántos nodos hay para cada grado</span>
+numbers = Counter(degrees)
+
+<span class="comment"># Crear gráfico de barras</span>
+fig, ax = plt.subplots(figsize=(<span class="number">18</span>, <span class="number">7</span>))
+ax.set_xlabel(<span class="string">'Node degree'</span>)
+ax.set_ylabel(<span class="string">'Number of nodes'</span>)
+plt.bar(numbers.keys(), numbers.values(), color=<span class="string">'#0A047A'</span>)</pre>
+  </div>
+
+  <!-- OUTPUT VISUAL: Histograma de distribución de grados -->
+  <div class="diagram" style="background: white; border: 2px solid #e5e7eb;">
+    <div style="color: #64748b; font-size: 0.85rem; text-align: left; margin-bottom: 5px; font-family: monospace;">📤 Output esperado:</div>
+    <svg viewBox="0 0 750 320" xmlns="http://www.w3.org/2000/svg">
+      <rect width="750" height="320" fill="white" rx="10"/>
+      
+      <!-- Ejes -->
+      <line x1="70" y1="20" x2="70" y2="260" stroke="#1e293b" stroke-width="1.5"/>
+      <line x1="70" y1="260" x2="710" y2="260" stroke="#1e293b" stroke-width="1.5"/>
+      
+      <!-- Y axis labels -->
+      <text x="60" y="265" text-anchor="end" font-size="10" fill="#64748b">0</text>
+      <text x="60" y="205" text-anchor="end" font-size="10" fill="#64748b">200</text>
+      <text x="60" y="145" text-anchor="end" font-size="10" fill="#64748b">400</text>
+      <text x="60" y="85" text-anchor="end" font-size="10" fill="#64748b">600</text>
+      <text x="60" y="30" text-anchor="end" font-size="10" fill="#64748b">800</text>
+      
+      <!-- Grid lines -->
+      <line x1="70" y1="200" x2="710" y2="200" stroke="#f1f5f9" stroke-width="0.5"/>
+      <line x1="70" y1="140" x2="710" y2="140" stroke="#f1f5f9" stroke-width="0.5"/>
+      <line x1="70" y1="80" x2="710" y2="80" stroke="#f1f5f9" stroke-width="0.5"/>
+      
+      <!-- Barras: distribución power-law de CiteSeer -->
+      <!-- Grado 0: ~15 nodos -->
+      <rect x="80" y="255" width="30" height="5" fill="#0A047A" rx="1"/>
+      <text x="95" y="275" text-anchor="middle" font-size="9" fill="#64748b">0</text>
+      
+      <!-- Grado 1: ~600 nodos -->
+      <rect x="120" y="80" width="30" height="180" fill="#0A047A" rx="1"/>
+      <text x="135" y="275" text-anchor="middle" font-size="9" fill="#64748b">1</text>
+      
+      <!-- Grado 2: ~720 nodos -->
+      <rect x="160" y="45" width="30" height="215" fill="#0A047A" rx="1"/>
+      <text x="175" y="275" text-anchor="middle" font-size="9" fill="#64748b">2</text>
+      
+      <!-- Grado 3: ~580 nodos -->
+      <rect x="200" y="87" width="30" height="173" fill="#0A047A" rx="1"/>
+      <text x="215" y="275" text-anchor="middle" font-size="9" fill="#64748b">3</text>
+      
+      <!-- Grado 4: ~380 nodos -->
+      <rect x="240" y="146" width="30" height="114" fill="#0A047A" rx="1"/>
+      <text x="255" y="275" text-anchor="middle" font-size="9" fill="#64748b">4</text>
+      
+      <!-- Grado 5: ~260 nodos -->
+      <rect x="280" y="182" width="30" height="78" fill="#0A047A" rx="1"/>
+      <text x="295" y="275" text-anchor="middle" font-size="9" fill="#64748b">5</text>
+      
+      <!-- Grado 6: ~170 nodos -->
+      <rect x="320" y="209" width="30" height="51" fill="#0A047A" rx="1"/>
+      <text x="335" y="275" text-anchor="middle" font-size="9" fill="#64748b">6</text>
+      
+      <!-- Grado 7: ~120 nodos -->
+      <rect x="360" y="224" width="30" height="36" fill="#0A047A" rx="1"/>
+      <text x="375" y="275" text-anchor="middle" font-size="9" fill="#64748b">7</text>
+      
+      <!-- Grado 8: ~80 nodos -->
+      <rect x="400" y="236" width="30" height="24" fill="#0A047A" rx="1"/>
+      <text x="415" y="275" text-anchor="middle" font-size="9" fill="#64748b">8</text>
+      
+      <!-- Grado 9: ~50 nodos -->
+      <rect x="440" y="245" width="30" height="15" fill="#0A047A" rx="1"/>
+      <text x="455" y="275" text-anchor="middle" font-size="9" fill="#64748b">9</text>
+      
+      <!-- Grado 10: ~30 nodos -->
+      <rect x="480" y="251" width="30" height="9" fill="#0A047A" rx="1"/>
+      <text x="495" y="275" text-anchor="middle" font-size="9" fill="#64748b">10</text>
+      
+      <!-- Grados 11-14: cola larga -->
+      <rect x="520" y="253" width="30" height="7" fill="#0A047A" rx="1"/>
+      <text x="535" y="275" text-anchor="middle" font-size="9" fill="#64748b">11</text>
+      
+      <rect x="560" y="255" width="30" height="5" fill="#0A047A" rx="1"/>
+      <text x="575" y="275" text-anchor="middle" font-size="9" fill="#64748b">12</text>
+      
+      <rect x="600" y="256" width="30" height="4" fill="#0A047A" rx="1"/>
+      <text x="615" y="275" text-anchor="middle" font-size="9" fill="#64748b">13</text>
+      
+      <rect x="640" y="257" width="30" height="3" fill="#0A047A" rx="1"/>
+      <text x="655" y="275" text-anchor="middle" font-size="9" fill="#64748b">14+</text>
+      
+      <!-- Axis labels -->
+      <text x="390" y="300" text-anchor="middle" font-size="12" fill="#1e293b" font-weight="600">Node degree</text>
+      <text x="25" y="145" text-anchor="middle" font-size="12" fill="#1e293b" font-weight="600" transform="rotate(-90, 25, 145)">Number of nodes</text>
+      
+      <!-- Anotaciones -->
+      <line x1="165" y1="40" x2="240" y2="30" stroke="#ef4444" stroke-width="1" stroke-dasharray="3,2"/>
+      <text x="245" y="34" font-size="9" fill="#ef4444" font-weight="600">← Pico: grado 2 (~720 nodos)</text>
+      
+      <line x1="540" y1="248" x2="580" y2="235" stroke="#64748b" stroke-width="1" stroke-dasharray="3,2"/>
+      <text x="585" y="238" font-size="9" fill="#64748b">Cola larga (power law) →</text>
+    </svg>
+    <div class="caption">Distribución de grados en CiteSeer. Forma típica de ley de potencias (right-skewed).</div>
+  </div>
+
+  <div class="explain-box">
+    <h4>📊 ¿Qué Revela el Histograma?</h4>
+    <p>
+      <strong>Grado = número de citas</strong> que da o recibe un artículo.<br><br>
+      Verás una distribución muy <strong>asimétrica (right-skewed)</strong>:<br>
+      📌 <strong>La mayoría</strong> de artículos tienen pocas citas (grado 1-3)<br>
+      📌 <strong>Muy pocos</strong> artículos son "super-citados" con grado alto<br>
+      📌 <strong>Grado 0</strong> = los 15 nodos aislados sin conexiones<br><br>
+      Esto es típico de redes del mundo real — se llama <strong>distribución de ley de potencias (power law)</strong>. ¡Igual que en redes sociales: pocos influencers con millones de seguidores y muchos usuarios con pocos!
+    </p>
+  </div>
+
+  <div class="warning-box">
+    <h4>🤔 ¿Por qué importan los grados para GAT?</h4>
+    <p>
+      ¡Esto es CLAVE! En una GCN, los pesos de cada vecino están <strong>fijos</strong> por la normalización de grado ($\frac{1}{\sqrt{\hat{d}_i \cdot \hat{d}_j}}$). Un nodo con 50 vecinos les da un peso bajo a todos, sin distinguir cuáles son relevantes.
+      <br><br>
+      Con <strong>GAT</strong>, el nodo con 50 vecinos puede aprender a <strong>ignorar citas irrelevantes</strong> y 
+      <strong>enfocarse en las más importantes</strong>, independientemente de la estructura del grafo. ¡Esa es la ventaja de la atención aprendida!
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECCIÓN 6: LA TEORÍA DEL MECANISMO DE ATENCIÓN
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-number">6</div>
+    <div class="section-title">
+      <h2>El Mecanismo de Atención en Grafos</h2>
+      <p>La matemática detrás de GAT — paso a paso</p>
+    </div>
+  </div>
+
+  <div class="deep-dive">
+    <h3>🧮 La Fórmula de Atención en GAT</h3>
+    <p style="margin-bottom: 20px;">Vamos a desglosar cómo un nodo decide cuánta atención prestarle a cada vecino.</p>
+    
+    <div class="deep-dive-grid">
+      <div class="deep-dive-card">
+        <h4>Paso 1: Transformación Lineal</h4>
+        <p>
+          Primero, transformamos los features de cada nodo con una matriz de pesos $W$:
+          <br><br>
+          $$\vec{h}'_i = W \cdot \vec{h}_i$$
+          <br>
+          Donde $\vec{h}_i$ son los features originales del nodo $i$ y $W$ es una matriz aprendible de tamaño $[F' \times F]$.
+        </p>
+      </div>
+      
+      <div class="deep-dive-card">
+        <h4>Paso 2: Calcular Coeficientes de Atención</h4>
+        <p>
+          Para cada par de nodos conectados $(i, j)$, calculamos un "score" de atención:
+          <br><br>
+          $$e_{ij} = \text{LeakyReLU}(\vec{a}^T [\vec{h}'_i \| \vec{h}'_j])$$
+          <br>
+          Donde $\|$ es concatenación y $\vec{a}$ es un vector de pesos aprendible. Más abajo (Sección 12) veremos cómo <strong>GATv2</strong> refina esta idea para ganar expresividad.
+        </p>
+      </div>
+      
+      <div class="deep-dive-card">
+        <h4>Paso 3: Normalizar con Softmax</h4>
+        <p>
+          Los scores se normalizan sobre todos los vecinos $\mathcal{N}(i)$ para que sumen 1:
+          <br><br>
+          $$\alpha_{ij} = \frac{\exp(e_{ij})}{\sum_{k \in \mathcal{N}(i)} \exp(e_{ik})}$$
+          <br>
+          Estos $\alpha_{ij}$ son los <strong>pesos de atención</strong> — números entre 0 y 1 que suman 1.
+        </p>
+      </div>
+      
+      <div class="deep-dive-card">
+        <h4>Paso 4: Agregación Ponderada</h4>
+        <p>
+          Finalmente, el nuevo embedding del nodo $i$ es la suma ponderada de sus vecinos:
+          <br><br>
+          $$\vec{h}''_i = \sigma\left(\sum_{j \in \mathcal{N}(i)} \alpha_{ij} \cdot \vec{h}'_j\right)$$
+          <br>
+          Donde $\sigma$ es una función de activación (ELU en nuestro caso).
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       EJEMPLO A MANO: CONCATENADO → PRODUCTO PUNTO → LEAKYRELU (3 nodos)
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div class="deep-dive" style="margin-top: 40px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 2px solid #fbbf24; border-radius: 16px; padding: 30px;">
+    <h3 style="color: #fbbf24; margin-bottom: 6px;">✏️ Ejemplo Calculado a Mano — 3 Nodos en Triángulo</h3>
+    <p style="color: #cbd5e1; margin-bottom: 20px;">Detallamos <strong>número por número</strong> qué pasa después del concatenado. Usamos un mini-grafo donde cada nodo se conecta con todos (grafo completo + self-loops).</p>
+
+    <!-- DATOS INICIALES -->
+    <div style="background: #1a1a2e; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+      <h4 style="color: #60a5fa;">📋 Datos iniciales</h4>
+      <p style="color: #94a3b8;">Features originales (F=2) y W = Identidad, así h'<sub>i</sub> = h<sub>i</sub> (simplificamos el Paso 1):</p>
+      <table style="width: 100%; border-collapse: collapse; margin: 12px 0;">
+        <tr style="background: #fbbf24; color: #1e293b;">
+          <th style="padding: 8px; border: 1px solid #334155;">Nodo</th>
+          <th style="padding: 8px; border: 1px solid #334155;">h'<sub>i</sub></th>
+        </tr>
+        <tr style="background: #1e293b; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">0</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-family: monospace;">[1, 0]</td>
+        </tr>
+        <tr style="background: #0f172a; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">1</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-family: monospace;">[0, 1]</td>
+        </tr>
+        <tr style="background: #1e293b; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">2</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-family: monospace;">[1, 1]</td>
+        </tr>
+      </table>
+      <p style="color: #94a3b8;">Vector de atención: <strong style="color: #fbbf24;">a = [0.5, &minus;1.0, 0.5, 0.5]</strong> &nbsp; (tamaño 2×d' = 4)</p>
+    </div>
+
+    <!-- PASO A: CONCATENAR -->
+    <div style="background: #1a1a2e; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+      <h4 style="color: #34d399;">🔗 Operación 1 — Concatenar h'<sub>i</sub> ∥ h'<sub>j</sub></h4>
+      <p style="color: #94a3b8; margin-bottom: 10px;">Pegamos el vector del <strong style="color: #60a5fa;">nodo origen</strong> a la izquierda y el del <strong style="color: #f472b6;">nodo destino</strong> a la derecha:</p>
+      <table style="width: 100%; border-collapse: collapse; margin: 12px 0;">
+        <tr style="background: #34d399; color: #1e293b;">
+          <th style="padding: 8px; border: 1px solid #334155;">Arista</th>
+          <th style="padding: 8px; border: 1px solid #334155;">h'<sub>i</sub></th>
+          <th style="padding: 8px; border: 1px solid #334155;">h'<sub>j</sub></th>
+          <th style="padding: 8px; border: 1px solid #334155;">Concatenado [h'<sub>i</sub> ∥ h'<sub>j</sub>]</th>
+        </tr>
+        <tr style="background: #1e293b; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">0→1</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-family: monospace; color: #60a5fa;">[1, 0]</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-family: monospace; color: #f472b6;">[0, 1]</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-family: monospace; font-weight: bold; color: #fbbf24;">[1, 0, 0, 1]</td>
+        </tr>
+        <tr style="background: #0f172a; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">0→2</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-family: monospace; color: #60a5fa;">[1, 0]</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-family: monospace; color: #f472b6;">[1, 1]</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-family: monospace; font-weight: bold; color: #fbbf24;">[1, 0, 1, 1]</td>
+        </tr>
+        <tr style="background: #1e293b; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">1→0</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-family: monospace; color: #60a5fa;">[0, 1]</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-family: monospace; color: #f472b6;">[1, 0]</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-family: monospace; font-weight: bold; color: #fbbf24;">[0, 1, 1, 0]</td>
+        </tr>
+        <tr style="background: #0f172a; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">1→2</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-family: monospace; color: #60a5fa;">[0, 1]</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-family: monospace; color: #f472b6;">[1, 1]</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-family: monospace; font-weight: bold; color: #fbbf24;">[0, 1, 1, 1]</td>
+        </tr>
+        <tr style="background: #1e293b; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">2→0</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-family: monospace; color: #60a5fa;">[1, 1]</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-family: monospace; color: #f472b6;">[1, 0]</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-family: monospace; font-weight: bold; color: #fbbf24;">[1, 1, 1, 0]</td>
+        </tr>
+        <tr style="background: #0f172a; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">2→1</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-family: monospace; color: #60a5fa;">[1, 1]</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-family: monospace; color: #f472b6;">[0, 1]</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-family: monospace; font-weight: bold; color: #fbbf24;">[1, 1, 0, 1]</td>
+        </tr>
+      </table>
+      <div style="background: #374151; border-left: 4px solid #fbbf24; padding: 12px 16px; border-radius: 0 8px 8px 0; margin-top: 10px;">
+        <p style="color: #fbbf24; font-weight: bold; margin-bottom: 4px;">⚠️ ¡El orden importa!</p>
+        <p style="color: #d1d5db; margin: 0;">0→1 da <code style="color: #60a5fa;">[1,0,0,1]</code> pero 1→0 da <code style="color: #f472b6;">[0,1,1,0]</code>. Son vectores <strong>diferentes</strong> → atención <strong>asimétrica</strong>.</p>
+      </div>
+    </div>
+
+    <!-- PASO B: PRODUCTO PUNTO -->
+    <div style="background: #1a1a2e; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+      <h4 style="color: #a78bfa;">🔢 Operación 2 — Producto punto con vector a</h4>
+      <p style="color: #94a3b8; margin-bottom: 10px;">Multiplicamos <strong>elemento por elemento</strong> el concatenado por <strong style="color: #fbbf24;">a = [0.5, &minus;1.0, 0.5, 0.5]</strong> y sumamos:</p>
+      <p style="color: #cbd5e1; margin-bottom: 15px;">$$e_{ij} = \mathbf{a}^T [\mathbf{h}'_i \| \mathbf{h}'_j] = \sum_{k=1}^{4} a_k \cdot c_k$$</p>
+
+      <!-- Arista 0→1 -->
+      <div style="background: #0f172a; border-radius: 8px; padding: 15px; margin-bottom: 12px; border-left: 4px solid #60a5fa;">
+        <p style="color: #60a5fa; font-weight: bold; margin-bottom: 8px;">Arista 0→1: concatenado = [1, 0, 0, 1]</p>
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr style="background: #334155; color: #e2e8f0;">
+            <th style="padding: 6px; border: 1px solid #475569; text-align: center;">Pos k</th>
+            <th style="padding: 6px; border: 1px solid #475569; text-align: center;">a<sub>k</sub></th>
+            <th style="padding: 6px; border: 1px solid #475569; text-align: center;">c<sub>k</sub></th>
+            <th style="padding: 6px; border: 1px solid #475569; text-align: center;">a<sub>k</sub> × c<sub>k</sub></th>
+          </tr>
+          <tr style="color: #e2e8f0;">
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">1</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center; color: #fbbf24;">0.5</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">1</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">0.5</td>
+          </tr>
+          <tr style="color: #e2e8f0;">
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">2</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center; color: #fbbf24;">&minus;1.0</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">0</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">0.0</td>
+          </tr>
+          <tr style="color: #e2e8f0;">
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">3</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center; color: #fbbf24;">0.5</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">0</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">0.0</td>
+          </tr>
+          <tr style="color: #e2e8f0;">
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">4</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center; color: #fbbf24;">0.5</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">1</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">0.5</td>
+          </tr>
+          <tr style="background: #1e3a5f; color: #60a5fa; font-weight: bold;">
+            <td colspan="3" style="padding: 6px; border: 1px solid #475569; text-align: right;">Suma =</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center; font-size: 1.1em;">1.0</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Arista 0→2 -->
+      <div style="background: #0f172a; border-radius: 8px; padding: 15px; margin-bottom: 12px; border-left: 4px solid #34d399;">
+        <p style="color: #34d399; font-weight: bold; margin-bottom: 8px;">Arista 0→2: concatenado = [1, 0, 1, 1]</p>
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr style="background: #334155; color: #e2e8f0;">
+            <th style="padding: 6px; border: 1px solid #475569; text-align: center;">Pos k</th>
+            <th style="padding: 6px; border: 1px solid #475569; text-align: center;">a<sub>k</sub></th>
+            <th style="padding: 6px; border: 1px solid #475569; text-align: center;">c<sub>k</sub></th>
+            <th style="padding: 6px; border: 1px solid #475569; text-align: center;">a<sub>k</sub> × c<sub>k</sub></th>
+          </tr>
+          <tr style="color: #e2e8f0;">
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">1</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center; color: #fbbf24;">0.5</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">1</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">0.5</td>
+          </tr>
+          <tr style="color: #e2e8f0;">
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">2</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center; color: #fbbf24;">&minus;1.0</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">0</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">0.0</td>
+          </tr>
+          <tr style="color: #e2e8f0;">
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">3</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center; color: #fbbf24;">0.5</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">1</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">0.5</td>
+          </tr>
+          <tr style="color: #e2e8f0;">
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">4</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center; color: #fbbf24;">0.5</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">1</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">0.5</td>
+          </tr>
+          <tr style="background: #1e3a5f; color: #34d399; font-weight: bold;">
+            <td colspan="3" style="padding: 6px; border: 1px solid #475569; text-align: right;">Suma =</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center; font-size: 1.1em;">1.5</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Arista 1→0 -->
+      <div style="background: #0f172a; border-radius: 8px; padding: 15px; margin-bottom: 12px; border-left: 4px solid #f472b6;">
+        <p style="color: #f472b6; font-weight: bold; margin-bottom: 8px;">Arista 1→0: concatenado = [0, 1, 1, 0]</p>
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr style="background: #334155; color: #e2e8f0;">
+            <th style="padding: 6px; border: 1px solid #475569; text-align: center;">Pos k</th>
+            <th style="padding: 6px; border: 1px solid #475569; text-align: center;">a<sub>k</sub></th>
+            <th style="padding: 6px; border: 1px solid #475569; text-align: center;">c<sub>k</sub></th>
+            <th style="padding: 6px; border: 1px solid #475569; text-align: center;">a<sub>k</sub> × c<sub>k</sub></th>
+          </tr>
+          <tr style="color: #e2e8f0;">
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">1</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center; color: #fbbf24;">0.5</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">0</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">0.0</td>
+          </tr>
+          <tr style="color: #e2e8f0;">
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">2</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center; color: #fbbf24;">&minus;1.0</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">1</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center; color: #ef4444; font-weight: bold;">&minus;1.0</td>
+          </tr>
+          <tr style="color: #e2e8f0;">
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">3</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center; color: #fbbf24;">0.5</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">1</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">0.5</td>
+          </tr>
+          <tr style="color: #e2e8f0;">
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">4</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center; color: #fbbf24;">0.5</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">0</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center;">0.0</td>
+          </tr>
+          <tr style="background: #3b1a2e; color: #f472b6; font-weight: bold;">
+            <td colspan="3" style="padding: 6px; border: 1px solid #475569; text-align: right;">Suma =</td>
+            <td style="padding: 6px; border: 1px solid #475569; text-align: center; font-size: 1.1em;">&minus;0.5</td>
+          </tr>
+        </table>
+        <p style="color: #f472b6; margin-top: 8px; font-size: 0.9em;">⚡ ¡Resultado negativo! La posición 2 del vector <strong>a</strong> vale &minus;1.0 y "castiga" cuando c<sub>2</sub> es 1.</p>
+      </div>
+
+      <!-- Arista 1→2 -->
+      <div style="background: #0f172a; border-radius: 8px; padding: 15px; margin-bottom: 12px; border-left: 4px solid #a78bfa;">
+        <p style="color: #a78bfa; font-weight: bold; margin-bottom: 8px;">Arista 1→2: concatenado = [0, 1, 1, 1]</p>
+        <p style="color: #d1d5db; font-family: monospace; font-size: 0.95em;">
+          (0.5)(0) + (&minus;1.0)(1) + (0.5)(1) + (0.5)(1) = 0 &minus; 1.0 + 0.5 + 0.5 = <strong style="color: #a78bfa;">0.0</strong>
+        </p>
+      </div>
+
+      <!-- Arista 2→0 -->
+      <div style="background: #0f172a; border-radius: 8px; padding: 15px; margin-bottom: 12px; border-left: 4px solid #fb923c;">
+        <p style="color: #fb923c; font-weight: bold; margin-bottom: 8px;">Arista 2→0: concatenado = [1, 1, 1, 0]</p>
+        <p style="color: #d1d5db; font-family: monospace; font-size: 0.95em;">
+          (0.5)(1) + (&minus;1.0)(1) + (0.5)(1) + (0.5)(0) = 0.5 &minus; 1.0 + 0.5 + 0 = <strong style="color: #fb923c;">0.0</strong>
+        </p>
+      </div>
+
+      <!-- Arista 2→1 -->
+      <div style="background: #0f172a; border-radius: 8px; padding: 15px; margin-bottom: 12px; border-left: 4px solid #22d3ee;">
+        <p style="color: #22d3ee; font-weight: bold; margin-bottom: 8px;">Arista 2→1: concatenado = [1, 1, 0, 1]</p>
+        <p style="color: #d1d5db; font-family: monospace; font-size: 0.95em;">
+          (0.5)(1) + (&minus;1.0)(1) + (0.5)(0) + (0.5)(1) = 0.5 &minus; 1.0 + 0 + 0.5 = <strong style="color: #22d3ee;">0.0</strong>
+        </p>
+      </div>
+    </div>
+
+    <!-- PASO C: LEAKYRELU -->
+    <div style="background: #1a1a2e; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+      <h4 style="color: #f87171;">⚡ Operación 3 — LeakyReLU (pendiente negativa = 0.2)</h4>
+      <p style="color: #cbd5e1; margin-bottom: 10px;">Si el score es positivo, lo dejamos igual. Si es negativo o cero, lo multiplicamos por 0.2:</p>
+      <p style="color: #cbd5e1; margin-bottom: 15px;">
+        $$\text{LeakyReLU}(x) = \begin{cases} x & \text{si } x > 0 \\ 0.2 \cdot x & \text{si } x \leq 0 \end{cases}$$
+      </p>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr style="background: #f87171; color: #1e293b;">
+          <th style="padding: 8px; border: 1px solid #334155;">Arista</th>
+          <th style="padding: 8px; border: 1px solid #334155;">Producto punto</th>
+          <th style="padding: 8px; border: 1px solid #334155;">¿Positivo?</th>
+          <th style="padding: 8px; border: 1px solid #334155;">Cálculo</th>
+          <th style="padding: 8px; border: 1px solid #334155;">e<sub>ij</sub> final</th>
+        </tr>
+        <tr style="background: #1e293b; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">0→1</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">1.0</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">✅ Sí</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">se queda igual</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-weight: bold; color: #34d399;">1.0</td>
+        </tr>
+        <tr style="background: #0f172a; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">0→2</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">1.5</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">✅ Sí</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">se queda igual</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-weight: bold; color: #34d399;">1.5</td>
+        </tr>
+        <tr style="background: #1e293b; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">1→0</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; color: #f87171;">&minus;0.5</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">❌ No</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">0.2 × (&minus;0.5)</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-weight: bold; color: #f87171;">&minus;0.1</td>
+        </tr>
+        <tr style="background: #0f172a; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">1→2</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">0.0</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">❌ No</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">0.2 × 0.0</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-weight: bold; color: #fbbf24;">0.0</td>
+        </tr>
+        <tr style="background: #1e293b; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">2→0</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">0.0</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">❌ No</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">0.2 × 0.0</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-weight: bold; color: #fbbf24;">0.0</td>
+        </tr>
+        <tr style="background: #0f172a; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">2→1</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">0.0</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">❌ No</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center;">0.2 × 0.0</td>
+          <td style="padding: 8px; border: 1px solid #334155; text-align: center; font-weight: bold; color: #fbbf24;">0.0</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- RESUMEN VISUAL DEL FLUJO -->
+    <div style="background: linear-gradient(135deg, #312e81, #1e1b4b); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+      <h4 style="color: #c4b5fd;">🔄 Resumen visual del flujo completo</h4>
+      <div style="font-family: monospace; color: #e2e8f0; line-height: 2.2; font-size: 0.95em;">
+        <p style="margin: 8px 0;">
+          <span style="color: #60a5fa;">h'₀=[1,0]</span> + <span style="color: #f472b6;">h'₁=[0,1]</span>
+          → concat → <span style="color: #fbbf24;">[1,0,0,1]</span>
+          → <strong>·a</strong> → <span style="color: #a78bfa;">1.0</span>
+          → LeakyReLU → <span style="color: #34d399; font-weight: bold;">1.0</span>
+        </p>
+        <p style="margin: 8px 0;">
+          <span style="color: #60a5fa;">h'₁=[0,1]</span> + <span style="color: #f472b6;">h'₀=[1,0]</span>
+          → concat → <span style="color: #fbbf24;">[0,1,1,0]</span>
+          → <strong>·a</strong> → <span style="color: #a78bfa;">&minus;0.5</span>
+          → LeakyReLU → <span style="color: #f87171; font-weight: bold;">&minus;0.1</span>
+        </p>
+      </div>
+      <div style="background: #4c1d95; border-radius: 8px; padding: 12px; margin-top: 12px;">
+        <p style="color: #c4b5fd; margin: 0;"><strong>🎯 Insight clave:</strong> La misma pareja (nodos 0 y 1) produce scores <strong>distintos</strong> según la dirección: <span style="color: #34d399;">1.0</span> vs <span style="color: #f87171;">&minus;0.1</span>. Esto es porque el concatenado cambia de orden y el vector <strong>a</strong> actúa diferente sobre cada posición.</p>
+      </div>
+    </div>
+
+    <!-- QUÉ SIGUE -->
+    <div style="background: #1a1a2e; border-radius: 12px; padding: 20px; border: 2px dashed #34d399;">
+      <h4 style="color: #34d399;">📐 ¿Y después? → Softmax por fila</h4>
+      <p style="color: #cbd5e1; margin-bottom: 10px;">Los scores $e_{ij}$ de arriba pasan a <strong>softmax</strong> — cada nodo normaliza <strong>solo entre sus vecinos</strong>:</p>
+      <p style="color: #cbd5e1; margin-bottom: 15px;">
+        $$\alpha_{ij} = \frac{\exp(e_{ij})}{\sum_{k \in \mathcal{N}(i)} \exp(e_{ik})}$$
+      </p>
+      <p style="color: #94a3b8;">Ejemplo para <strong style="color: #60a5fa;">Nodo 0</strong> (vecinos: 1 y 2):</p>
+      <p style="color: #d1d5db; font-family: monospace;">
+        &nbsp;&nbsp;exp(1.0) = 2.718 &nbsp;&nbsp;&nbsp; exp(1.5) = 4.482<br>
+        &nbsp;&nbsp;suma = 2.718 + 4.482 = <strong>7.200</strong><br>
+        &nbsp;&nbsp;α<sub>0,1</sub> = 2.718 / 7.200 = <strong style="color: #fbbf24;">0.378</strong><br>
+        &nbsp;&nbsp;α<sub>0,2</sub> = 4.482 / 7.200 = <strong style="color: #fbbf24;">0.622</strong> &nbsp;&nbsp;← el nodo 2 recibe <strong>más</strong> atención
+      </p>
+      <p style="color: #6b7280; font-size: 0.85em; margin-top: 10px;">Nota: siempre suman 1 → 0.378 + 0.622 = 1.000 ✓</p>
+    </div>
+  </div>
+
+  <!-- LINK A DIAGRAMA INTERACTIVO -->
+  <div style="background: linear-gradient(135deg, #1e293b, #0f172a); border: 2px solid #e11d48; border-radius: 16px; padding: 24px 30px; margin: 30px 0; text-align: center;">
+    <h3 style="color: #fbbf24; margin-bottom: 10px; font-size: 1.3em;">🔴 ¿Quieres ver esto paso a paso con matrices reales?</h3>
+    <p style="color: #cbd5e1; margin-bottom: 16px;">Hemos creado un visualizador interactivo que anima celda por celda las 4 etapas del mecanismo de atención: 
+      transformación lineal, scores $e_{ij}$, softmax $\alpha_{ij}$ y agregación ponderada con ELU.</p>
+    <a href="GAT_Architecture_Diagram.html" target="_blank" 
+       style="display: inline-block; background: linear-gradient(135deg, #e11d48, #be123c); color: white; 
+              padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 1.1em;
+              transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 15px rgba(225,29,72,0.3);"
+       onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 25px rgba(225,29,72,0.5)'"
+       onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 15px rgba(225,29,72,0.3)'">
+      🎬 Abrir Diagrama Interactivo GAT →
+    </a>
+    <p style="color: #64748b; font-size: 0.85em; margin-top: 12px;">6 nodos × 4 features → W → Atención → Softmax → Agregación + ELU &nbsp;|&nbsp; Play/Pausa/Paso a paso</p>
+  </div>
+
+  <!-- MULTI-HEAD ATTENTION -->
+  <h3 style="color: var(--primary-dark); margin-top: 30px;">🔮 Multi-Head Attention — ¡No uno, sino 8 "ojos"!</h3>
+
+  <div class="diagram">
+    <svg viewBox="0 0 800 350" xmlns="http://www.w3.org/2000/svg">
+      <rect width="800" height="350" fill="#f8fafc" rx="15"/>
+      
+      <text x="400" y="30" text-anchor="middle" font-size="16" fill="#1e293b" font-weight="700">Multi-Head Attention (K = 8 cabezas)</text>
+      
+      <!-- Input node -->
+      <rect x="30" y="140" width="100" height="60" rx="10" fill="#3b82f6" stroke="#1e40af" stroke-width="2"/>
+      <text x="80" y="165" text-anchor="middle" fill="white" font-size="11" font-weight="bold">Input</text>
+      <text x="80" y="185" text-anchor="middle" fill="white" font-size="9">features</text>
+      
+      <!-- 8 Heads -->
+      <g transform="translate(200, 50)">
+        <rect x="0" y="0" width="80" height="35" rx="6" fill="#e11d48"/>
+        <text x="40" y="22" text-anchor="middle" fill="white" font-size="9" font-weight="bold">Head 1</text>
+        
+        <rect x="0" y="40" width="80" height="35" rx="6" fill="#db2777"/>
+        <text x="40" y="62" text-anchor="middle" fill="white" font-size="9" font-weight="bold">Head 2</text>
+        
+        <rect x="0" y="80" width="80" height="35" rx="6" fill="#c026d3"/>
+        <text x="40" y="102" text-anchor="middle" fill="white" font-size="9" font-weight="bold">Head 3</text>
+        
+        <rect x="0" y="120" width="80" height="35" rx="6" fill="#9333ea"/>
+        <text x="40" y="142" text-anchor="middle" fill="white" font-size="9" font-weight="bold">Head 4</text>
+        
+        <rect x="0" y="160" width="80" height="35" rx="6" fill="#7c3aed"/>
+        <text x="40" y="182" text-anchor="middle" fill="white" font-size="9" font-weight="bold">Head 5</text>
+        
+        <rect x="0" y="200" width="80" height="35" rx="6" fill="#6366f1"/>
+        <text x="40" y="222" text-anchor="middle" fill="white" font-size="9" font-weight="bold">Head 6</text>
+        
+        <rect x="0" y="240" width="80" height="35" rx="6" fill="#4f46e5"/>
+        <text x="40" y="262" text-anchor="middle" fill="white" font-size="9" font-weight="bold">Head 7</text>
+        
+        <rect x="0" y="280" width="80" height="35" rx="6" fill="#3b82f6"/>
+        <text x="40" y="302" text-anchor="middle" fill="white" font-size="9" font-weight="bold">Head 8</text>
+      </g>
+      
+      <!-- Arrows from Input to Heads -->
+      <g stroke="#94a3b8" stroke-width="1.5" fill="none">
+        <line x1="130" y1="170" x2="200" y2="67"/>
+        <line x1="130" y1="170" x2="200" y2="107"/>
+        <line x1="130" y1="170" x2="200" y2="147"/>
+        <line x1="130" y1="170" x2="200" y2="187"/>
+        <line x1="130" y1="170" x2="200" y2="227"/>
+        <line x1="130" y1="170" x2="200" y2="267"/>
+        <line x1="130" y1="170" x2="200" y2="307"/>
+        <line x1="130" y1="170" x2="200" y2="347"/>
+      </g>
+      
+      <!-- Concatenation -->
+      <rect x="360" y="100" width="120" height="200" rx="10" fill="#fbbf24" stroke="#d97706" stroke-width="2"/>
+      <text x="420" y="180" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="bold">Concatenar</text>
+      <text x="420" y="200" text-anchor="middle" fill="#78350f" font-size="9">8 × dim_h</text>
+      <text x="420" y="220" text-anchor="middle" fill="#78350f" font-size="9">= 8 × 8 = 64</text>
+      <text x="420" y="250" text-anchor="middle" fill="#78350f" font-size="10" font-weight="bold">‖</text>
+      
+      <!-- Arrows from Heads to Concatenation -->
+      <g stroke="#94a3b8" stroke-width="1.5" fill="none">
+        <line x1="280" y1="67" x2="360" y2="160"/>
+        <line x1="280" y1="107" x2="360" y2="170"/>
+        <line x1="280" y1="147" x2="360" y2="180"/>
+        <line x1="280" y1="187" x2="360" y2="190"/>
+        <line x1="280" y1="227" x2="360" y2="210"/>
+        <line x1="280" y1="267" x2="360" y2="230"/>
+        <line x1="280" y1="307" x2="360" y2="250"/>
+        <line x1="280" y1="347" x2="360" y2="270"/>
+      </g>
+      
+      <!-- Output -->
+      <rect x="560" y="140" width="120" height="60" rx="10" fill="#10b981" stroke="#047857" stroke-width="2"/>
+      <text x="620" y="165" text-anchor="middle" fill="white" font-size="11" font-weight="bold">Output</text>
+      <text x="620" y="185" text-anchor="middle" fill="white" font-size="9">dim_h × K</text>
+      
+      <!-- Arrow -->
+      <line x1="480" y1="200" x2="560" y2="170" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow2)"/>
+      
+      <defs>
+        <marker id="arrow2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L9,3 z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+      
+      <!-- Explanation -->
+      <text x="620" y="230" text-anchor="middle" font-size="10" fill="#64748b">Capa 1: Concatenar</text>
+      <text x="620" y="245" text-anchor="middle" font-size="10" fill="#64748b">Capa final: Promediar</text>
+    </svg>
+  </div>
+
+  <div class="explain-box">
+    <h4>💡 ¿Por qué múltiples cabezas?</h4>
+    <p>
+      Cada "cabeza" de atención aprende un <strong>patrón diferente</strong> de lo que es importante:<br><br>
+      🧠 <strong>Cabeza 1</strong> podría enfocarse en vecinos del mismo tema<br>
+      🧠 <strong>Cabeza 2</strong> podría enfocarse en artículos muy citados<br>
+      🧠 <strong>Cabeza 3</strong> podría enfocarse en artículos recientes<br>
+      ... y así con las 8 cabezas.<br><br>
+      En la <strong>primera capa GAT</strong> se <strong>concatenan</strong> las salidas: 8 cabezas × 8 dimensiones = <strong>64 dimensiones</strong>.<br>
+      En la <strong>última capa GAT</strong> se <strong>promedian</strong> las cabezas para obtener la predicción final.
+    </p>
+  </div>
+
+  <div class="formula-box">
+    <div class="description">Fórmula completa de Multi-Head GAT (Capa 1):</div>
+    <div class="formula" style="font-size: 1rem;">
+      $$\vec{h}'_i = \overset{K}{\underset{k=1}{\big\|}} \sigma\left(\sum_{j \in \mathcal{N}(i)} \alpha^k_{ij} W^k \vec{h}_j\right)$$
+    </div>
+    <div class="description">Donde $\|$ es concatenación y $K=8$ cabezas de atención, cada una con sus propios pesos $W^k$ y coeficientes $\alpha^k$.</div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       EJEMPLO CONCRETO: 7 NODOS, 6 CABEZAS DE ATENCIÓN
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div class="deep-dive" style="margin-top: 40px; background: linear-gradient(135deg, #1a0a2e 0%, #16213e 100%); border: 2px solid #a78bfa; border-radius: 16px; padding: 30px;">
+    <h3 style="color: #a78bfa; margin-bottom: 6px;">🧠 Ejemplo Concreto: 7 Nodos, 6 Cabezas de Atención</h3>
+    <p style="color: #cbd5e1; margin-bottom: 20px;">Veamos un grafo de <strong>7 nodos</strong> con <strong>K=6 cabezas</strong> de atención. Cada cabeza tiene sus <strong>propios pesos</strong> W<sup>k</sup> y vector a<sup>k</sup>, por lo que «ve» el grafo de manera diferente.</p>
+
+    <!-- GRAFO SVG -->
+    <div style="text-align: center; margin-bottom: 20px;">
+      <svg viewBox="0 0 500 320" style="max-width: 480px; width: 100%;">
+        <!-- Aristas -->
+        <line x1="250" y1="40" x2="410" y2="100" stroke="#475569" stroke-width="1.5"/>
+        <line x1="250" y1="40" x2="90" y2="100" stroke="#475569" stroke-width="1.5"/>
+        <line x1="410" y1="100" x2="440" y2="230" stroke="#475569" stroke-width="1.5"/>
+        <line x1="90" y1="100" x2="60" y2="230" stroke="#475569" stroke-width="1.5"/>
+        <line x1="440" y1="230" x2="310" y2="290" stroke="#475569" stroke-width="1.5"/>
+        <line x1="60" y1="230" x2="190" y2="290" stroke="#475569" stroke-width="1.5"/>
+        <line x1="190" y1="290" x2="310" y2="290" stroke="#475569" stroke-width="1.5"/>
+        <line x1="250" y1="40" x2="440" y2="230" stroke="#475569" stroke-width="1" stroke-dasharray="5,5"/>
+        <line x1="90" y1="100" x2="410" y2="100" stroke="#475569" stroke-width="1" stroke-dasharray="5,5"/>
+        <!-- Nodos -->
+        <circle cx="250" cy="40" r="22" fill="#3b82f6" stroke="#60a5fa" stroke-width="2"/>
+        <text x="250" y="46" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+        <circle cx="410" cy="100" r="22" fill="#8b5cf6" stroke="#a78bfa" stroke-width="2"/>
+        <text x="410" y="106" text-anchor="middle" fill="white" font-weight="bold" font-size="14">1</text>
+        <circle cx="90" cy="100" r="22" fill="#ec4899" stroke="#f472b6" stroke-width="2"/>
+        <text x="90" y="106" text-anchor="middle" fill="white" font-weight="bold" font-size="14">2</text>
+        <circle cx="440" cy="230" r="22" fill="#f59e0b" stroke="#fbbf24" stroke-width="2"/>
+        <text x="440" y="236" text-anchor="middle" fill="white" font-weight="bold" font-size="14">3</text>
+        <circle cx="60" cy="230" r="22" fill="#10b981" stroke="#34d399" stroke-width="2"/>
+        <text x="60" y="236" text-anchor="middle" fill="white" font-weight="bold" font-size="14">4</text>
+        <circle cx="310" cy="290" r="22" fill="#ef4444" stroke="#f87171" stroke-width="2"/>
+        <text x="310" y="296" text-anchor="middle" fill="white" font-weight="bold" font-size="14">5</text>
+        <circle cx="190" cy="290" r="22" fill="#06b6d4" stroke="#22d3ee" stroke-width="2"/>
+        <text x="190" y="296" text-anchor="middle" fill="white" font-weight="bold" font-size="14">6</text>
+        <!-- Leyenda -->
+        <text x="250" y="16" text-anchor="middle" fill="#94a3b8" font-size="10">Aristas sólidas = adyacencia directa | Punteadas = conexiones adicionales</text>
+      </svg>
+    </div>
+
+    <!-- CONFIGURACIÓN -->
+    <div style="background: #1a1a2e; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+      <h4 style="color: #60a5fa;">⚙️ Configuración del modelo</h4>
+      <table style="width: 100%; border-collapse: collapse; margin: 12px 0;">
+        <tr style="background: #334155; color: #e2e8f0;">
+          <th style="padding: 8px; border: 1px solid #475569; text-align: left;">Parámetro</th>
+          <th style="padding: 8px; border: 1px solid #475569; text-align: center;">Valor</th>
+        </tr>
+        <tr style="background: #1e293b; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #475569;">N° nodos</td>
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center;"><strong>7</strong></td>
+        </tr>
+        <tr style="background: #0f172a; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #475569;">Features por nodo (F)</td>
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center;"><strong>8</strong></td>
+        </tr>
+        <tr style="background: #1e293b; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #475569;">N° cabezas (K)</td>
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center;"><strong style="color: #a78bfa;">6</strong></td>
+        </tr>
+        <tr style="background: #0f172a; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #475569;">Dimensión por cabeza (d')</td>
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center;"><strong>4</strong></td>
+        </tr>
+        <tr style="background: #1e293b; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #475569;">Salida concatenada</td>
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center;"><strong style="color: #fbbf24;">6 × 4 = 24</strong></td>
+        </tr>
+      </table>
+      <p style="color: #94a3b8; font-size: 0.9em;">Cada cabeza: W<sup>k</sup> ∈ ℝ<sup>8×4</sup> (transforma 8 features → 4), a<sup>k</sup> ∈ ℝ<sup>8</sup> (vector atención sobre 2×4=8).</p>
+    </div>
+
+    <!-- CADA CABEZA VE ALGO DIFERENTE -->
+    <div style="background: #1a1a2e; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+      <h4 style="color: #fbbf24;">👁️ Cada cabeza "ve" patrones distintos</h4>
+      <p style="color: #cbd5e1; margin-bottom: 15px;">Enfoquémonos en el <strong style="color: #3b82f6;">Nodo 0</strong> (vecinos directos: 1 y 2; incluimos la conexión adicional 0→3 para ilustrar atención multi-hop). Cada cabeza produce coeficientes α<sup>k</sup> <strong>diferentes</strong>:</p>
+
+      <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+        <tr style="background: #a78bfa; color: #1e293b;">
+          <th style="padding: 10px; border: 1px solid #334155;">Cabeza k</th>
+          <th style="padding: 10px; border: 1px solid #334155;">α<sup>k</sup><sub>0,1</sub></th>
+          <th style="padding: 10px; border: 1px solid #334155;">α<sup>k</sup><sub>0,2</sub></th>
+          <th style="padding: 10px; border: 1px solid #334155;">α<sup>k</sup><sub>0,3</sub></th>
+          <th style="padding: 10px; border: 1px solid #334155;">Interpretación</th>
+        </tr>
+        <tr style="background: #1e293b; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center; font-weight: bold; color: #f87171;">1</td>
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center;"><strong style="color: #34d399;">0.72</strong></td>
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center;">0.18</td>
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center;">0.10</td>
+          <td style="padding: 8px; border: 1px solid #475569; color: #94a3b8; font-size: 0.9em;">Enfoca fuerte en nodo 1</td>
+        </tr>
+        <tr style="background: #0f172a; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center; font-weight: bold; color: #fb923c;">2</td>
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center;">0.25</td>
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center;"><strong style="color: #34d399;">0.60</strong></td>
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center;">0.15</td>
+          <td style="padding: 8px; border: 1px solid #475569; color: #94a3b8; font-size: 0.9em;">Prefiere nodo 2</td>
+        </tr>
+        <tr style="background: #1e293b; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center; font-weight: bold; color: #fbbf24;">3</td>
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center;">0.33</td>
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center;">0.34</td>
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center;">0.33</td>
+          <td style="padding: 8px; border: 1px solid #475569; color: #94a3b8; font-size: 0.9em;">~Uniforme (todos iguales)</td>
+        </tr>
+        <tr style="background: #0f172a; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center; font-weight: bold; color: #34d399;">4</td>
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center;">0.15</td>
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center;">0.15</td>
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center;"><strong style="color: #34d399;">0.70</strong></td>
+          <td style="padding: 8px; border: 1px solid #475569; color: #94a3b8; font-size: 0.9em;">Mira lejos: nodo 3</td>
+        </tr>
+        <tr style="background: #1e293b; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center; font-weight: bold; color: #60a5fa;">5</td>
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center;"><strong style="color: #34d399;">0.50</strong></td>
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center;"><strong style="color: #34d399;">0.45</strong></td>
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center;">0.05</td>
+          <td style="padding: 8px; border: 1px solid #475569; color: #94a3b8; font-size: 0.9em;">Atención repartida 1+2</td>
+        </tr>
+        <tr style="background: #0f172a; color: #e2e8f0;">
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center; font-weight: bold; color: #a78bfa;">6</td>
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center;">0.05</td>
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center;"><strong style="color: #34d399;">0.90</strong></td>
+          <td style="padding: 8px; border: 1px solid #475569; text-align: center;">0.05</td>
+          <td style="padding: 8px; border: 1px solid #475569; color: #94a3b8; font-size: 0.9em;">Casi todo al nodo 2</td>
+        </tr>
+      </table>
+
+      <div style="background: #374151; border-left: 4px solid #a78bfa; padding: 12px 16px; border-radius: 0 8px 8px 0; margin-top: 12px;">
+        <p style="color: #c4b5fd; font-weight: bold; margin-bottom: 4px;">💡 Observación clave</p>
+        <p style="color: #d1d5db; margin: 0;">Las 6 cabezas <strong>suman 1.0 cada una</strong> (softmax) pero distribuyen la atención de forma <strong>completamente diferente</strong>. La cabeza 3 es casi "democrática", la cabeza 6 es casi "dictatorial" (90% a un solo vecino).</p>
+      </div>
+    </div>
+
+    <!-- AGREGACIÓN POR CABEZA -->
+    <div style="background: #1a1a2e; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+      <h4 style="color: #22d3ee;">📊 Paso 1 — Cada cabeza agrega (h'<sub>j</sub> ponderado)</h4>
+      <p style="color: #cbd5e1; margin-bottom: 12px;">Supongamos que después de transformar con W<sup>k</sup>, los vectores h'<sub>j</sub> del nodo 0 en la cabeza 1 son:</p>
+      <div style="display: grid; grid-template-columns: auto 1fr; gap: 8px; margin-bottom: 15px;">
+        <span style="color: #8b5cf6; font-weight: bold;">h'<sub>1</sub> =</span>
+        <span style="color: #e2e8f0; font-family: monospace;">[0.3, &minus;0.5, 0.8, 0.1]</span>
+        <span style="color: #ec4899; font-weight: bold;">h'<sub>2</sub> =</span>
+        <span style="color: #e2e8f0; font-family: monospace;">[0.7, 0.2, &minus;0.3, 0.9]</span>
+        <span style="color: #f59e0b; font-weight: bold;">h'<sub>3</sub> =</span>
+        <span style="color: #e2e8f0; font-family: monospace;">[&minus;0.1, 0.6, 0.4, &minus;0.2]</span>
+      </div>
+      <p style="color: #cbd5e1; margin-bottom: 10px;">La cabeza 1 agrega con α = [0.72, 0.18, 0.10]:</p>
+      <div style="background: #0f172a; border-radius: 8px; padding: 15px; font-family: monospace; color: #e2e8f0; line-height: 1.8; overflow-x: auto;">
+        <p style="margin: 4px 0;">out<sup>1</sup><sub>0</sub> = 0.72·[0.3, &minus;0.5, 0.8, 0.1] + 0.18·[0.7, 0.2, &minus;0.3, 0.9] + 0.10·[&minus;0.1, 0.6, 0.4, &minus;0.2]</p>
+        <p style="margin: 4px 0; color: #94a3b8;">
+          &nbsp;&nbsp;Pos 1: 0.72(0.3) + 0.18(0.7) + 0.10(&minus;0.1) = 0.216 + 0.126 &minus; 0.010 = <strong style="color: #fbbf24;">0.332</strong>
+        </p>
+        <p style="margin: 4px 0; color: #94a3b8;">
+          &nbsp;&nbsp;Pos 2: 0.72(&minus;0.5) + 0.18(0.2) + 0.10(0.6) = &minus;0.360 + 0.036 + 0.060 = <strong style="color: #fbbf24;">&minus;0.264</strong>
+        </p>
+        <p style="margin: 4px 0; color: #94a3b8;">
+          &nbsp;&nbsp;Pos 3: 0.72(0.8) + 0.18(&minus;0.3) + 0.10(0.4) = 0.576 &minus; 0.054 + 0.040 = <strong style="color: #fbbf24;">0.562</strong>
+        </p>
+        <p style="margin: 4px 0; color: #94a3b8;">
+          &nbsp;&nbsp;Pos 4: 0.72(0.1) + 0.18(0.9) + 0.10(&minus;0.2) = 0.072 + 0.162 &minus; 0.020 = <strong style="color: #fbbf24;">0.214</strong>
+        </p>
+        <p style="margin: 8px 0 0 0; color: #34d399; font-weight: bold;">
+          ∴ out<sup>1</sup><sub>0</sub> = [0.332, &minus;0.264, 0.562, 0.214] &nbsp;&nbsp;← vector de 4 dims de la cabeza 1
+        </p>
+      </div>
+      <p style="color: #94a3b8; margin-top: 10px; font-size: 0.9em;">Las otras 5 cabezas hacen el <strong>mismo proceso</strong> pero con sus propios W<sup>k</sup>, a<sup>k</sup> → diferentes α<sup>k</sup> → diferentes vectores de salida de 4 dims.</p>
+    </div>
+
+    <!-- CONCATENACIÓN FINAL -->
+    <div style="background: #1a1a2e; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+      <h4 style="color: #f59e0b;">🔗 Paso 2 — Concatenar las 6 cabezas</h4>
+      <p style="color: #cbd5e1; margin-bottom: 15px;">Cada cabeza produce un vector de <strong>4 dimensiones</strong> para el nodo 0. Concatenamos las 6:</p>
+
+      <div style="display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin-bottom: 15px; font-family: monospace; font-size: 0.92em;">
+        <span style="color: #f87171; font-weight: bold;">Cabeza 1:</span>
+        <span style="color: #e2e8f0;">[<span style="color: #f87171;">0.332</span>, <span style="color: #f87171;">&minus;0.264</span>, <span style="color: #f87171;">0.562</span>, <span style="color: #f87171;">0.214</span>]</span>
+        <span style="color: #fb923c; font-weight: bold;">Cabeza 2:</span>
+        <span style="color: #e2e8f0;">[<span style="color: #fb923c;">0.615</span>, <span style="color: #fb923c;">0.108</span>, <span style="color: #fb923c;">&minus;0.201</span>, <span style="color: #fb923c;">0.843</span>]</span>
+        <span style="color: #fbbf24; font-weight: bold;">Cabeza 3:</span>
+        <span style="color: #e2e8f0;">[<span style="color: #fbbf24;">0.299</span>, <span style="color: #fbbf24;">0.101</span>, <span style="color: #fbbf24;">0.300</span>, <span style="color: #fbbf24;">0.266</span>]</span>
+        <span style="color: #34d399; font-weight: bold;">Cabeza 4:</span>
+        <span style="color: #e2e8f0;">[<span style="color: #34d399;">&minus;0.047</span>, <span style="color: #34d399;">0.522</span>, <span style="color: #34d399;">0.370</span>, <span style="color: #34d399;">&minus;0.164</span>]</span>
+        <span style="color: #60a5fa; font-weight: bold;">Cabeza 5:</span>
+        <span style="color: #e2e8f0;">[<span style="color: #60a5fa;">0.499</span>, <span style="color: #60a5fa;">&minus;0.155</span>, <span style="color: #60a5fa;">0.265</span>, <span style="color: #60a5fa;">0.490</span>]</span>
+        <span style="color: #a78bfa; font-weight: bold;">Cabeza 6:</span>
+        <span style="color: #e2e8f0;">[<span style="color: #a78bfa;">0.680</span>, <span style="color: #a78bfa;">0.176</span>, <span style="color: #a78bfa;">&minus;0.283</span>, <span style="color: #a78bfa;">0.874</span>]</span>
+      </div>
+
+      <div style="background: linear-gradient(90deg, #f87171, #fb923c, #fbbf24, #34d399, #60a5fa, #a78bfa); height: 4px; border-radius: 2px; margin: 12px 0;"></div>
+
+      <div style="background: #0f172a; border-radius: 8px; padding: 15px; border: 2px solid #fbbf24;">
+        <p style="color: #fbbf24; font-weight: bold; margin-bottom: 8px;">Resultado final para Nodo 0 (capa 1 - concatenación):</p>
+        <p style="color: #e2e8f0; font-family: monospace; font-size: 0.88em; word-break: break-all;">
+          h'<sub>0</sub> = [<span style="color: #f87171;">0.332, &minus;0.264, 0.562, 0.214</span>, <span style="color: #fb923c;">0.615, 0.108, &minus;0.201, 0.843</span>, <span style="color: #fbbf24;">0.299, 0.101, 0.300, 0.266</span>, <span style="color: #34d399;">&minus;0.047, 0.522, 0.370, &minus;0.164</span>, <span style="color: #60a5fa;">0.499, &minus;0.155, 0.265, 0.490</span>, <span style="color: #a78bfa;">0.680, 0.176, &minus;0.283, 0.874</span>]
+        </p>
+        <p style="color: #fbbf24; margin-top: 10px; font-size: 1.1em; text-align: center;">
+          <strong>Dimensión final: 6 cabezas × 4 = 24 dimensiones</strong>
+        </p>
+      </div>
+    </div>
+
+    <!-- ÚLTIMA CAPA: PROMEDIO -->
+    <div style="background: #1a1a2e; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+      <h4 style="color: #34d399;">📐 Última capa: Promedio en vez de concatenación</h4>
+      <p style="color: #cbd5e1; margin-bottom: 10px;">En la <strong>última capa GAT</strong> (para clasificación), las cabezas se <strong>promedian</strong> en lugar de concatenarse. Si clasificamos en <strong>C=6 clases</strong>, cada cabeza produce un vector de 6 dims y promediamos:</p>
+
+      <div style="background: #0f172a; border-radius: 8px; padding: 15px; font-family: monospace; color: #e2e8f0; line-height: 1.8;">
+        <p style="margin: 4px 0;">$$\vec{h}''_i = \frac{1}{K} \sum_{k=1}^{K} \sigma\left(\sum_{j \in \mathcal{N}(i)} \alpha^{k}_{ij} W^k \vec{h}'_j\right)$$</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; font-family: monospace; font-size: 0.92em; margin: 15px 0;">
+        <span style="color: #f87171;">Cabeza 1:</span>
+        <span style="color: #e2e8f0;">[2.1, 0.3, &minus;0.5, 1.2, 0.1, &minus;0.8]</span>
+        <span style="color: #fb923c;">Cabeza 2:</span>
+        <span style="color: #e2e8f0;">[1.8, 0.7, &minus;0.2, 1.5, &minus;0.3, &minus;0.6]</span>
+        <span style="color: #fbbf24;">Cabeza 3:</span>
+        <span style="color: #e2e8f0;">[2.0, 0.5, &minus;0.3, 1.3, 0.0, &minus;0.9]</span>
+        <span style="color: #34d399;">Cabeza 4:</span>
+        <span style="color: #e2e8f0;">[1.5, 0.9, &minus;0.7, 1.0, 0.4, &minus;0.5]</span>
+        <span style="color: #60a5fa;">Cabeza 5:</span>
+        <span style="color: #e2e8f0;">[2.3, 0.1, &minus;0.4, 1.4, &minus;0.1, &minus;0.7]</span>
+        <span style="color: #a78bfa;">Cabeza 6:</span>
+        <span style="color: #e2e8f0;">[1.9, 0.6, &minus;0.6, 1.1, 0.2, &minus;0.4]</span>
+      </div>
+
+      <div style="background: #0f172a; border: 2px solid #34d399; border-radius: 8px; padding: 15px;">
+        <p style="color: #34d399; font-weight: bold;">Promedio (pos a pos):</p>
+        <p style="color: #e2e8f0; font-family: monospace; margin: 6px 0;">
+          Pos 1: (2.1+1.8+2.0+1.5+2.3+1.9)/6 = <strong style="color: #fbbf24;">1.933</strong><br>
+          Pos 2: (0.3+0.7+0.5+0.9+0.1+0.6)/6 = <strong style="color: #fbbf24;">0.517</strong><br>
+          Pos 3: (&minus;0.5&minus;0.2&minus;0.3&minus;0.7&minus;0.4&minus;0.6)/6 = <strong style="color: #fbbf24;">&minus;0.450</strong><br>
+          Pos 4: (1.2+1.5+1.3+1.0+1.4+1.1)/6 = <strong style="color: #fbbf24;">1.250</strong><br>
+          Pos 5: (0.1&minus;0.3+0.0+0.4&minus;0.1+0.2)/6 = <strong style="color: #fbbf24;">0.050</strong><br>
+          Pos 6: (&minus;0.8&minus;0.6&minus;0.9&minus;0.5&minus;0.7&minus;0.4)/6 = <strong style="color: #fbbf24;">&minus;0.650</strong>
+        </p>
+        <p style="color: #34d399; margin-top: 8px; font-weight: bold;">
+          logits<sub>0</sub> = [1.933, 0.517, &minus;0.450, 1.250, 0.050, &minus;0.650]
+        </p>
+        <p style="color: #94a3b8; margin-top: 6px;">→ softmax → predicción: <strong style="color: #fbbf24;">clase 0</strong> (logit más alto = 1.933)</p>
+      </div>
+    </div>
+
+    <!-- RESUMEN VISUAL PIPELINE -->
+    <div style="background: linear-gradient(135deg, #312e81, #1e1b4b); border-radius: 12px; padding: 20px; border: 2px dashed #a78bfa;">
+      <h4 style="color: #c4b5fd;">🔄 Pipeline completo — Nodo 0 con 6 cabezas</h4>
+      <div style="text-align: center; margin: 15px 0;">
+        <svg viewBox="0 0 700 140" style="max-width: 680px; width: 100%;">
+          <!-- Capa 1 -->
+          <rect x="10" y="10" width="110" height="50" rx="8" fill="#3b82f6" stroke="#60a5fa" stroke-width="2"/>
+          <text x="65" y="30" text-anchor="middle" fill="white" font-size="10" font-weight="bold">Input: 8 dims</text>
+          <text x="65" y="46" text-anchor="middle" fill="#bfdbfe" font-size="9">h₀ ∈ ℝ⁸</text>
+
+          <text x="140" y="40" text-anchor="middle" fill="#94a3b8" font-size="16">→</text>
+
+          <rect x="160" y="5" width="140" height="60" rx="8" fill="#7c3aed" stroke="#a78bfa" stroke-width="2"/>
+          <text x="230" y="26" text-anchor="middle" fill="white" font-size="10" font-weight="bold">6 Cabezas GAT</text>
+          <text x="230" y="42" text-anchor="middle" fill="#ddd6fe" font-size="9">cada una: ℝ⁸→ℝ⁴</text>
+          <text x="230" y="56" text-anchor="middle" fill="#c4b5fd" font-size="9">6 vectores de 4 dims</text>
+
+          <text x="320" y="40" text-anchor="middle" fill="#94a3b8" font-size="16">→</text>
+
+          <rect x="340" y="10" width="100" height="50" rx="8" fill="#f59e0b" stroke="#fbbf24" stroke-width="2"/>
+          <text x="390" y="30" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="bold">CONCAT</text>
+          <text x="390" y="46" text-anchor="middle" fill="#451a03" font-size="9">6×4 = 24 dims</text>
+
+          <text x="460" y="40" text-anchor="middle" fill="#94a3b8" font-size="16">→</text>
+
+          <!-- Capa 2 -->
+          <rect x="480" y="5" width="100" height="60" rx="8" fill="#7c3aed" stroke="#a78bfa" stroke-width="2"/>
+          <text x="530" y="26" text-anchor="middle" fill="white" font-size="10" font-weight="bold">6 Cabezas</text>
+          <text x="530" y="42" text-anchor="middle" fill="#ddd6fe" font-size="9">ℝ²⁴→ℝ⁶</text>
+          <text x="530" y="56" text-anchor="middle" fill="#c4b5fd" font-size="9">(última capa)</text>
+
+          <text x="600" y="40" text-anchor="middle" fill="#94a3b8" font-size="16">→</text>
+
+          <rect x="615" y="10" width="75" height="50" rx="8" fill="#10b981" stroke="#34d399" stroke-width="2"/>
+          <text x="652" y="30" text-anchor="middle" fill="white" font-size="10" font-weight="bold">PROM</text>
+          <text x="652" y="46" text-anchor="middle" fill="#a7f3d0" font-size="9">→ 6 clases</text>
+
+          <!-- Labels -->
+          <text x="65" y="85" text-anchor="middle" fill="#64748b" font-size="9">Features</text>
+          <text x="230" y="85" text-anchor="middle" fill="#64748b" font-size="9">Capa 1</text>
+          <text x="390" y="85" text-anchor="middle" fill="#64748b" font-size="9">‖</text>
+          <text x="530" y="85" text-anchor="middle" fill="#64748b" font-size="9">Capa 2</text>
+          <text x="652" y="85" text-anchor="middle" fill="#64748b" font-size="9">mean</text>
+
+          <!-- Dimensiones -->
+          <text x="65" y="100" text-anchor="middle" fill="#475569" font-size="8">ℝ⁸</text>
+          <text x="390" y="100" text-anchor="middle" fill="#475569" font-size="8">ℝ²⁴</text>
+          <text x="652" y="100" text-anchor="middle" fill="#475569" font-size="8">ℝ⁶</text>
+        </svg>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px;">
+        <div style="background: #4c1d95; border-radius: 8px; padding: 12px;">
+          <p style="color: #fbbf24; font-weight: bold; margin-bottom: 4px;">Capa 1 (concat)</p>
+          <p style="color: #d1d5db; font-size: 0.9em; margin: 0;">6 cabezas × 4 dims = <strong>24 dims</strong><br>Captura diversidad de patrones</p>
+        </div>
+        <div style="background: #4c1d95; border-radius: 8px; padding: 12px;">
+          <p style="color: #34d399; font-weight: bold; margin-bottom: 4px;">Capa 2 (promedio)</p>
+          <p style="color: #d1d5db; font-size: 0.9em; margin: 0;">6 cabezas → prom → <strong>6 dims</strong><br>Suaviza para clasificación</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECCIÓN 7: IMPLEMENTACIÓN GCN vs GAT
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-number">7</div>
+    <div class="section-title">
+      <h2>Implementación: GCN vs GAT</h2>
+      <p>¡Ahora sí, manos al código! Comparemos las dos arquitecturas</p>
+    </div>
+  </div>
+
+  <div class="highlight" style="margin-bottom: 20px;">
+    <div class="icon">▶️</div>
+    <p><strong>¡Ejecuta la Celda 6!</strong> Esta celda define AMBOS modelos (GCN y GAT) y las funciones de entrenamiento/evaluación.</p>
+  </div>
+
+  <!-- COMPARACIÓN CÓDIGO GCN vs GAT -->
+  <div class="comparison-grid">
+    <div class="comparison-card gcn">
+      <h4 style="color: #1e40af;">🔵 Modelo GCN</h4>
+      <div class="code-block" style="margin: 10px 0;">
+        <pre><span class="keyword">class</span> <span class="function">GCN</span>(torch.nn.Module):
+  <span class="keyword">def</span> __init__(self, dim_in, dim_h, dim_out):
+    <span class="keyword">super</span>().__init__()
+    self.gcn1 = <span class="function">GCNConv</span>(dim_in, dim_h)
+    self.gcn2 = <span class="function">GCNConv</span>(dim_h, dim_out)
+    self.optimizer = torch.optim.Adam(
+      self.parameters(),
+      lr=<span class="number">0.01</span>,
+      weight_decay=<span class="number">5e-4</span>)
+
+  <span class="keyword">def</span> forward(self, x, edge_index):
+    h = F.dropout(x, p=<span class="number">0.5</span>)
+    h = self.gcn1(h, edge_index)
+    h = torch.<span class="function">relu</span>(h)
+    h = F.dropout(h, p=<span class="number">0.5</span>)
+    h = self.gcn2(h, edge_index)
+    <span class="keyword">return</span> h, F.log_softmax(h, dim=1)</pre>
+      </div>
+      <div style="font-size: 0.85rem; color: #475569;">
+        ✅ 2 capas GCNConv<br>
+        ✅ ReLU como activación<br>
+        ✅ Dropout = 0.5<br>
+        ✅ lr = 0.01
+      </div>
+    </div>
+    
+    <div class="comparison-card gat">
+      <h4 style="color: #be123c;">🔴 Modelo GAT</h4>
+      <div class="code-block" style="margin: 10px 0;">
+        <pre><span class="keyword">class</span> <span class="function">GAT</span>(torch.nn.Module):
+  <span class="keyword">def</span> __init__(self, dim_in, dim_h, dim_out, 
+               heads=<span class="number">8</span>):
+    <span class="keyword">super</span>().__init__()
+    self.gat1 = <span class="function">GATv2Conv</span>(dim_in, dim_h, 
+                          heads=heads)
+    self.gat2 = <span class="function">GATv2Conv</span>(dim_h*heads, dim_out,
+                          heads=<span class="number">1</span>)
+    self.optimizer = torch.optim.Adam(
+      self.parameters(),
+      lr=<span class="number">0.005</span>,
+      weight_decay=<span class="number">5e-4</span>)
+
+  <span class="keyword">def</span> forward(self, x, edge_index):
+    h = F.dropout(x, p=<span class="number">0.6</span>)
+    h = self.gat1(h, edge_index)
+    h = F.<span class="function">elu</span>(h)
+    h = F.dropout(h, p=<span class="number">0.6</span>)
+    h = self.gat2(h, edge_index)
+    <span class="keyword">return</span> h, F.log_softmax(h, dim=1)</pre>
+      </div>
+      <div style="font-size: 0.85rem; color: #475569;">
+        ✅ 2 capas <strong>GATv2Conv</strong><br>
+        ✅ <strong>ELU</strong> como activación<br>
+        ✅ Dropout = <strong>0.6</strong> (más alto)<br>
+        ✅ lr = <strong>0.005</strong> (más bajo)<br>
+        ✅ <strong>8 cabezas</strong> en capa 1, <strong>1</strong> en capa 2
+      </div>
+      <div style="margin-top: 10px; font-size: 0.8rem; padding: 8px 12px; background: #ecfdf5; border-radius: 8px; color: #166534; border: 1px solid #86efac;">
+        ✅ <strong>Detalle importante:</strong> aquí usamos <code>self.gat1(<strong>h</strong>, ...)</code> para que el dropout de entrada sí afecte a la primera capa.
+        Si en tu notebook aparece <code>self.gat1(x, ...)</code>, cámbialo por <code>self.gat1(h, ...)</code>.
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLA DE DIFERENCIAS CLAVE -->
+  <h3 style="color: var(--primary-dark); margin-top: 30px;">⚖️ Diferencias Clave entre GCN y GAT</h3>
+  
+  <table class="data-table">
+    <tr>
+      <th>Aspecto</th>
+      <th style="text-align: center;">🔵 GCN</th>
+      <th style="text-align: center;">🔴 GAT</th>
+    </tr>
+    <tr>
+      <td><strong>Capa principal</strong></td>
+      <td style="text-align: center;">GCNConv</td>
+      <td style="text-align: center;">GATv2Conv</td>
+    </tr>
+    <tr>
+      <td><strong>Cómo agrega vecinos</strong></td>
+      <td style="text-align: center;">Normalización por grado (pesos fijos)</td>
+      <td style="text-align: center;"><strong>Promedio ponderado</strong> (con atención)</td>
+    </tr>
+    <tr>
+      <td><strong>Multi-head</strong></td>
+      <td style="text-align: center;">No</td>
+      <td style="text-align: center;"><strong>Sí</strong> (8 cabezas en capa 1)</td>
+    </tr>
+    <tr>
+      <td><strong>Activación</strong></td>
+      <td style="text-align: center;">ReLU</td>
+      <td style="text-align: center;"><strong>ELU</strong></td>
+    </tr>
+    <tr>
+      <td><strong>Dropout</strong></td>
+      <td style="text-align: center;">0.5</td>
+      <td style="text-align: center;"><strong>0.6</strong></td>
+    </tr>
+    <tr>
+      <td><strong>Learning rate</strong></td>
+      <td style="text-align: center;">0.01</td>
+      <td style="text-align: center;"><strong>0.005</strong></td>
+    </tr>
+    <tr>
+      <td><strong>Dimensión capa 1 salida</strong></td>
+      <td style="text-align: center;">16</td>
+      <td style="text-align: center;"><strong>8 × 8 = 64</strong> (heads × dim_h)</td>
+    </tr>
+    <tr>
+      <td><strong>Parámetros aprendibles</strong></td>
+      <td style="text-align: center;">Menos</td>
+      <td style="text-align: center;"><strong>Más</strong> (8 sets de pesos por cabeza)</td>
+    </tr>
+  </table>
+
+  <!-- ARQUITECTURA VISUAL -->
+  <h3 style="color: var(--primary-dark); margin-top: 30px;">🏗️ Arquitectura del GAT — Flujo de Datos</h3>
+  
+  <div class="architecture">
+    <div class="arch-block" style="background: linear-gradient(135deg, #e11d48, #be123c);">
+      <h5>Input</h5>
+      <p>[3327, 3703]<br>features</p>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-block" style="background: linear-gradient(135deg, #9333ea, #7c3aed);">
+      <h5>Dropout(0.6)</h5>
+      <p>Regularización</p>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-block" style="background: linear-gradient(135deg, #e11d48, #db2777);">
+      <h5>GATv2Conv</h5>
+      <p>8 heads × 8 dim<br>→ [3327, 64]</p>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-block" style="background: linear-gradient(135deg, #059669, #10b981);">
+      <h5>ELU + Drop</h5>
+      <p>Activación +<br>Dropout(0.6)</p>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-block" style="background: linear-gradient(135deg, #e11d48, #db2777);">
+      <h5>GATv2Conv</h5>
+      <p>1 head × 6 dim<br>→ [3327, 6]</p>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-block" style="background: linear-gradient(135deg, #d97706, #fbbf24);">
+      <h5>Softmax</h5>
+      <p>6 clases<br>probabilidades</p>
+    </div>
+  </div>
+
+  <!-- ELU vs ReLU -->
+  <div class="explain-box" style="background: linear-gradient(135deg, #fce7f3 0%, #fdf2f8 100%); border-color: #e11d48;">
+    <h4>🤔 ¿Por qué ELU en lugar de ReLU?</h4>
+    <p>
+      <strong>ReLU:</strong> $f(x) = \max(0, x)$ → Los valores negativos se vuelven 0 ("mueren")<br>
+      <strong>ELU:</strong> $f(x) = \begin{cases} x & \text{si } x > 0 \\ \alpha(e^x - 1) & \text{si } x \leq 0 \end{cases}$ → Los valores negativos se <strong>suavizan</strong> en lugar de morir<br><br>
+      <strong>Ventaja:</strong> ELU permite que gradientes fluyan incluso para valores negativos, lo que ayuda al mecanismo de atención a ajustar pesos más finamente. Es como darle al modelo una "sensibilidad" extra para distinguir importancias.
+    </p>
+  </div>
+
+  <!-- FUNCIONES DE ENTRENAMIENTO -->
+  <h3 style="color: var(--primary-dark); margin-top: 30px;">🔧 Funciones de Entrenamiento y Evaluación</h3>
+
+  <div class="code-block">
+    <pre><span class="keyword">def</span> <span class="function">train</span>(model, data):
+    criterion = torch.nn.CrossEntropyLoss()
+    optimizer = model.optimizer
+    epochs = <span class="number">200</span>
+
+    model.train()
+    <span class="keyword">for</span> epoch <span class="keyword">in</span> range(epochs+<span class="number">1</span>):
+        optimizer.zero_grad()
+        _, out = model(data.x, data.edge_index)
+        loss = criterion(out[<span class="function">data.train_mask</span>], data.y[<span class="function">data.train_mask</span>])
+        acc = accuracy(out[data.train_mask].argmax(dim=<span class="number">1</span>), data.y[data.train_mask])
+        loss.backward()
+        optimizer.step()
+
+        <span class="comment"># Validación</span>
+        val_loss = criterion(out[<span class="function">data.val_mask</span>], data.y[<span class="function">data.val_mask</span>])
+        val_acc = accuracy(out[data.val_mask].argmax(dim=<span class="number">1</span>), data.y[data.val_mask])
+    <span class="keyword">return</span> model</pre>
+  </div>
+
+  <div class="warning-box">
+    <h4>🎯 ¡Diferencia CLAVE con el Capítulo 1!</h4>
+    <p>
+      ¿Recuerdas que en el Cap. 1 usábamos <code>loss = criterion(z, data.y)</code> con TODOS los nodos?<br><br>
+      ¡Aquí usamos <strong>masks</strong>!<br>
+      <code>loss = criterion(out[<strong>data.train_mask</strong>], data.y[<strong>data.train_mask</strong>])</code><br><br>
+      Además, ahora hay <strong>validación</strong> en cada época: medimos <code>val_loss</code> y <code>val_acc</code> con <code>data.val_mask</code>.
+      Esto es la forma <strong>correcta</strong> de entrenar en producción — separar train / validation / test.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECCIÓN 8: ENTRENAR GCN
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-number">8</div>
+    <div class="section-title">
+      <h2>Entrenar el Modelo GCN (Baseline)</h2>
+      <p>Primero entrenamos la GCN como punto de referencia</p>
+    </div>
+  </div>
+
+  <div class="highlight" style="margin-bottom: 20px;">
+    <div class="icon">▶️</div>
+    <p><strong>¡Ejecuta las Celdas 7-8!</strong> Entrenamos y evaluamos el modelo GCN sobre CiteSeer.</p>
+  </div>
+
+  <div class="code-block">
+    <pre><span class="comment"># Crear modelo GCN</span>
+gcn = GCN(dataset.num_features, <span class="number">16</span>, dataset.num_classes)
+<span class="function">print</span>(gcn)
+
+<span class="comment"># Entrenar</span>
+train(gcn, data)
+
+<span class="comment"># Evaluar en test set</span>
+acc = test(gcn, data)
+<span class="function">print</span>(<span class="string">f'\nGCN test accuracy: {acc*100:.2f}%\n'</span>)</pre>
+  </div>
+
+  <div class="output-box">
+    <div class="label">📤 Output esperado (resumido):</div>
+    GCN(<br>
+    &nbsp;&nbsp;(gcn1): GCNConv(3703, 16)<br>
+    &nbsp;&nbsp;(gcn2): GCNConv(16, 6)<br>
+    )<br><br>
+    Epoch &nbsp;&nbsp;0 | Train Loss: 1.818 | Train Acc: &nbsp;16.67% | Val Loss: 1.81 | Val Acc: 19.40%<br>
+    Epoch &nbsp;10 | Train Loss: 1.516 | Train Acc: &nbsp;65.83% | ...<br>
+    Epoch 200 | Train Loss: 0.363 | Train Acc: &nbsp;97.50% | Val Loss: 1.21 | Val Acc: ~70%<br><br>
+    <strong style="color: #3b82f6;">GCN test accuracy: ~71%</strong>
+  </div>
+
+  <div class="explain-box">
+    <h4>📊 Interpretación de los Resultados GCN</h4>
+    <p>
+      <strong>Train Acc: ~97%</strong> → El modelo aprende bien los datos de entrenamiento<br>
+      <strong>Val Acc: ~70%</strong> → Pero generaliza peor a datos nuevos<br>
+      <strong>Test Acc: ~71%</strong> → Resultado final del baseline<br><br>
+      Hay una brecha de ~25% entre train y test → indicador de <strong>overfitting</strong>.<br>
+      ¿Podrá el GAT hacerlo mejor? ¡Vamos a ver! 🚀
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECCIÓN 9: ENTRENAR GAT
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-number">9</div>
+    <div class="section-title">
+      <h2>Entrenar el Modelo GAT</h2>
+      <p>¡El momento de la verdad! ¿Superará la atención aprendida a los pesos fijos?</p>
+    </div>
+  </div>
+
+  <div class="highlight" style="margin-bottom: 20px;">
+    <div class="icon">▶️</div>
+    <p><strong>¡Ejecuta las Celdas 9-10!</strong> Entrenamos y evaluamos el modelo GAT.</p>
+  </div>
+
+  <div class="code-block">
+    <pre><span class="comment"># Crear modelo GAT</span>
+gat = GAT(dataset.num_features, <span class="number">8</span>, dataset.num_classes)
+<span class="function">print</span>(gat)
+
+<span class="comment"># Entrenar</span>
+train(gat, data)
+
+<span class="comment"># Evaluar en test set</span>
+acc = test(gat, data)
+<span class="function">print</span>(<span class="string">f'\nGAT test accuracy: {acc*100:.2f}%\n'</span>)</pre>
+  </div>
+
+  <div class="output-box">
+    <div class="label">📤 Output esperado (resumido):</div>
+    GAT(<br>
+    &nbsp;&nbsp;(gat1): GATv2Conv(3703, 8, heads=8)<br>
+    &nbsp;&nbsp;(gat2): GATv2Conv(64, 6, heads=1)<br>
+    )<br><br>
+    Epoch &nbsp;&nbsp;0 | Train Loss: 1.814 | Train Acc: &nbsp;20.00% | Val Loss: 1.80 | Val Acc: 20.80%<br>
+    Epoch &nbsp;10 | Train Loss: 1.205 | Train Acc: &nbsp;62.50% | ...<br>
+    Epoch 200 | Train Loss: 0.145 | Train Acc: &nbsp;99.17% | Val Loss: ~1.0 | Val Acc: ~71%<br><br>
+    <strong style="color: #e11d48;">GAT test accuracy: ~72%</strong>
+  </div>
+
+  <!-- COMPARACIÓN VISUAL DE RESULTADOS -->
+  <div class="diagram">
+    <svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg">
+      <rect width="700" height="300" fill="#f8fafc" rx="15"/>
+      
+      <text x="350" y="30" text-anchor="middle" font-size="16" fill="#1e293b" font-weight="700">🏆 Comparación Final: GCN vs GAT en CiteSeer</text>
+      
+      <!-- GCN Bar -->
+      <rect x="130" y="80" width="180" height="50" rx="10" fill="#3b82f6"/>
+      <text x="220" y="110" text-anchor="middle" fill="white" font-size="14" font-weight="bold">GCN: ~71%</text>
+      
+      <!-- GAT Bar -->
+      <rect x="130" y="150" width="195" height="50" rx="10" fill="#e11d48"/>
+      <text x="227" y="180" text-anchor="middle" fill="white" font-size="14" font-weight="bold">GAT: ~72%</text>
+      
+      <!-- Scale -->
+      <line x1="130" y1="220" x2="600" y2="220" stroke="#e5e7eb" stroke-width="2"/>
+      <text x="130" y="240" text-anchor="middle" font-size="10" fill="#64748b">0%</text>
+      <text x="365" y="240" text-anchor="middle" font-size="10" fill="#64748b">50%</text>
+      <text x="600" y="240" text-anchor="middle" font-size="10" fill="#64748b">100%</text>
+      
+      <!-- Improvement arrow -->
+      <rect x="400" y="100" width="200" height="80" rx="10" fill="#dcfce7" stroke="#10b981" stroke-width="2"/>
+      <text x="500" y="125" text-anchor="middle" font-size="12" fill="#047857" font-weight="600">📈 Mejora del GAT</text>
+      <text x="500" y="148" text-anchor="middle" font-size="11" fill="#166534">+1-2% en accuracy</text>
+      <text x="500" y="168" text-anchor="middle" font-size="10" fill="#64748b">Pero con mejor generalización</text>
+      
+      <!-- Note -->
+      <text x="350" y="275" text-anchor="middle" font-size="11" fill="#64748b" font-style="italic">Los resultados varían por seed aleatoria. Lo importante es la tendencia.</text>
+    </svg>
+  </div>
+
+  <div class="explain-box">
+    <h4>🤔 ¿Solo 1-2% de mejora? ¿Vale la pena?</h4>
+    <p>
+      ¡Sí! Por varias razones:<br><br>
+      1️⃣ <strong>CiteSeer es un benchmark difícil</strong> — incluso 1% más es significativo<br>
+      2️⃣ <strong>GAT es más robusto</strong> — su rendimiento es más estable entre ejecuciones<br>
+      3️⃣ <strong>Interpretabilidad:</strong> Los pesos de atención nos dicen QUÉ vecinos fueron importantes 🔍<br>
+      4️⃣ <strong>En datasets más complejos</strong> (con grafos heterogéneos), la ventaja del GAT crece mucho más<br><br>
+      Piénsalo así: es como comparar un estudiante que lee TODO un libro (GCN) vs uno que <strong>subraya lo importante</strong> (GAT). Ambos pueden pasar el examen, ¡pero el segundo es más inteligente!
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECCIÓN 10: VISUALIZACIÓN t-SNE
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-number">10</div>
+    <div class="section-title">
+      <h2>Visualización t-SNE: Antes vs Después del Entrenamiento</h2>
+      <p>¡Vamos a VER cómo la atención organiza los nodos!</p>
+    </div>
+  </div>
+
+  <div class="highlight" style="margin-bottom: 20px;">
+    <div class="icon">▶️</div>
+    <p><strong>¡Ejecuta las Celdas 11-12!</strong> Primero visualizamos un GAT SIN entrenar, luego el GAT YA ENTRENADO.</p>
+  </div>
+
+  <div class="code-block">
+    <pre><span class="comment"># GAT SIN ENTRENAR — embeddings aleatorios</span>
+untrained_gat = GAT(dataset.num_features, <span class="number">8</span>, dataset.num_classes)
+h, _ = untrained_gat(data.x, data.edge_index)
+
+<span class="comment"># Reducir a 2D con t-SNE</span>
+tsne = TSNE(n_components=<span class="number">2</span>, learning_rate=<span class="string">'auto'</span>,
+         init=<span class="string">'pca'</span>).fit_transform(h.detach())
+
+plt.figure(figsize=(<span class="number">10</span>, <span class="number">10</span>))
+plt.axis(<span class="string">'off'</span>)
+plt.scatter(tsne[:, <span class="number">0</span>], tsne[:, <span class="number">1</span>], s=<span class="number">50</span>, c=data.y)
+plt.show()</pre>
+  </div>
+
+  <div class="explain-box">
+    <h4>🧩 ¿Qué es t-SNE?</h4>
+    <p>
+      <strong>t-SNE</strong> (t-Distributed Stochastic Neighbor Embedding) es un algoritmo de <strong>reducción de dimensionalidad</strong> para visualización.<br><br>
+      Los embeddings del GAT tienen 6 dimensiones (una por clase). Nosotros solo podemos visualizar 2D. t-SNE comprime esas 6 dimensiones en 2, intentando <strong>preservar las distancias relativas</strong> — nodos que estaban "cerca" en 6D deben estar cerca en 2D.<br><br>
+      Es como aplastar un globo terráqueo en un mapa plano: pierdes algo de fidelidad, ¡pero puedes ver los continentes!
+    </p>
+  </div>
+
+  <!-- VISUAL: Antes vs Después -->
+  <div class="diagram">
+    <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+      <rect width="800" height="400" fill="#f8fafc" rx="15"/>
+      
+      <text x="400" y="30" text-anchor="middle" font-size="16" fill="#1e293b" font-weight="700">t-SNE: Antes vs Después del Entrenamiento</text>
+      
+      <!-- ANTES: Sin entrenar -->
+      <g transform="translate(30, 50)">
+        <text x="170" y="0" text-anchor="middle" font-size="14" fill="#ef4444" font-weight="600">❌ GAT Sin Entrenar</text>
+        
+        <rect x="0" y="15" width="340" height="300" rx="12" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+        
+        <!-- Scattered random points - all mixed -->
+        <circle cx="80" cy="60" r="5" fill="#3b82f6" opacity="0.8"/>
+        <circle cx="150" cy="100" r="5" fill="#f472b6" opacity="0.8"/>
+        <circle cx="200" cy="70" r="5" fill="#34d399" opacity="0.8"/>
+        <circle cx="100" cy="150" r="5" fill="#fbbf24" opacity="0.8"/>
+        <circle cx="260" cy="120" r="5" fill="#a78bfa" opacity="0.8"/>
+        <circle cx="50" cy="200" r="5" fill="#f87171" opacity="0.8"/>
+        <circle cx="180" cy="180" r="5" fill="#3b82f6" opacity="0.8"/>
+        <circle cx="120" cy="80" r="5" fill="#34d399" opacity="0.8"/>
+        <circle cx="300" cy="200" r="5" fill="#fbbf24" opacity="0.8"/>
+        <circle cx="70" cy="130" r="5" fill="#f472b6" opacity="0.8"/>
+        <circle cx="220" cy="260" r="5" fill="#a78bfa" opacity="0.8"/>
+        <circle cx="140" cy="230" r="5" fill="#f87171" opacity="0.8"/>
+        <circle cx="250" cy="50" r="5" fill="#3b82f6" opacity="0.8"/>
+        <circle cx="90" cy="280" r="5" fill="#34d399" opacity="0.8"/>
+        <circle cx="310" cy="80" r="5" fill="#fbbf24" opacity="0.8"/>
+        <circle cx="170" cy="290" r="5" fill="#f472b6" opacity="0.8"/>
+        <circle cx="40" cy="100" r="5" fill="#a78bfa" opacity="0.8"/>
+        <circle cx="280" cy="170" r="5" fill="#f87171" opacity="0.8"/>
+        <circle cx="110" cy="200" r="5" fill="#3b82f6" opacity="0.8"/>
+        <circle cx="230" cy="140" r="5" fill="#34d399" opacity="0.8"/>
+        <circle cx="190" cy="50" r="5" fill="#fbbf24" opacity="0.8"/>
+        <circle cx="60" cy="250" r="5" fill="#f472b6" opacity="0.8"/>
+        <circle cx="290" cy="250" r="5" fill="#a78bfa" opacity="0.8"/>
+        <circle cx="320" cy="140" r="5" fill="#f87171" opacity="0.8"/>
+        
+        <text x="170" y="330" text-anchor="middle" font-size="11" fill="#64748b">Todos los colores mezclados = sin estructura</text>
+      </g>
+      
+      <!-- Arrow -->
+      <g transform="translate(385, 180)">
+        <path d="M 0 0 L 30 0" stroke="#fbbf24" stroke-width="4" marker-end="url(#goldarrow)"/>
+        <text x="15" y="25" text-anchor="middle" font-size="10" fill="#d97706" font-weight="bold">200 épocas</text>
+      </g>
+      
+      <!-- DESPUÉS: Entrenado -->
+      <g transform="translate(430, 50)">
+        <text x="170" y="0" text-anchor="middle" font-size="14" fill="#10b981" font-weight="600">✅ GAT Entrenado</text>
+        
+        <rect x="0" y="15" width="340" height="300" rx="12" fill="#1e293b" stroke="#10b981" stroke-width="3"/>
+        
+        <!-- Clustered points - organized by color -->
+        <!-- Blue cluster (top-left) -->
+        <circle cx="60" cy="60" r="5" fill="#3b82f6"/>
+        <circle cx="70" cy="70" r="5" fill="#3b82f6"/>
+        <circle cx="55" cy="75" r="5" fill="#3b82f6"/>
+        <circle cx="80" cy="55" r="5" fill="#3b82f6"/>
+        <circle cx="65" cy="50" r="5" fill="#3b82f6"/>
+        
+        <!-- Pink cluster (top-right) -->
+        <circle cx="260" cy="50" r="5" fill="#f472b6"/>
+        <circle cx="270" cy="65" r="5" fill="#f472b6"/>
+        <circle cx="250" cy="60" r="5" fill="#f472b6"/>
+        <circle cx="280" cy="55" r="5" fill="#f472b6"/>
+        
+        <!-- Green cluster (center-left) -->
+        <circle cx="60" cy="170" r="5" fill="#34d399"/>
+        <circle cx="70" cy="180" r="5" fill="#34d399"/>
+        <circle cx="50" cy="175" r="5" fill="#34d399"/>
+        <circle cx="75" cy="165" r="5" fill="#34d399"/>
+        <circle cx="55" cy="185" r="5" fill="#34d399"/>
+        
+        <!-- Yellow cluster (center-right) -->
+        <circle cx="270" cy="160" r="5" fill="#fbbf24"/>
+        <circle cx="280" cy="170" r="5" fill="#fbbf24"/>
+        <circle cx="260" cy="175" r="5" fill="#fbbf24"/>
+        <circle cx="285" cy="155" r="5" fill="#fbbf24"/>
+        
+        <!-- Purple cluster (bottom-left) -->
+        <circle cx="80" cy="270" r="5" fill="#a78bfa"/>
+        <circle cx="90" cy="280" r="5" fill="#a78bfa"/>
+        <circle cx="70" cy="275" r="5" fill="#a78bfa"/>
+        <circle cx="95" cy="265" r="5" fill="#a78bfa"/>
+        
+        <!-- Red cluster (bottom-right) -->
+        <circle cx="260" cy="270" r="5" fill="#f87171"/>
+        <circle cx="270" cy="280" r="5" fill="#f87171"/>
+        <circle cx="250" cy="275" r="5" fill="#f87171"/>
+        <circle cx="280" cy="265" r="5" fill="#f87171"/>
+        
+        <text x="170" y="330" text-anchor="middle" font-size="11" fill="#10b981">6 clusters separados = ¡modelo aprendió!</text>
+      </g>
+      
+      <defs>
+        <marker id="goldarrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L9,3 z" fill="#fbbf24"/>
+        </marker>
+      </defs>
+    </svg>
+  </div>
+
+  <div class="success-box">
+    <h4>🎉 ¡Mira la transformación!</h4>
+    <p>
+      <strong>Antes:</strong> Los nodos de diferentes clases están completamente mezclados — el modelo no sabe distinguir nada.<br><br>
+      <strong>Después:</strong> Los nodos del mismo color (misma clase) se agrupan en clusters separados — ¡el mecanismo de atención aprendió a extraer las features relevantes de cada vecino para crear representaciones significativas!
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECCIÓN 11: ACCURACY POR GRADO
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-number">11</div>
+    <div class="section-title">
+      <h2>Accuracy por Grado de Nodo</h2>
+      <p>¿Los nodos con más conexiones se clasifican mejor?</p>
+    </div>
+  </div>
+
+  <div class="highlight" style="margin-bottom: 20px;">
+    <div class="icon">▶️</div>
+    <p><strong>¡Ejecuta la Celda 13!</strong> Este análisis es FASCINANTE — revela cómo el número de vecinos afecta la precisión.</p>
+  </div>
+
+  <div class="code-block">
+    <pre><span class="keyword">from</span> torch_geometric.utils <span class="keyword">import</span> degree
+
+<span class="comment"># Obtener predicciones del modelo</span>
+_, out = gat(data.x, data.edge_index)
+
+<span class="comment"># Calcular grado de cada nodo</span>
+degrees = degree(data.edge_index[<span class="number">0</span>]).numpy()
+
+<span class="comment"># Accuracy para grados 0, 1, 2, 3, 4, 5 y >5</span>
+accuracies = []
+sizes = []
+<span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">0</span>, <span class="number">6</span>):
+    mask = np.where(degrees == i)[<span class="number">0</span>]
+    accuracies.append(accuracy(out.argmax(dim=<span class="number">1</span>)[mask], data.y[mask]))
+    sizes.append(len(mask))
+
+<span class="comment"># Agrupar grados > 5</span>
+mask = np.where(degrees > <span class="number">5</span>)[<span class="number">0</span>]
+accuracies.append(accuracy(out.argmax(dim=<span class="number">1</span>)[mask], data.y[mask]))
+sizes.append(len(mask))
+
+<span class="comment"># Visualizar</span>
+plt.bar([<span class="string">'0'</span>,<span class="string">'1'</span>,<span class="string">'2'</span>,<span class="string">'3'</span>,<span class="string">'4'</span>,<span class="string">'5'</span>,<span class="string">'>5'</span>], accuracies, color=<span class="string">'#0A047A'</span>)</pre>
+  </div>
+
+  <!-- VISUAL: Accuracy por grado -->
+  <div class="diagram">
+    <svg viewBox="0 0 700 350" xmlns="http://www.w3.org/2000/svg">
+      <rect width="700" height="350" fill="#f8fafc" rx="15"/>
+      
+      <text x="350" y="30" text-anchor="middle" font-size="16" fill="#1e293b" font-weight="700">Accuracy del GAT según el Grado del Nodo</text>
+      
+      <!-- Y axis -->
+      <line x1="80" y1="50" x2="80" y2="290" stroke="#e5e7eb" stroke-width="2"/>
+      <text x="40" y="60" font-size="10" fill="#64748b">100%</text>
+      <text x="40" y="170" font-size="10" fill="#64748b">50%</text>
+      <text x="40" y="290" font-size="10" fill="#64748b">0%</text>
+      
+      <!-- Grid lines -->
+      <line x1="80" y1="60" x2="650" y2="60" stroke="#f1f5f9" stroke-width="1"/>
+      <line x1="80" y1="170" x2="650" y2="170" stroke="#f1f5f9" stroke-width="1"/>
+      
+      <!-- X axis -->
+      <line x1="80" y1="290" x2="650" y2="290" stroke="#e5e7eb" stroke-width="2"/>
+      
+      <!-- Bars -->
+      <!-- Degree 0: ~55% -->
+      <rect x="100" y="160" width="60" height="130" rx="5" fill="#ef4444" opacity="0.8"/>
+      <text x="130" y="155" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="bold">~55%</text>
+      <text x="130" y="310" text-anchor="middle" font-size="11" fill="#64748b">0</text>
+      <text x="130" y="325" text-anchor="middle" font-size="8" fill="#94a3b8">(15)</text>
+      
+      <!-- Degree 1: ~60% -->
+      <rect x="180" y="145" width="60" height="145" rx="5" fill="#f59e0b" opacity="0.8"/>
+      <text x="210" y="140" text-anchor="middle" font-size="10" fill="#f59e0b" font-weight="bold">~60%</text>
+      <text x="210" y="310" text-anchor="middle" font-size="11" fill="#64748b">1</text>
+      <text x="210" y="325" text-anchor="middle" font-size="8" fill="#94a3b8">(~600)</text>
+      
+      <!-- Degree 2: ~70% -->
+      <rect x="260" y="120" width="60" height="170" rx="5" fill="#fbbf24" opacity="0.8"/>
+      <text x="290" y="115" text-anchor="middle" font-size="10" fill="#d97706" font-weight="bold">~70%</text>
+      <text x="290" y="310" text-anchor="middle" font-size="11" fill="#64748b">2</text>
+      <text x="290" y="325" text-anchor="middle" font-size="8" fill="#94a3b8">(~700)</text>
+      
+      <!-- Degree 3: ~73% -->
+      <rect x="340" y="110" width="60" height="180" rx="5" fill="#34d399" opacity="0.8"/>
+      <text x="370" y="105" text-anchor="middle" font-size="10" fill="#059669" font-weight="bold">~73%</text>
+      <text x="370" y="310" text-anchor="middle" font-size="11" fill="#64748b">3</text>
+      <text x="370" y="325" text-anchor="middle" font-size="8" fill="#94a3b8">(~600)</text>
+      
+      <!-- Degree 4: ~77% -->
+      <rect x="420" y="98" width="60" height="192" rx="5" fill="#10b981" opacity="0.8"/>
+      <text x="450" y="93" text-anchor="middle" font-size="10" fill="#047857" font-weight="bold">~77%</text>
+      <text x="450" y="310" text-anchor="middle" font-size="11" fill="#64748b">4</text>
+      <text x="450" y="325" text-anchor="middle" font-size="8" fill="#94a3b8">(~400)</text>
+      
+      <!-- Degree 5: ~80% -->
+      <rect x="500" y="85" width="60" height="205" rx="5" fill="#3b82f6" opacity="0.8"/>
+      <text x="530" y="80" text-anchor="middle" font-size="10" fill="#1e40af" font-weight="bold">~80%</text>
+      <text x="530" y="310" text-anchor="middle" font-size="11" fill="#64748b">5</text>
+      <text x="530" y="325" text-anchor="middle" font-size="8" fill="#94a3b8">(~300)</text>
+      
+      <!-- Degree >5: ~85% -->
+      <rect x="580" y="72" width="60" height="218" rx="5" fill="#9333ea" opacity="0.8"/>
+      <text x="610" y="67" text-anchor="middle" font-size="10" fill="#7c3aed" font-weight="bold">~85%</text>
+      <text x="610" y="310" text-anchor="middle" font-size="11" fill="#64748b">>5</text>
+      <text x="610" y="325" text-anchor="middle" font-size="8" fill="#94a3b8">(~500)</text>
+      
+      <!-- Trend arrow -->
+      <line x1="120" y1="160" x2="620" y2="72" stroke="#e11d48" stroke-width="2" stroke-dasharray="8,4"/>
+      
+      <!-- Labels -->
+      <text x="350" y="345" text-anchor="middle" font-size="11" fill="#64748b">Grado del nodo (número entre paréntesis = cantidad de nodos)</text>
+    </svg>
+  </div>
+
+  <div class="explain-box" style="background: linear-gradient(135deg, #fce7f3 0%, #fdf2f8 100%); border-color: #e11d48;">
+    <h4>🔍 ¿Qué nos revela este gráfico?</h4>
+    <p>
+      ¡La tendencia es clarísima! A <strong>más conexiones</strong>, <strong>mejor accuracy</strong>:<br><br>
+      🔴 <strong>Grado 0 (~55%)</strong>: Los nodos aislados — el modelo básicamente "adivina" porque no tiene vecinos de los que aprender<br>
+      🟡 <strong>Grado 1-2 (~60-70%)</strong>: Pocos vecinos, información limitada<br>
+      🟢 <strong>Grado 3-5 (~73-80%)</strong>: Suficientes vecinos para que la atención funcione bien<br>
+      🟣 <strong>Grado >5 (~85%)</strong>: Muchos vecinos = mucha información disponible<br><br>
+      <strong>💡 Conclusión:</strong> Las GNNs (y especialmente GAT) brillan cuando hay estructura de grafo rica. El mecanismo de atención es especialmente útil para nodos con MUCHAS conexiones, porque puede <strong>filtrar el ruido</strong> y enfocarse en los vecinos más informativos.
+    </p>
+  </div>
+
+  <div class="warning-box">
+    <h4>⚠️ Implicación para AML (Anti-Money Laundering)</h4>
+    <p>
+      En redes de transacciones financieras, los <strong>nodos hub</strong> (cuentas con muchas transacciones) son más fáciles de clasificar.
+      Pero los <strong>lavadores de dinero suelen crear cuentas con pocas transacciones</strong> ("capas" de lavado) precisamente para evitar detección.<br><br>
+      ¡Esto significa que los nodos más difíciles de clasificar son exactamente los que nos interesan! El GAT ayuda porque puede <strong>dar más peso a las pocas conexiones sospechosas</strong> en lugar de depender de pesos fijos basados en el grado.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECCIÓN 12: GATv2 — LA MEJORA
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-number">12</div>
+    <div class="section-title">
+      <h2>¿Por qué usamos GATv2 y no GAT?</h2>
+      <p>Una mejora sutil pero importante</p>
+    </div>
+  </div>
+
+  <div class="explain-box">
+    <h4>🔬 GAT vs GATv2: El Problema del "Static Attention"</h4>
+    <p>
+      El paper original de GAT (2018) tenía un problema: los coeficientes de atención $\alpha_{ij}$ dependían del <strong>ranking</strong> 
+      de los vecinos, pero no cambiaban para diferentes nodos query. Es como si un profesor siempre le diera la nota más alta al mismo estudiante, 
+      sin importar cuál fuera la pregunta del examen.<br><br>
+      <strong>GATv2</strong> (Brody et al., 2021) corrige esto haciendo la atención <strong>"dinámica"</strong>: los pesos cambian 
+      dependiendo tanto del nodo fuente como del nodo destino.<br><br>
+      En el código: usamos <code>GATv2Conv</code> en lugar de <code>GATConv</code>. ¡Es un simple cambio de clase pero con impacto real!
+    </p>
+  </div>
+
+  <div class="comparison-grid">
+    <div class="comparison-card gcn" style="border-color: #f59e0b; background: linear-gradient(135deg, #fffbeb, #fef3c7);">
+      <h4 style="color: #92400e;">⚠️ GAT Original (v1)</h4>
+      <p style="color: #78350f;">
+        $$e_{ij} = \text{LeakyReLU}(\vec{a}^T [W\vec{h}_i \| W\vec{h}_j])$$
+        <br>
+        La transformación lineal $W$ se aplica ANTES de la atención. Esto limita la expresividad.
+      </p>
+    </div>
+    <div class="comparison-card gat" style="border-color: #10b981; background: linear-gradient(135deg, #ecfdf5, #d1fae5);">
+      <h4 style="color: #047857;">✅ GATv2 (Lo que usamos)</h4>
+      <p style="color: #166534;">
+        $$e_{ij} = \vec{a}^T \text{LeakyReLU}(W \cdot [\vec{h}_i \| \vec{h}_j])$$
+        <br>
+        LeakyReLU se aplica DESPUÉS de la concatenación. Esto da atención verdaderamente dinámica.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     RESUMEN FINAL
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-number">✓</div>
+    <div class="section-title">
+      <h2>🎉 ¡Lo Lograste!</h2>
+      <p>Resumen de todo lo que aprendiste en este capítulo</p>
+    </div>
+  </div>
+
+  <div class="success-box" style="margin-bottom: 30px;">
+    <h4>🏆 ¡Felicidades!</h4>
+    <p>
+      Has completado el <strong>Capítulo 2: Graph Attention Networks</strong>. 
+      Ahora entiendes cómo el mecanismo de atención permite a los nodos 
+      <strong>ponderar la importancia de sus vecinos de forma adaptativa</strong> en lugar de usar pesos fijos por grado.
+      <br><br>
+      <strong>Lo más impresionante:</strong> Implementaste GCN y GAT, los comparaste en un dataset real, 
+      y descubriste que la accuracy depende del número de conexiones de cada nodo.
+    </p>
+  </div>
+
+  <h3 style="color: var(--primary-dark);">📋 Conceptos Clave que Ahora Dominas:</h3>
+
+  <table class="data-table">
+    <tr>
+      <th>Concepto</th>
+      <th>Lo que significa en palabras simples</th>
+    </tr>
+    <tr>
+      <td><strong>CiteSeer</strong></td>
+      <td>Red de citas académicas: 3,327 artículos, 6 categorías, ~9,000 conexiones</td>
+    </tr>
+    <tr>
+      <td><strong>Mecanismo de Atención</strong></td>
+      <td>Cada nodo aprende cuánto "escuchar" a cada vecino (pesos α que suman 1)</td>
+    </tr>
+    <tr>
+      <td><strong>GATv2Conv</strong></td>
+      <td>La capa de atención mejorada que usamos — atención dinámica sobre vecinos</td>
+    </tr>
+    <tr>
+      <td><strong>Multi-Head Attention</strong></td>
+      <td>Usar 8 "cabezas" de atención en paralelo, cada una aprendiendo patrones diferentes</td>
+    </tr>
+    <tr>
+      <td><strong>ELU</strong></td>
+      <td>Función de activación que suaviza valores negativos en lugar de "matarlos" (vs ReLU)</td>
+    </tr>
+    <tr>
+      <td><strong>t-SNE</strong></td>
+      <td>Algoritmo para visualizar embeddings de alta dimensión en 2D</td>
+    </tr>
+    <tr>
+      <td><strong>train_mask / val_mask / test_mask</strong></td>
+      <td>Máscaras booleanas para separar correctamente datos de entrenamiento, validación y test</td>
+    </tr>
+    <tr>
+      <td><strong>Grado del nodo</strong></td>
+      <td>Número de conexiones — a más grado, mejor accuracy (más info para la GNN)</td>
+    </tr>
+    <tr>
+      <td><strong>Nodos aislados</strong></td>
+      <td>Nodos sin conexiones — el talón de Aquiles de las GNNs (peor accuracy)</td>
+    </tr>
+  </table>
+
+  <!-- COMPARACIÓN FINAL CAPÍTULOS -->
+  <h3 style="color: var(--primary-dark); margin-top: 30px;">📈 Progresión del Curso</h3>
+  
+  <div class="flow-steps">
+    <div class="flow-step" style="border-color: #3b82f6;">
+      <div class="icon">📘</div>
+      <h5 style="color: #3b82f6;">Capítulo 0</h5>
+      <p>Fundamentos de Redes Neuronales</p>
+    </div>
+    <div class="flow-step" style="border-color: #3b82f6;">
+      <div class="icon">📘</div>
+      <h5 style="color: #3b82f6;">Capítulo 1</h5>
+      <p>GCN — Pesos fijos por grado</p>
+    </div>
+    <div class="flow-step" style="border-color: #e11d48; border-width: 3px; background: #fce7f3;">
+      <div class="icon">📕</div>
+      <h5 style="color: #e11d48;">Capítulo 2 ✅</h5>
+      <p><strong>GAT — Atención sobre vecinos</strong></p>
+    </div>
+    <div class="flow-step" style="border-color: #10b981;">
+      <div class="icon">📗</div>
+      <h5 style="color: #10b981;">Capítulo 3</h5>
+      <p>GraphSAGE — Sampling de vecinos</p>
+    </div>
+  </div>
+
+  <div class="highlight" style="margin-top: 30px;">
+    <div class="icon">🚀</div>
+    <p>
+      <strong>¿Listo para más?</strong><br>
+      En el Capítulo 3 veremos <strong>GraphSAGE</strong><br>
+      La diferencia: en lugar de usar TODOS los vecinos, <strong>tomamos una muestra aleatoria</strong>.
+      <br><br>
+      <em>¡Es como pasar de "encuesto a todos en la ciudad" (GCN/GAT) a "encuesto una muestra representativa" (GraphSAGE)!</em>
+      <br><br>
+      Esto permite escalar a grafos con <strong>millones de nodos</strong> — crucial para aplicaciones reales como AML.
+    </p>
+  </div>
+</section>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <h3>📘 Capítulo 2: Graph Attention Networks ✅</h3>
+  <p>Basado en el curso de <a href="https://github.com/mlabonne/Graph-Neural-Network-Course" target="_blank">Maxime Labonne</a></p>
+  <p style="margin-top: 10px;">
+    <a href="Chapter1_GCN_Explained.html">← Capítulo 1: GCN</a> &nbsp;|&nbsp; 
+    <a href="3_GraphSAGE.ipynb">Capítulo 3: GraphSAGE →</a>
+  </p>
+  <p style="margin-top: 20px; font-size: 0.85rem; opacity: 0.7;">
+    Documento explicativo para uso educativo 📚 | ¡Nos vemos en el Capítulo 3! 👋
+  </p>
+</footer>
+
+<!-- SCROLL REVEAL + ANIMATIONS SCRIPT -->
+<script>
+  // Scroll-reveal: sections appear with fadeInUp as you scroll
+  document.addEventListener('DOMContentLoaded', () => {
+    const sections = document.querySelectorAll('.section');
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target); // solo animar una vez
+        }
+      });
+    }, {
+      threshold: 0,       // trigger en cuanto CUALQUIER pixel sea visible
+      rootMargin: '200px 0px 0px 0px'  // pre-activar 200px antes de entrar al viewport
+    });
+
+    sections.forEach(section => observer.observe(section));
+
+    // Fallback: si tras 2s alguna sección sigue invisible (por ser muy grande), forzar visible
+    setTimeout(() => {
+      sections.forEach(section => {
+        if (!section.classList.contains('visible')) {
+          const rect = section.getBoundingClientRect();
+          // Si la sección ya pasó o está parcialmente en pantalla, hacerla visible
+          if (rect.top < window.innerHeight + 500) {
+            section.classList.add('visible');
+          }
+        }
+      });
+    }, 2000);
+
+    // Smooth scroll para links internos
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href'))?.scrollIntoView({
+          behavior: 'smooth'
+        });
+      });
+    });
+
+    // Animación de conteo para números grandes en el hero-badge
+    const badge = document.querySelector('.hero-badge');
+    if (badge) {
+      badge.style.animation = 'fadeInUp 0.8s ease-out 0.5s both';
+    }
+  });
+</script>
+
+</body>
+</html>

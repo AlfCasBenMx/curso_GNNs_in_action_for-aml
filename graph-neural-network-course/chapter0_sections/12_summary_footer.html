@@ -1,0 +1,430 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     RESUMEN FINAL
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="section" style="background: linear-gradient(135deg, #1e293b, #334155); color: white;">
+  <h2 style="text-align: center; color: #60a5fa; margin-bottom: 30px;">📋 Resumen del Viaje</h2>
+
+  <div style="max-width: 800px; margin: 0 auto 25px auto; background: rgba(15, 23, 42, 0.9); padding: 16px 18px; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.4);">
+    <h3 style="color: #e5e7eb; margin: 0 0 6px; font-size: 0.98em; text-align: left;">✅ Al terminar este capítulo deberías poder:</h3>
+    <ul style="color: #cbd5e1; font-size: 0.9em; margin: 0 0 0 18px; line-height: 1.6;">
+      <li>Nombrar los componentes clave de una red neuronal (capas, activaciones, forward pass, loss, backpropagation y optimizador).</li>
+      <li>Leer y entender un fragmento de código de entrenamiento básico en PyTorch (loop de entrenamiento completo).</li>
+      <li>Explicar qué añade una Graph Neural Network sobre una red densa clásica (agregar información de vecinos en un grafo).</li>
+    </ul>
+  </div>
+  
+  <div class="grid-3">
+    <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; text-align: center;">
+      <div style="font-size: 1.4em;">🧠</div>
+      <div style="font-weight: bold; font-size: 0.85em;">Neurona</div>
+      <div style="font-size: 0.7em; color: #94a3b8; margin-top: 4px;">Suma ponderada + activación</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; text-align: center;">
+      <div style="font-size: 1.4em;">📈</div>
+      <div style="font-weight: bold; font-size: 0.85em;">Regresión</div>
+      <div style="font-size: 0.7em; color: #94a3b8; margin-top: 4px;">Predecir valores continuos</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; text-align: center;">
+      <div style="font-size: 1.4em;">🎯</div>
+      <div style="font-weight: bold; font-size: 0.85em;">Clasificación</div>
+      <div style="font-size: 0.7em; color: #94a3b8; margin-top: 4px;">Sigmoid → probabilidades</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; text-align: center;">
+      <div style="font-size: 1.4em;">🔮</div>
+      <div style="font-weight: bold; font-size: 0.85em;">No-linealidad</div>
+      <div style="font-size: 0.7em; color: #94a3b8; margin-top: 4px;">Fronteras curvas (XOR)</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; text-align: center;">
+      <div style="font-size: 1.4em;">🏭</div>
+      <div style="font-weight: bold; font-size: 0.85em;">Capas Ocultas</div>
+      <div style="font-size: 0.7em; color: #94a3b8; margin-top: 4px;">Representaciones internas</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; text-align: center;">
+      <div style="font-size: 1.4em;">⚡</div>
+      <div style="font-weight: bold; font-size: 0.85em;">Activación</div>
+      <div style="font-size: 0.7em; color: #94a3b8; margin-top: 4px;">ReLU, Sigmoid, Tanh</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; text-align: center;">
+      <div style="font-size: 1.4em;">➡️</div>
+      <div style="font-weight: bold; font-size: 0.85em;">Forward Pass</div>
+      <div style="font-size: 0.7em; color: #94a3b8; margin-top: 4px;">Input → Predicción</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; text-align: center;">
+      <div style="font-size: 1.4em;">📉</div>
+      <div style="font-weight: bold; font-size: 0.85em;">Loss Function</div>
+      <div style="font-size: 0.7em; color: #94a3b8; margin-top: 4px;">Medir el error</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; text-align: center;">
+      <div style="font-size: 1.4em;">⬅️</div>
+      <div style="font-weight: bold; font-size: 0.85em;">Backpropagation</div>
+      <div style="font-size: 0.7em; color: #94a3b8; margin-top: 4px;">Gradientes en reversa</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; text-align: center;">
+      <div style="font-size: 1.4em;">🚀</div>
+      <div style="font-weight: bold; font-size: 0.85em;">Optimizador</div>
+      <div style="font-size: 0.7em; color: #94a3b8; margin-top: 4px;">SGD, Adam → bajar colina</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; text-align: center;">
+      <div style="font-size: 1.4em;">📦</div>
+      <div style="font-weight: bold; font-size: 0.85em;">Mini-Batches</div>
+      <div style="font-size: 0.7em; color: #94a3b8; margin-top: 4px;">Balance eficiencia/ruido</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; text-align: center;">
+      <div style="font-size: 1.4em;">🛡️</div>
+      <div style="font-weight: bold; font-size: 0.85em;">Regularización</div>
+      <div style="font-size: 0.7em; color: #94a3b8; margin-top: 4px;">Evitar overfitting</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════
+       DIAGRAMA: DE REDES NEURONALES A GNNs - VERSIÓN DIDÁCTICA
+       ═══════════════════════════════════════════════════════════════════════════ -->
+  <div style="background: linear-gradient(135deg, #1e1b4b, #312e81); border-radius: 16px; padding: 25px; margin: 35px auto 0; max-width: 900px;">
+    <div style="text-align: center; color: #c4b5fd; font-weight: bold; margin-bottom: 10px; font-size: 1.2em;">🌉 El Puente: De Redes Neuronales a Graph Neural Networks</div>
+    
+    <!-- PREGUNTA CLAVE -->
+    <div style="background: rgba(251, 191, 36, 0.15); border: 2px solid #fbbf24; border-radius: 12px; padding: 16px; margin-bottom: 20px; text-align: center;">
+      <div style="color: #fbbf24; font-weight: bold; font-size: 1em; margin-bottom: 8px;">🤔 La pregunta que cambia todo:</div>
+      <div style="color: #fef3c7; font-size: 1.1em; font-weight: 600;">¿De dónde viene la información que usa cada neurona?</div>
+    </div>
+
+    <!-- COMPARACIÓN LADO A LADO: CAPA DENSA vs CAPA GNN -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+      
+      <!-- CAPA DENSA -->
+      <div style="background: rgba(59, 130, 246, 0.1); border: 2px solid #3b82f6; border-radius: 12px; padding: 16px;">
+        <div style="text-align: center; color: #60a5fa; font-weight: bold; font-size: 1em; margin-bottom: 12px;">🔵 CAPA DENSA (lo que ya conoces)</div>
+        
+        <!-- Diagrama capa densa -->
+        <svg viewBox="0 0 280 100" style="width: 100%; max-width: 280px; display: block; margin: 0 auto 12px;">
+          <rect width="280" height="100" fill="#0f172a" rx="8"/>
+          
+          <!-- Input x -->
+          <rect x="15" y="35" width="45" height="30" fill="#3b82f6" rx="6"/>
+          <text x="37" y="55" font-size="12" fill="white" text-anchor="middle" font-weight="bold">x</text>
+          <text x="37" y="78" font-size="8" fill="#94a3b8" text-anchor="middle">entrada</text>
+          
+          <!-- Flecha -->
+          <line x1="65" y1="50" x2="95" y2="50" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrowDense)"/>
+          
+          <!-- W (pesos) -->
+          <rect x="100" y="35" width="40" height="30" fill="#8b5cf6" rx="6"/>
+          <text x="120" y="55" font-size="12" fill="white" text-anchor="middle" font-weight="bold">W</text>
+          <text x="120" y="78" font-size="8" fill="#94a3b8" text-anchor="middle">pesos</text>
+          
+          <!-- Flecha -->
+          <line x1="145" y1="50" x2="175" y2="50" stroke="#a855f7" stroke-width="2" marker-end="url(#arrowDense)"/>
+          
+          <!-- σ (activación) -->
+          <circle cx="190" cy="50" r="15" fill="#a855f7"/>
+          <text x="190" y="55" font-size="11" fill="white" text-anchor="middle" font-weight="bold">σ</text>
+          <text x="190" y="78" font-size="8" fill="#94a3b8" text-anchor="middle">activación</text>
+          
+          <!-- Flecha -->
+          <line x1="210" y1="50" x2="235" y2="50" stroke="#c084fc" stroke-width="2" marker-end="url(#arrowDense)"/>
+          
+          <!-- Output h -->
+          <rect x="240" y="35" width="30" height="30" fill="#22c55e" rx="6"/>
+          <text x="255" y="55" font-size="12" fill="white" text-anchor="middle" font-weight="bold">h</text>
+          <text x="255" y="78" font-size="8" fill="#94a3b8" text-anchor="middle">salida</text>
+          
+          <defs>
+            <marker id="arrowDense" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L6,3 z" fill="#c084fc"/>
+            </marker>
+          </defs>
+        </svg>
+        
+        <div style="background: rgba(15, 23, 42, 0.8); border-radius: 8px; padding: 10px; font-size: 0.82em; color: #e2e8f0;">
+          <div style="font-family: monospace; text-align: center; margin-bottom: 8px; color: #93c5fd; font-size: 1.1em;">h = σ(W · x)</div>
+          <div style="color: #cbd5e1; line-height: 1.5;">
+            <strong style="color: #60a5fa;">La neurona solo ve su entrada directa</strong><br>
+            Si <span style="font-family: monospace;">x</span> tiene 3 valores, la neurona calcula un promedio ponderado de esos 3 valores y le aplica una activación.
+          </div>
+        </div>
+      </div>
+      
+      <!-- CAPA GNN -->
+      <div style="background: rgba(34, 197, 94, 0.1); border: 2px solid #22c55e; border-radius: 12px; padding: 16px;">
+        <div style="text-align: center; color: #4ade80; font-weight: bold; font-size: 1em; margin-bottom: 12px;">🟢 CAPA GNN (lo nuevo)</div>
+        
+        <!-- Diagrama capa GNN -->
+        <svg viewBox="0 0 280 100" style="width: 100%; max-width: 280px; display: block; margin: 0 auto 12px;">
+          <rect width="280" height="100" fill="#0f172a" rx="8"/>
+          
+          <!-- Vecinos -->
+          <circle cx="25" cy="25" r="10" fill="#22c55e"/>
+          <text x="25" y="29" font-size="8" fill="white" text-anchor="middle">A</text>
+          <circle cx="25" cy="50" r="10" fill="#22c55e"/>
+          <text x="25" y="54" font-size="8" fill="white" text-anchor="middle">B</text>
+          <circle cx="25" cy="75" r="10" fill="#22c55e"/>
+          <text x="25" y="79" font-size="8" fill="white" text-anchor="middle">D</text>
+          <text x="25" y="95" font-size="7" fill="#94a3b8" text-anchor="middle">vecinos</text>
+          
+          <!-- Flechas a AGGREGATE -->
+          <line x1="38" y1="25" x2="58" y2="45" stroke="#4ade80" stroke-width="1.5"/>
+          <line x1="38" y1="50" x2="58" y2="50" stroke="#4ade80" stroke-width="1.5"/>
+          <line x1="38" y1="75" x2="58" y2="55" stroke="#4ade80" stroke-width="1.5"/>
+          
+          <!-- AGGREGATE -->
+          <rect x="60" y="32" width="55" height="36" fill="#166534" stroke="#4ade80" stroke-width="1.5" rx="6"/>
+          <text x="87" y="50" font-size="7" fill="#a7f3d0" text-anchor="middle" font-weight="bold">AGGREGATE</text>
+          <text x="87" y="60" font-size="6" fill="#86efac" text-anchor="middle">promedio</text>
+          <text x="87" y="82" font-size="7" fill="#fbbf24" text-anchor="middle" font-weight="bold">★ NUEVO</text>
+          
+          <!-- Flecha a W -->
+          <line x1="120" y1="50" x2="140" y2="50" stroke="#a855f7" stroke-width="2" marker-end="url(#arrowGNN2)"/>
+          
+          <!-- W (pesos) -->
+          <rect x="145" y="35" width="35" height="30" fill="#8b5cf6" rx="6"/>
+          <text x="162" y="55" font-size="11" fill="white" text-anchor="middle" font-weight="bold">W</text>
+          
+          <!-- Flecha a σ -->
+          <line x1="185" y1="50" x2="205" y2="50" stroke="#a855f7" stroke-width="2" marker-end="url(#arrowGNN2)"/>
+          
+          <!-- σ (activación) -->
+          <circle cx="218" cy="50" r="12" fill="#a855f7"/>
+          <text x="218" y="54" font-size="10" fill="white" text-anchor="middle" font-weight="bold">σ</text>
+          
+          <!-- Flecha a output -->
+          <line x1="233" y1="50" x2="248" y2="50" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrowGNN2)"/>
+          
+          <!-- Nodo v -->
+          <circle cx="262" cy="50" r="12" fill="#3b82f6"/>
+          <text x="262" y="54" font-size="9" fill="white" text-anchor="middle" font-weight="bold">v</text>
+          <text x="262" y="80" font-size="7" fill="#94a3b8" text-anchor="middle">nodo</text>
+          
+          <defs>
+            <marker id="arrowGNN2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L6,3 z" fill="#38bdf8"/>
+            </marker>
+          </defs>
+        </svg>
+        
+        <div style="background: rgba(15, 23, 42, 0.8); border-radius: 8px; padding: 10px; font-size: 0.82em; color: #e2e8f0;">
+          <div style="font-family: monospace; text-align: center; margin-bottom: 8px; color: #86efac; font-size: 1em;">h_v = σ(W · AGGREGATE({h_u}))</div>
+          <div style="color: #cbd5e1; line-height: 1.5;">
+            <strong style="color: #4ade80;">Antes de W, el nodo mira a sus vecinos</strong><br>
+            El nodo <strong>v</strong> primero "pregunta" a A, B y D, combina sus representaciones, y luego aplica W y σ.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLA COMPARATIVA -->
+    <div style="background: rgba(15, 23, 42, 0.9); border-radius: 12px; padding: 16px; margin-bottom: 20px; overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.85em;">
+        <thead>
+          <tr style="border-bottom: 2px solid #475569;">
+            <th style="text-align: left; padding: 8px; color: #94a3b8;"></th>
+            <th style="text-align: center; padding: 8px; color: #60a5fa;">🔵 Capa Densa</th>
+            <th style="text-align: center; padding: 8px; color: #4ade80;">🟢 Capa GNN</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid #334155;">
+            <td style="padding: 8px; color: #cbd5e1; font-weight: 600;">¿Qué entra?</td>
+            <td style="padding: 8px; text-align: center; color: #93c5fd;">Vector <code style="background:#1e3a5f; padding: 2px 6px; border-radius: 4px;">x</code> directamente</td>
+            <td style="padding: 8px; text-align: center; color: #86efac;">Representaciones de <strong>vecinos</strong></td>
+          </tr>
+          <tr style="border-bottom: 1px solid #334155;">
+            <td style="padding: 8px; color: #cbd5e1; font-weight: 600;">¿Hay paso extra?</td>
+            <td style="padding: 8px; text-align: center; color: #93c5fd;">No</td>
+            <td style="padding: 8px; text-align: center; color: #fbbf24; font-weight: bold;">Sí: AGGREGATE</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #334155;">
+            <td style="padding: 8px; color: #cbd5e1; font-weight: 600;">Fórmula</td>
+            <td style="padding: 8px; text-align: center; font-family: monospace; color: #93c5fd;">h = σ(Wx)</td>
+            <td style="padding: 8px; text-align: center; font-family: monospace; color: #86efac;">h_v = σ(W·AGG(vecinos))</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; color: #cbd5e1; font-weight: 600;">Datos ideales</td>
+            <td style="padding: 8px; text-align: center; color: #93c5fd;">Tablas, imágenes (grids)</td>
+            <td style="padding: 8px; text-align: center; color: #86efac;">Grafos: redes sociales, moléculas</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- EXPLICACIÓN DETALLADA DE AGGREGATE -->
+    <div style="background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.4); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+      <div style="color: #fbbf24; font-weight: bold; font-size: 1em; margin-bottom: 12px; text-align: center;">🧮 ¿Qué hace exactamente AGGREGATE?</div>
+      
+      <div style="color: #fef3c7; font-size: 0.88em; line-height: 1.6; margin-bottom: 14px; text-align: center;">
+        <strong>AGGREGATE</strong> = "juntar la información de los vecinos en un solo vector"
+      </div>
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px;">
+        <div style="background: rgba(15, 23, 42, 0.8); border-radius: 8px; padding: 10px; border: 1px solid rgba(34, 197, 94, 0.3);">
+          <div style="font-weight: 600; color: #4ade80; font-size: 0.85em; margin-bottom: 4px;">➕ Suma</div>
+          <div style="font-family: monospace; font-size: 0.75em; color: #cbd5e1; margin-bottom: 4px;">Σ h_u</div>
+          <div style="color: #94a3b8; font-size: 0.75em;">Más vecinos = vector más grande</div>
+        </div>
+        <div style="background: rgba(15, 23, 42, 0.8); border-radius: 8px; padding: 10px; border: 1px solid rgba(59, 130, 246, 0.3);">
+          <div style="font-weight: 600; color: #60a5fa; font-size: 0.85em; margin-bottom: 4px;">📊 Promedio</div>
+          <div style="font-family: monospace; font-size: 0.75em; color: #cbd5e1; margin-bottom: 4px;">(1/|N|) Σ h_u</div>
+          <div style="color: #94a3b8; font-size: 0.75em;">Normalizado por cantidad</div>
+        </div>
+        <div style="background: rgba(15, 23, 42, 0.8); border-radius: 8px; padding: 10px; border: 1px solid rgba(239, 68, 68, 0.3);">
+          <div style="font-weight: 600; color: #f87171; font-size: 0.85em; margin-bottom: 4px;">📈 Máximo</div>
+          <div style="font-family: monospace; font-size: 0.75em; color: #cbd5e1; margin-bottom: 4px;">max(h_u)</div>
+          <div style="color: #94a3b8; font-size: 0.75em;">Toma el valor más fuerte</div>
+        </div>
+        <div style="background: rgba(15, 23, 42, 0.8); border-radius: 8px; padding: 10px; border: 1px solid rgba(168, 85, 247, 0.3);">
+          <div style="font-weight: 600; color: #c084fc; font-size: 0.85em; margin-bottom: 4px;">🎯 Atención</div>
+          <div style="font-family: monospace; font-size: 0.75em; color: #cbd5e1; margin-bottom: 4px;">Σ α_u · h_u</div>
+          <div style="color: #94a3b8; font-size: 0.75em;">Peso diferente por vecino</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANALOGÍA INTUITIVA -->
+    <div style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+      <div style="color: #c4b5fd; font-weight: bold; font-size: 0.95em; margin-bottom: 10px;">💡 Analogía: Formarte una opinión</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 0.85em;">
+        <div style="background: rgba(59, 130, 246, 0.15); border-radius: 8px; padding: 12px;">
+          <div style="color: #60a5fa; font-weight: 600; margin-bottom: 6px;">🔵 Red densa = Encuesta individual</div>
+          <div style="color: #cbd5e1; line-height: 1.5;">Te dan un formulario con tus propios datos (edad, ingresos, etc.) y decides <strong>solo con eso</strong>.</div>
+        </div>
+        <div style="background: rgba(34, 197, 94, 0.15); border-radius: 8px; padding: 12px;">
+          <div style="color: #4ade80; font-weight: 600; margin-bottom: 6px;">🟢 GNN = Preguntas a tus amigos</div>
+          <div style="color: #cbd5e1; line-height: 1.5;"><strong>Antes de decidir</strong>, preguntas a tus contactos qué piensan, combinas sus opiniones, y luego formas tu criterio.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESUMEN VISUAL: FLUJO COMPLETO -->
+    <svg viewBox="0 0 800 120" style="width: 100%; max-width: 800px; display: block; margin: 0 auto 15px;">
+      <rect width="800" height="120" fill="#0f172a" rx="10"/>
+      
+      <!-- Título -->
+      <text x="400" y="20" font-size="11" fill="#94a3b8" text-anchor="middle">Flujo completo de una capa GNN para el nodo C con vecinos A, B, D:</text>
+      
+      <!-- Nodos vecinos -->
+      <circle cx="60" cy="55" r="14" fill="#22c55e"/>
+      <text x="60" y="60" font-size="10" fill="white" text-anchor="middle" font-weight="bold">A</text>
+      <circle cx="60" cy="90" r="14" fill="#22c55e"/>
+      <text x="60" y="95" font-size="10" fill="white" text-anchor="middle" font-weight="bold">B</text>
+      <circle cx="100" cy="72" r="14" fill="#22c55e"/>
+      <text x="100" y="77" font-size="10" fill="white" text-anchor="middle" font-weight="bold">D</text>
+      
+      <!-- Flechas a AGGREGATE -->
+      <line x1="78" y1="55" x2="180" y2="65" stroke="#4ade80" stroke-width="1.5"/>
+      <line x1="78" y1="90" x2="180" y2="75" stroke="#4ade80" stroke-width="1.5"/>
+      <line x1="118" y1="72" x2="180" y2="70" stroke="#4ade80" stroke-width="1.5"/>
+      
+      <!-- AGGREGATE box -->
+      <rect x="180" y="45" width="120" height="50" fill="#166534" stroke="#4ade80" stroke-width="2" rx="8"/>
+      <text x="240" y="68" font-size="12" fill="#a7f3d0" text-anchor="middle" font-weight="bold">AGGREGATE</text>
+      <text x="240" y="82" font-size="9" fill="#86efac" text-anchor="middle">(ej: promedio)</text>
+      
+      <!-- Flecha a combinado -->
+      <line x1="305" y1="70" x2="350" y2="70" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrowMain)"/>
+      
+      <!-- m_C vector -->
+      <rect x="355" y="50" width="60" height="40" fill="#854d0e" stroke="#fbbf24" stroke-width="1.5" rx="6"/>
+      <text x="385" y="68" font-size="10" fill="#fef3c7" text-anchor="middle" font-weight="bold">m_C</text>
+      <text x="385" y="80" font-size="8" fill="#fcd34d" text-anchor="middle">resumen</text>
+      
+      <!-- Flecha a W -->
+      <line x1="420" y1="70" x2="460" y2="70" stroke="#a855f7" stroke-width="2" marker-end="url(#arrowMain)"/>
+      
+      <!-- W -->
+      <rect x="465" y="50" width="50" height="40" fill="#5b21b6" stroke="#a855f7" stroke-width="1.5" rx="6"/>
+      <text x="490" y="68" font-size="11" fill="#e9d5ff" text-anchor="middle" font-weight="bold">W</text>
+      <text x="490" y="80" font-size="8" fill="#c4b5fd" text-anchor="middle">pesos</text>
+      
+      <!-- Flecha a σ -->
+      <line x1="520" y1="70" x2="555" y2="70" stroke="#a855f7" stroke-width="2" marker-end="url(#arrowMain)"/>
+      
+      <!-- σ -->
+      <circle cx="575" cy="70" r="18" fill="#7c3aed"/>
+      <text x="575" y="75" font-size="13" fill="white" text-anchor="middle" font-weight="bold">σ</text>
+      
+      <!-- Flecha a nuevo C -->
+      <line x1="598" y1="70" x2="650" y2="70" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrowMain)"/>
+      
+      <!-- Nuevo h_C -->
+      <circle cx="690" cy="70" r="22" fill="#3b82f6" stroke="#60a5fa" stroke-width="2"/>
+      <text x="690" y="68" font-size="10" fill="white" text-anchor="middle" font-weight="bold">h_C</text>
+      <text x="690" y="79" font-size="8" fill="#bfdbfe" text-anchor="middle">nuevo</text>
+      
+      <text x="690" y="105" font-size="9" fill="#22c55e" text-anchor="middle">✓ C ahora "sabe" de A, B, D</text>
+      
+      <defs>
+        <marker id="arrowMain" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L6,3 z" fill="#fbbf24"/>
+        </marker>
+      </defs>
+    </svg>
+
+    <!-- CARDS DE RESUMEN -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px;">
+      <div style="background: rgba(59, 130, 246, 0.15); padding: 12px; border-radius: 10px; border: 1px solid rgba(59, 130, 246, 0.3);">
+        <div style="color: #60a5fa; font-weight: bold; font-size: 0.9em; margin-bottom: 6px;">📊 Lo que ya sabes</div>
+        <div style="color: #e2e8f0; font-size: 0.8em;">Forward pass, backprop, loss, optimizadores — ¡todo aplica a GNNs!</div>
+      </div>
+      <div style="background: rgba(34, 197, 94, 0.15); padding: 12px; border-radius: 10px; border: 1px solid rgba(34, 197, 94, 0.3);">
+        <div style="color: #4ade80; font-weight: bold; font-size: 0.9em; margin-bottom: 6px;">🆕 Lo nuevo en GNNs</div>
+        <div style="color: #e2e8f0; font-size: 0.8em;">AGGREGATE: cada nodo pregunta a sus vecinos, combina sus representaciones y usa ese resumen para actualizarse.</div>
+      </div>
+      <div style="background: rgba(139, 92, 246, 0.15); padding: 12px; border-radius: 10px; border: 1px solid rgba(139, 92, 246, 0.3);">
+        <div style="color: #a78bfa; font-weight: bold; font-size: 0.9em; margin-bottom: 6px;">🎯 El mismo objetivo</div>
+        <div style="color: #e2e8f0; font-size: 0.8em;">Aprender representaciones útiles para clasificar nodos, aristas o grafos respetando la estructura del grafo.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lo que aprendiste -->
+  <div style="max-width: 800px; margin: 40px auto 0; background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.1)); border: 1px solid rgba(34, 197, 94, 0.4); border-radius: 16px; padding: 25px;">
+    <h3 style="color: #22c55e; margin-bottom: 15px; text-align: center;">🎓 ¡Ahora puedes leer código de Deep Learning!</h3>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+      <div>
+        <h4 style="color: #86efac; font-size: 0.9em; margin-bottom: 10px;">✅ Lo que entiendes ahora:</h4>
+        <ul style="color: #e2e8f0; font-size: 0.85em; margin-left: 20px;">
+          <li>Por qué <code>model(x)</code> produce predicciones</li>
+          <li>Qué hace <code>loss.backward()</code></li>
+          <li>Por qué <code>optimizer.step()</code> mejora el modelo</li>
+          <li>La diferencia entre regresión y clasificación</li>
+          <li>Por qué algunas redes tienen más capas</li>
+        </ul>
+      </div>
+      <div>
+        <h4 style="color: #86efac; font-size: 0.9em; margin-bottom: 10px;">🚀 Próximos pasos (GNNs):</h4>
+        <ul style="color: #e2e8f0; font-size: 0.85em; margin-left: 20px;">
+          <li><strong>GCN:</strong> Neuronas que miran vecinos en un grafo</li>
+          <li><strong>GAT:</strong> Atención sobre vecinos</li>
+          <li><strong>GraphSAGE:</strong> Muestrear vecinos para escalar</li>
+          <li><strong>GIN:</strong> Más expresivo para grafos isomorfos</li>
+        </ul>
+      </div>
+    </div>
+    
+    <p style="text-align: center; color: #94a3b8; font-size: 0.85em; margin-top: 20px;">
+      💡 <strong>Clave:</strong> Las GNNs usan el mismo loop de entrenamiento. La diferencia es que el forward pass 
+      considera la <strong>estructura del grafo</strong> para agregar información de nodos vecinos.
+    </p>
+  </div>
+
+  <div style="text-align: center; margin-top: 40px;">
+    <p style="font-size: 1.1em; margin-bottom: 20px; color: #94a3b8;">¿Listo para grafos?</p>
+    <a href="1_Graph_Convolutional_Networks.ipynb" class="nav-btn" style="display: inline-flex; text-decoration: none; background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; padding: 15px 30px; border-radius: 12px; font-weight: bold; font-size: 1.1em; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);">
+      📊 Siguiente: Capítulo 1 - GCN →
+    </a>
+  </div>
+</section>
+
+<footer style="text-align: center; padding: 30px; color: white; background: #0f172a;">
+  <p>📚 Material de apoyo para el curso de Graph Neural Networks</p>
+  <p style="font-size: 0.9em; margin-top: 10px; opacity: 0.8;">
+    Basado en <a href="https://github.com/mlabonne/graph-neural-network-course" style="color: #fbbf24;">@maximelabonne</a> | 
+    Adaptación visual interactiva
+  </p>
+  <div style="margin-top: 20px; display: flex; justify-content: center; gap: 20px;">
+    <a href="1_Graph_Convolutional_Networks.ipynb" style="color: #60a5fa; text-decoration: none; font-size: 0.85em;">GCN →</a>
+    <a href="2_Graph_Attention_Network.ipynb" style="color: #60a5fa; text-decoration: none; font-size: 0.85em;">GAT →</a>
+    <a href="3_GraphSAGE.ipynb" style="color: #60a5fa; text-decoration: none; font-size: 0.85em;">GraphSAGE →</a>
+    <a href="4_Graph_Isomorphism_Network.ipynb" style="color: #60a5fa; text-decoration: none; font-size: 0.85em;">GIN →</a>
+  </div>
+</footer>

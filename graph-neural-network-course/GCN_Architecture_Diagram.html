@@ -1,0 +1,554 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GCN  Multiplicacion de Matrices Animada</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+.header{text-align:center;padding:28px 20px 18px;background:linear-gradient(135deg,#1e1b4b,#312e81,#1e1b4b);border-bottom:2px solid #8b5cf6}
+.header h1{font-size:1.8em;margin-bottom:4px}.header h1 span{color:#8b5cf6}
+.header p{color:#94a3b8;font-size:.95em}
+
+.stage-tabs{display:flex;justify-content:center;gap:8px;padding:16px;background:#1e293b;border-bottom:1px solid #334155;flex-wrap:wrap}
+.stage-tab{padding:10px 22px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.9em;border:2px solid transparent;transition:all .25s}
+.stage-tab:hover{transform:translateY(-2px)}
+.stage-tab.active{transform:translateY(-2px);border-color:#fff}
+.s0{background:#f59e0b}.s1{background:#3b82f6}.s2{background:#10b981}.s3{background:#ec4899}
+
+.controls{display:flex;justify-content:center;gap:12px;padding:14px;align-items:center;flex-wrap:wrap}
+.controls button{background:#334155;color:#e2e8f0;border:1px solid #475569;border-radius:6px;padding:7px 18px;font-size:.9em;cursor:pointer;font-weight:600;transition:background .2s}
+.controls button:hover{background:#475569}
+.controls button.play-btn{background:#8b5cf6;border-color:#8b5cf6}
+.controls button.play-btn:hover{background:#7c3aed}
+.controls .speed-group{display:flex;align-items:center;gap:6px;color:#94a3b8;font-size:.85em}
+.controls .speed-group input{width:100px}
+
+.stage-info{text-align:center;padding:10px 20px;font-size:1em;color:#cbd5e1}
+.stage-info .formula{color:#fbbf24;font-size:1.1em;margin-top:8px}
+.stage-info .formula .katex{color:#fbbf24}
+.dot-product-display .katex{font-size:1em}
+
+.matrix-area{display:flex;justify-content:center;align-items:center;gap:16px;padding:20px;overflow-x:auto;flex-wrap:nowrap;min-height:320px}
+
+.mat-block{display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0}
+.mat-label{font-size:.82em;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border-radius:4px;color:#fff}
+.mat-dims{font-size:.72em;color:#94a3b8;font-family:Consolas,monospace}
+.mat-grid{display:grid;gap:1px;background:#1e293b;border:2px solid #334155;border-radius:8px;overflow:hidden}
+.mat-cell{display:flex;align-items:center;justify-content:center;font-family:'Cascadia Code',Consolas,monospace;background:#0f172a;transition:background .15s,color .15s,transform .15s;position:relative}
+.mat-cell.hl-row{background:#1e3a5f;color:#93c5fd}
+.mat-cell.hl-col{background:#3b1f54;color:#d8b4fe}
+.mat-cell.hl-both{background:#7c3aed;color:#fff;transform:scale(1.08);z-index:2;font-weight:700}
+.mat-cell.hl-result{background:#854d0e;color:#fde68a;font-weight:700;transform:scale(1.1);z-index:2}
+.mat-cell.computed{background:#164e3a;color:#6ee7b7}
+.mat-cell.relu-zero{background:#7f1d1d;color:#fca5a5}
+.mat-cell.relu-pos{background:#14532d;color:#86efac}
+.mat-cell.adj-one{background:#92400e;color:#fbbf24}
+.mat-cell.adj-zero{background:#0f172a;color:#334155}
+
+.op-symbol{font-size:2em;color:#64748b;font-weight:700;padding:0 6px;align-self:center}
+
+.dot-product-display{text-align:center;padding:10px 20px;min-height:60px}
+.dot-product-display .calc{font-family:'Cascadia Code',Consolas,monospace;font-size:.88em;color:#e2e8f0;line-height:1.8;max-width:900px;margin:0 auto;word-wrap:break-word}
+.dot-product-display .result-val{font-size:1.2em;font-weight:700;color:#fbbf24;margin-top:4px}
+
+.progress-bar-ct{max-width:600px;margin:0 auto;padding:8px 20px}
+.progress-bar-ct .bar-bg{background:#1e293b;border-radius:6px;height:8px;overflow:hidden}
+.progress-bar-ct .bar-fill{height:100%;border-radius:6px;transition:width .2s}
+.progress-bar-ct .bar-text{font-size:.75em;color:#64748b;text-align:center;margin-top:3px}
+
+.nn-diagram{max-width:900px;margin:0 auto;padding:10px 20px 20px}
+.nn-diagram canvas{display:block;margin:0 auto;border-radius:10px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>&#x1F9E0; <span>GCN</span> &#x2014; Multiplicaci&#xF3;n de Matrices Paso a Paso</h1>
+  <p>Visualiza c&#xF3;mo fluyen los datos: &#xC2; = &#x1D0;&#x207B;&#xBD;&#xC3;&#x1D0;&#x207B;&#xBD; &#x2192; &#xC2; &#xD7; W&#x2081; &#x2192; ReLU &#x2192; &#xD7; W&#x2082; &#x2192; Output</p>
+</div>
+
+<div class="stage-tabs">
+  <div class="stage-tab s0 active" onclick="setStage(0)">0&#xFE0F;&#x20E3; Norm &#xC2;</div>
+  <div class="stage-tab s1" onclick="setStage(1)">1&#xFE0F;&#x20E3; &#xC2; &#xD7; W&#x2081; = H</div>
+  <div class="stage-tab s2" onclick="setStage(2)">2&#xFE0F;&#x20E3; ReLU(H)</div>
+  <div class="stage-tab s3" onclick="setStage(3)">3&#xFE0F;&#x20E3; ReLU(H) &#xD7; W&#x2082; = Z</div>
+</div>
+
+<div class="controls">
+  <button class="play-btn" id="btnPlay" onclick="togglePlay()">&#x25B6; Play</button>
+  <button onclick="stepForward()">&#x23ED; Paso</button>
+  <button onclick="resetStage()">&#x23EE; Reiniciar</button>
+  <button onclick="randomizeWeights()">&#x1F504; Nuevos pesos</button>
+  <div class="speed-group">
+    <span>Velocidad:</span>
+    <input type="range" id="speedSlider" min="50" max="1500" value="400" step="50">
+  </div>
+</div>
+
+<div class="stage-info" id="stageInfo"></div>
+
+<div class="matrix-area" id="matrixArea"></div>
+
+<div class="dot-product-display" id="dotDisplay"></div>
+
+<div class="progress-bar-ct">
+  <div class="bar-bg"><div class="bar-fill" id="progBar" style="width:0%;background:#8b5cf6"></div></div>
+  <div class="bar-text" id="progText">0 / 0</div>
+</div>
+
+<div class="nn-diagram"><canvas id="nnCanvas" width="880" height="340"></canvas></div>
+
+<script>
+// ========== DATA ==========
+var ROWS = 34; // 34 nodes (Karate Club)
+var IN_DIM = 34; // 34 features (one-hot identity)
+var HIDDEN = 3;
+var OUT = 4;
+
+// Input X: identity (one-hot) 34x34
+var X = [];
+for(var i=0;i<ROWS;i++){var r=[];for(var j=0;j<IN_DIM;j++) r.push(i===j?1:0);X.push(r);}
+
+// Karate Club adjacency matrix (78 edges)
+var A=[];
+for(var i=0;i<ROWS;i++){A.push([]);for(var j=0;j<ROWS;j++) A[i].push(0);}
+var edges=[[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[0,7],[0,8],[0,10],[0,11],[0,12],[0,13],[0,17],[0,19],[0,21],[0,31],[1,2],[1,3],[1,7],[1,13],[1,17],[1,19],[1,21],[1,30],[2,3],[2,7],[2,8],[2,9],[2,13],[2,27],[2,28],[2,32],[3,7],[3,12],[3,13],[4,6],[4,10],[5,6],[5,10],[5,16],[6,16],[8,30],[8,32],[8,33],[9,33],[13,33],[14,32],[14,33],[15,32],[15,33],[18,32],[18,33],[19,33],[20,32],[20,33],[22,32],[22,33],[23,25],[23,27],[23,29],[23,32],[23,33],[24,25],[24,27],[24,31],[25,31],[26,29],[26,33],[27,33],[28,31],[28,33],[29,32],[29,33],[30,32],[30,33],[31,32],[31,33],[32,33]];
+for(var e=0;e<edges.length;e++){var u=edges[e][0],v=edges[e][1];A[u][v]=1;A[v][u]=1;}
+
+// A_tilde = A + I (add self-loops)
+var Atilde=[];
+for(var i=0;i<ROWS;i++){Atilde.push([]);for(var j=0;j<ROWS;j++) Atilde[i].push(A[i][j]+(i===j?1:0));}
+
+// Degree vector d_tilde
+var deg=[];
+for(var i=0;i<ROWS;i++){var s=0;for(var j=0;j<ROWS;j++) s+=Atilde[i][j];deg.push(s);}
+
+// Normalized adjacency: Norm = D_tilde^{-1/2} A_tilde D_tilde^{-1/2}
+var Norm=[];
+for(var i=0;i<ROWS;i++){Norm.push([]);for(var j=0;j<ROWS;j++){
+  Norm[i].push(+(Atilde[i][j]/Math.sqrt(deg[i]*deg[j])).toFixed(6));
+}}
+
+// Non-zero positions for normalization animation (skip zeros)
+var normSteps=[];
+for(var i=0;i<ROWS;i++) for(var j=0;j<ROWS;j++) if(Atilde[i][j]>0) normSteps.push([i,j]);
+
+// W1: 34x3 random weights
+function rnd(){return +(Math.random()*2-1).toFixed(2)}
+var W1=[], W2=[];
+function makeWeights(){
+  W1=[];W2=[];
+  for(var i=0;i<IN_DIM;i++){var r=[];for(var j=0;j<HIDDEN;j++) r.push(rnd());W1.push(r);}
+  for(var i=0;i<HIDDEN;i++){var r=[];for(var j=0;j<OUT;j++) r.push(rnd());W2.push(r);}
+}
+makeWeights();
+
+function matmul(A,B){
+  var R=A.length,C=B[0].length,K=B.length,res=[];
+  for(var i=0;i<R;i++){var r=[];for(var j=0;j<C;j++){var s=0;for(var k=0;k<K;k++) s+=A[i][k]*B[k][j];r.push(+s.toFixed(4));}res.push(r);}
+  return res;
+}
+function applyRelu(M){
+  var res=[];
+  for(var i=0;i<M.length;i++){var r=[];for(var j=0;j<M[i].length;j++) r.push(M[i][j]>0?M[i][j]:0);res.push(r);}
+  return res;
+}
+
+var H, HR, Z;
+function computeAll(){H=matmul(Norm,W1);HR=applyRelu(H);Z=matmul(HR,W2);}
+computeAll();
+
+// ========== STAGES ==========
+var currentStage=0; // 0=Norm, 1=N*W1, 2=ReLU, 3=HR*W2
+var stepIdx=0;
+var playing=false;
+var timer=null;
+
+var stageConfigs=[
+  {title:'Etapa 0: Normalizaci\u00f3n \\(\\hat{A} = \\tilde{D}^{-1/2}\\tilde{A}\\tilde{D}^{-1/2}\\)',formula:'\\hat{A}_{i,j} \\;=\\; \\frac{\\tilde{A}_{i,j}}{\\sqrt{\\tilde{d}_i \\cdot \\tilde{d}_j}} \\quad \\text{donde } \\tilde{A} = A + I_N',color:'#f59e0b'},
+  {title:'Etapa 1: \\(\\hat{A} \\times W_1 = H\\) (GCNConv)',formula:'H_{i,j} \\;=\\; \\displaystyle\\sum_{\\scriptstyle k}\\, \\hat{A}_{i,k} \\cdot W^{(1)}_{k,j}',color:'#3b82f6'},
+  {title:'Etapa 2: Activaci\u00f3n \\(\\text{ReLU}(H)\\)',formula:'\\text{ReLU}(x) \\;=\\; \\max(0,\\, x)',color:'#10b981'},
+  {title:'Etapa 3: \\(\\text{ReLU}(H) \\times W_2 = Z\\) (Linear)',formula:'Z_{i,j} \\;=\\; \\displaystyle\\sum_{\\scriptstyle k}\\, H\'_{i,k} \\cdot W^{(2)}_{k,j}',color:'#ec4899'},
+];
+
+function totalSteps(){
+  if(currentStage===0) return normSteps.length;
+  if(currentStage===1) return ROWS*HIDDEN;
+  if(currentStage===2) return ROWS*HIDDEN;
+  return ROWS*OUT;
+}
+
+function setStage(s){
+  stop();
+  currentStage=s;
+  stepIdx=0;
+  computeAll();
+  updateTabs();
+  renderAll();
+}
+
+function updateTabs(){
+  var tabs=document.querySelectorAll('.stage-tab');
+  tabs.forEach(function(t,i){t.classList.toggle('active',i===currentStage);});
+}
+
+// ========== RENDERING ==========
+function renderAll(){
+  renderStageInfo();
+  renderMatrices();
+  renderDotProduct();
+  renderProgress();
+  renderMiniNN();
+}
+
+function renderStageInfo(){
+  var c=stageConfigs[currentStage];
+  var el=document.getElementById('stageInfo');
+  el.innerHTML=c.title+'<div class="formula" id="stageFormula"></div>';
+  katex.render(c.formula,document.getElementById('stageFormula'),{displayMode:true,throwOnError:false});
+  // also render inline katex in title
+  renderInlineKatex(el);
+}
+function renderInlineKatex(el){
+  var html=el.innerHTML;
+  html=html.replace(/\\\((.+?)\\\)/g,function(m,tex){
+    var span=document.createElement('span');
+    katex.render(tex,span,{throwOnError:false});
+    return span.innerHTML;
+  });
+  el.innerHTML=html;
+}
+
+function buildMatrixHTML(name,data,rows,cols,color,hlRow,hlCol,computed,cellClass){
+  // Dynamic sizing based on matrix dimensions
+  var big=Math.max(rows,cols);
+  var cw,ch,fs;
+  if(big>20){cw=22;ch=16;fs='.48em';}
+  else if(big>10){cw=32;ch=22;fs='.6em';}
+  else{cw=52;ch=32;fs='.72em';}
+  var h='<div class="mat-block"><div class="mat-label" style="background:'+color+'">'+name+'</div>';
+  h+='<div class="mat-dims">'+rows+'&#xD7;'+cols+'</div>';
+  h+='<div class="mat-grid" style="grid-template-columns:repeat('+cols+','+cw+'px)">';
+  for(var i=0;i<rows;i++){
+    for(var j=0;j<cols;j++){
+      var val=data[i][j];
+      var cls='mat-cell';
+      if(cellClass && cellClass[i] && cellClass[i][j]) cls+=' '+cellClass[i][j];
+      else{
+        var isRow=(hlRow===i), isCol=(hlCol===j);
+        if(isRow && isCol) cls+=' hl-both';
+        else if(isRow) cls+=' hl-row';
+        else if(isCol) cls+=' hl-col';
+        if(computed && computed[i] && computed[i][j]) cls+=' computed';
+      }
+      var dp=big>20?1:2;
+      var txt=(val===Math.floor(val)&&Math.abs(val)<100)?val.toFixed(0):val.toFixed(dp);
+      h+='<div class="'+cls+'" style="width:'+cw+'px;height:'+ch+'px;font-size:'+fs+'">'+txt+'</div>';
+    }
+  }
+  h+='</div></div>';
+  return h;
+}
+
+function renderMatrices(){
+  var area=document.getElementById('matrixArea');
+  var html='';
+
+  if(currentStage===0){
+    // Normalization: Atilde -> Norm
+    var curI=-1, curJ=-1;
+    if(stepIdx < normSteps.length){
+      curI = normSteps[stepIdx][0];
+      curJ = normSteps[stepIdx][1];
+    }
+    // Atilde matrix with adjacency coloring
+    var aCls={};
+    for(var i=0;i<ROWS;i++){aCls[i]={};for(var j=0;j<ROWS;j++){
+      aCls[i][j]=Atilde[i][j]>0?'adj-one':'adj-zero';
+    }}
+    if(curI>=0){
+      for(var j2=0;j2<ROWS;j2++) aCls[curI][j2]='hl-row';
+      for(var i2=0;i2<ROWS;i2++) aCls[i2][curJ]='hl-col';
+      aCls[curI][curJ]='hl-result';
+    }
+    html+=buildMatrixHTML('\u00c3 (A+I)',Atilde,ROWS,ROWS,'#f59e0b',-1,-1,null,aCls);
+
+    html+='<div class="op-symbol">\u2192</div>';
+    html+='<div style="text-align:center;align-self:center;padding:0 8px"><div style="font-size:1.3em;color:#f59e0b;font-weight:700">\u00f7\u221a(d\u0303\u1d62\u00b7d\u0303\u2c7c)</div></div>';
+    html+='<div class="op-symbol">\u2192</div>';
+
+    // Norm result
+    var nShow=[];
+    var nCls={};
+    var compSet={};
+    for(var s=0;s<Math.min(stepIdx,normSteps.length);s++){
+      var si=normSteps[s][0],sj=normSteps[s][1];
+      if(!compSet[si]) compSet[si]={};
+      compSet[si][sj]=true;
+    }
+    for(var i=0;i<ROWS;i++){nShow.push([]);nCls[i]={};for(var j=0;j<ROWS;j++){
+      if(compSet[i]&&compSet[i][j]){
+        nShow[i].push(+Norm[i][j].toFixed(4));
+        nCls[i][j]='computed';
+      } else {
+        nShow[i].push(0);
+      }
+    }}
+    if(curI>=0 && curJ>=0) nCls[curI][curJ]='hl-result';
+    html+=buildMatrixHTML('\u00c2 (norm)',nShow,ROWS,ROWS,'#f59e0b',-1,-1,null,nCls);
+
+  } else if(currentStage===1){
+    // Norm * W1 = H
+    var ri=Math.floor(stepIdx/HIDDEN), ci=stepIdx%HIDDEN;
+    if(stepIdx>=totalSteps()){ri=-1;ci=-1;}
+    var comp={};
+    for(var s=0;s<Math.min(stepIdx,totalSteps());s++){
+      var r2=Math.floor(s/HIDDEN),c2=s%HIDDEN;
+      if(!comp[r2]) comp[r2]={};
+      comp[r2][c2]=true;
+    }
+    html+=buildMatrixHTML('\u00c2 (norm)',Norm,ROWS,IN_DIM,'#f59e0b',ri,-1,null,null);
+    html+='<div class="op-symbol">&#xD7;</div>';
+    html+=buildMatrixHTML('W&#x2081;',W1,IN_DIM,HIDDEN,'#fbbf24',-1,ci,null,null);
+    html+='<div class="op-symbol">=</div>';
+    var hShow=[];
+    for(var i=0;i<ROWS;i++){var r=[];for(var j=0;j<HIDDEN;j++){
+      if(comp[i] && comp[i][j]) r.push(H[i][j]); else r.push(0);
+    }hShow.push(r);}
+    var hCls={};
+    for(var i=0;i<ROWS;i++){hCls[i]={};for(var j=0;j<HIDDEN;j++){
+      if(comp[i]&&comp[i][j]) hCls[i][j]='computed';
+      if(i===ri&&j===ci) hCls[i][j]='hl-result';
+    }}
+    html+=buildMatrixHTML('H',hShow,ROWS,HIDDEN,'#f97316',ri,ci,null,hCls);
+
+  } else if(currentStage===2){
+    // ReLU
+    var done=stepIdx;
+    var hCls={}, hrShow=[];
+    for(var i=0;i<ROWS;i++){hrShow.push([]);hCls[i]={};for(var j=0;j<HIDDEN;j++){
+      var idx=i*HIDDEN+j;
+      if(idx<done){
+        hrShow[i].push(HR[i][j]);
+        hCls[i][j]=HR[i][j]>0?'relu-pos':'relu-zero';
+      } else {
+        hrShow[i].push(H[i][j]);
+      }
+    }}
+    var cur=done<totalSteps()?done:-1;
+    var curR=cur>=0?Math.floor(cur/HIDDEN):-1;
+    var curC=cur>=0?cur%HIDDEN:-1;
+    if(curR>=0) hCls[curR][curC]='hl-result';
+
+    html+=buildMatrixHTML('H (pre-ReLU)',H,ROWS,HIDDEN,'#f97316',-1,-1,null,null);
+    html+='<div class="op-symbol">&#x2192;</div>';
+    html+='<div style="text-align:center;align-self:center;padding:0 8px"><div style="font-size:2.5em">&#x21A7;</div><div style="font-size:.9em;color:#10b981;font-weight:700">max(0, x)</div></div>';
+    html+='<div class="op-symbol">&#x2192;</div>';
+    html+=buildMatrixHTML("H' (post-ReLU)",hrShow,ROWS,HIDDEN,'#10b981',-1,-1,null,hCls);
+
+  } else {
+    // HR * W2 = Z
+    var ri=Math.floor(stepIdx/OUT), ci=stepIdx%OUT;
+    if(stepIdx>=totalSteps()){ri=-1;ci=-1;}
+    var comp={};
+    for(var s=0;s<Math.min(stepIdx,totalSteps());s++){
+      var r2=Math.floor(s/OUT),c2=s%OUT;
+      if(!comp[r2]) comp[r2]={};
+      comp[r2][c2]=true;
+    }
+    html+=buildMatrixHTML("H' (ReLU)",HR,ROWS,HIDDEN,'#10b981',ri,-1,null,null);
+    html+='<div class="op-symbol">&#xD7;</div>';
+    html+=buildMatrixHTML('W&#x2082;',W2,HIDDEN,OUT,'#a855f7',-1,ci,null,null);
+    html+='<div class="op-symbol">=</div>';
+    var zShow=[];
+    for(var i=0;i<ROWS;i++){var r=[];for(var j=0;j<OUT;j++){
+      if(comp[i]&&comp[i][j]) r.push(Z[i][j]); else r.push(0);
+    }zShow.push(r);}
+    var zCls={};
+    for(var i=0;i<ROWS;i++){zCls[i]={};for(var j=0;j<OUT;j++){
+      if(comp[i]&&comp[i][j]) zCls[i][j]='computed';
+      if(i===ri&&j===ci) zCls[i][j]='hl-result';
+    }}
+    html+=buildMatrixHTML('Z (logits)',zShow,ROWS,OUT,'#ec4899',ri,ci,null,zCls);
+  }
+  area.innerHTML=html;
+}
+
+function renderDotProduct(){
+  var el=document.getElementById('dotDisplay');
+  if(stepIdx>=totalSteps()){el.innerHTML='<div class="result-val" style="color:#10b981">&#x2705; Etapa completada</div>';return;}
+
+  if(currentStage===0){
+    // Normalization step
+    var pos=normSteps[stepIdx];
+    var ni=pos[0], nj=pos[1];
+    var aVal=Atilde[ni][nj];
+    var di=deg[ni], dj=deg[nj];
+    var result=aVal/Math.sqrt(di*dj);
+    el.innerHTML='<div class="calc" id="dotCalcNorm"></div>';
+    var tex='\\hat{A}_{'+ni+','+nj+'} = \\frac{\\tilde{A}_{'+ni+','+nj+'}}{\\sqrt{\\tilde{d}_{'+ni+'} \\cdot \\tilde{d}_{'+nj+'}}} = \\frac{'+aVal+'}{\\sqrt{'+di+' \\cdot '+dj+'}} = \\frac{'+aVal+'}{'+Math.sqrt(di*dj).toFixed(4)+'} = \\color{#fbbf24}{'+result.toFixed(6)+'}';
+    katex.render(tex,document.getElementById('dotCalcNorm'),{throwOnError:false});
+    return;
+  }
+
+  if(currentStage===2){
+    var cur=stepIdx;
+    var r=Math.floor(cur/HIDDEN),c=cur%HIDDEN;
+    var v=H[r][c];
+    var rv=v>0?v:0;
+    var col=rv>0?'#86efac':'#fca5a5';
+    el.innerHTML='<div class="calc" id="dotCalc1"></div><div class="calc" id="dotCalc2"></div>';
+    katex.render('H_{'+r+','+c+'} = '+v.toFixed(4),document.getElementById('dotCalc1'),{throwOnError:false});
+    katex.render('\\text{ReLU}('+v.toFixed(4)+') = \\max(0,\\;'+v.toFixed(4)+') = \\color{'+(rv>0?'#86efac':'#fca5a5')+'}{'+rv.toFixed(4)+'}',document.getElementById('dotCalc2'),{throwOnError:false});
+    return;
+  }
+
+  var M1,M2,R2;
+  if(currentStage===1){M1=Norm;M2=W1;R2=H;}
+  else{M1=HR;M2=W2;R2=Z;}
+
+  var cols=M2[0].length;
+  var ri=Math.floor(stepIdx/cols), ci=stepIdx%cols;
+  var K=M2.length;
+
+  var texParts=[];var sum=0;var shown=0;
+  for(var k=0;k<K;k++){
+    var a=M1[ri][k],b=M2[k][ci],p=a*b;
+    sum+=p;
+    if(K>10 && Math.abs(a)<0.0001) continue;
+    shown++;
+    var cv=p>=0?'#93c5fd':'#fca5a5';
+    texParts.push('\\color{#94a3b8}{'+a.toFixed(2)+'} \\times \\color{#fbbf24}{'+b.toFixed(2)+'} = \\color{'+cv+'}{'+p.toFixed(4)+'}');
+  }
+
+  var name=currentStage===1?'H':'Z';
+  var note=(K>10 && shown<K)?' \\;\\small{('+shown+' t\\acute{e}rminos \\neq 0)}':'';
+  var tex=name+'_{'+ri+','+ci+'} = '+texParts.join(' + ')+note;
+  el.innerHTML='<div id="dotCalcMain"></div><div class="result-val" id="dotCalcResult"></div>';
+  katex.render(tex,document.getElementById('dotCalcMain'),{throwOnError:false});
+  katex.render('= '+sum.toFixed(4),document.getElementById('dotCalcResult'),{throwOnError:false});
+}
+
+function renderProgress(){
+  var t=totalSteps(),pct=t>0?(stepIdx/t*100):0;
+  document.getElementById('progBar').style.width=Math.min(pct,100)+'%';
+  var colors=['#f59e0b','#3b82f6','#10b981','#ec4899'];
+  document.getElementById('progBar').style.background=colors[currentStage];
+  document.getElementById('progText').textContent=Math.min(stepIdx,t)+' / '+t+' operaciones';
+}
+
+// Mini NN diagram
+function renderMiniNN(){
+  var cv=document.getElementById('nnCanvas');
+  var c=cv.getContext('2d');
+  var cvH=cv.height;
+  c.clearRect(0,0,cv.width,cvH);
+  c.fillStyle='#0f172a';c.fillRect(0,0,cv.width,cvH);
+
+  var layerX=[110,330,520,710];
+  var layerN=[IN_DIM,HIDDEN,HIDDEN,OUT];
+  var layerC=['#f59e0b','#3b82f6','#10b981','#ec4899'];
+  var layerL=['Norm (\u00c2)','GCNConv','ReLU','Linear'];
+  var activeLayer=currentStage;
+
+  var midY=cvH/2;
+  for(var li=0;li<4;li++){
+    var n=layerN[li];var cx=layerX[li];
+    var nr=n>10?4:9;
+    var spacing=Math.min(n>10?9:24,(cvH-60)/(n+1));
+    var startY=midY-spacing*(n-1)/2;
+    // connections
+    if(li>0){
+      var pn=layerN[li-1];var px=layerX[li-1];
+      var pnr=pn>10?4:9;
+      var ps=Math.min(pn>10?9:24,(cvH-60)/(pn+1));var py=midY-ps*(pn-1)/2;
+      for(var a=0;a<pn;a++){
+        for(var b=0;b<n;b++){
+          if(li===2&&a!==b) continue; // ReLU identity
+          var alpha=li===activeLayer?0.35:0.1;
+          c.strokeStyle='rgba(148,163,184,'+alpha+')';
+          c.lineWidth=li===activeLayer?1:0.3;
+          c.beginPath();c.moveTo(px+pnr+1,py+a*ps);c.lineTo(cx-nr-1,startY+b*spacing);c.stroke();
+        }
+      }
+    }
+    // neurons
+    for(var ni=0;ni<n;ni++){
+      var ny=startY+ni*spacing;
+      c.beginPath();c.arc(cx,ny,nr,0,Math.PI*2);
+      c.fillStyle=li===activeLayer?layerC[li]:'#334155';
+      if(li===activeLayer){
+        c.shadowColor=layerC[li];c.shadowBlur=12;
+      }
+      c.fill();c.shadowBlur=0;
+      c.strokeStyle=layerC[li];c.lineWidth=n>10?0.8:1.5;c.stroke();
+    }
+    // label
+    c.save();c.font='bold 11px Segoe UI';c.fillStyle=layerC[li];c.textAlign='center';
+    c.fillText(layerL[li],cx,cvH-10);c.restore();
+  }
+  // stage arrow
+  c.save();c.font='10px Consolas';c.fillStyle='#fbbf24';c.textAlign='center';
+  var ax;
+  if(currentStage===0) ax=layerX[0];
+  else if(currentStage===1) ax=(layerX[0]+layerX[1])/2;
+  else if(currentStage===2) ax=(layerX[1]+layerX[2])/2;
+  else ax=(layerX[2]+layerX[3])/2;
+  c.fillText('\u25BC procesando',ax,15);c.restore();
+}
+
+// ========== CONTROLS ==========
+function stepForward(){
+  if(stepIdx<totalSteps()){stepIdx++;renderAll();}
+  else{
+    // auto-advance to next stage
+    if(currentStage<3){setStage(currentStage+1);}
+    else{stop();}
+  }
+}
+
+function togglePlay(){
+  if(playing) stop(); else play();
+}
+
+function play(){
+  playing=true;
+  document.getElementById('btnPlay').innerHTML='&#x23F8; Pausa';
+  tick();
+}
+
+function stop(){
+  playing=false;
+  if(timer) clearTimeout(timer);
+  timer=null;
+  document.getElementById('btnPlay').innerHTML='&#x25B6; Play';
+}
+
+function tick(){
+  if(!playing) return;
+  if(stepIdx<totalSteps()){
+    stepIdx++;renderAll();
+    var spd=parseInt(document.getElementById('speedSlider').value);
+    timer=setTimeout(tick,spd);
+  } else {
+    if(currentStage<3){
+      timer=setTimeout(function(){setStage(currentStage+1);play();},800);
+    } else {stop();}
+  }
+}
+
+function resetStage(){stop();stepIdx=0;renderAll();}
+
+function randomizeWeights(){
+  stop();makeWeights();computeAll();stepIdx=0;renderAll();
+}
+
+// init
+renderAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Módulo 3: Aplicaciones GenAI en Negocios</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+      color: #e0e0e0;
+      line-height: 1.6;
+    }
+    .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+    .hero {
+      text-align: center;
+      padding: 60px 20px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border-radius: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 40px rgba(16,185,129,0.3);
+    }
+    .hero h1 { font-size: 2.5em; margin-bottom: 12px; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+    .hero p { font-size: 1.1em; opacity: 0.95; color: white; }
+    .section { background: #2a2a40; border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    .section-header { display: flex; align-items: center; gap: 15px; margin-bottom: 18px; }
+    .section-number { width: 45px; height: 45px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3em; font-weight: bold; color: white; }
+    .section-title h2 { font-size: 1.35em; color: #a5f3fc; }
+    .section-title p { font-size: 0.9em; color: #9ca3af; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 18px 0; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 18px 0; }
+    @media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+    .card { background: linear-gradient(135deg, #1f2937, #0f172a); padding: 18px; border-radius: 12px; border: 1px solid rgba(59,130,246,0.25); }
+    .card h4 { color: #7dd3fc; margin-bottom: 10px; font-size: 1.05em; }
+    .pill { display: inline-block; padding: 6px 10px; border-radius: 999px; background: rgba(16,185,129,0.15); color: #a7f3d0; font-size: 0.85em; margin-right: 6px; margin-bottom: 6px; }
+    .highlight { display: flex; gap: 12px; padding: 16px; border-radius: 12px; border-left: 4px solid; margin: 16px 0; }
+    .highlight.info { background: rgba(59,130,246,0.1); border-color: #3b82f6; }
+    .highlight.warning { background: rgba(251,191,36,0.15); border-color: #f59e0b; }
+    .highlight.success { background: rgba(16,185,129,0.15); border-color: #10b981; }
+    .comparison-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.95em; }
+    .comparison-table th { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 10px 12px; text-align: left; }
+    .comparison-table td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .comparison-table tr:nth-child(even) { background: rgba(255,255,255,0.03); }
+    .quiz-container { background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 12px; padding: 20px; margin: 16px 0; border: 1px solid rgba(16,185,129,0.25); }
+    .quiz-question { color: #a5f3fc; font-size: 1.02em; margin-bottom: 12px; }
+    .quiz-option { display: block; background: rgba(255,255,255,0.04); border: 2px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 12px; margin: 8px 0; cursor: pointer; transition: all 0.15s; }
+    .quiz-option:hover { border-color: #10b981; background: rgba(16,185,129,0.1); }
+    .quiz-option.correct { border-color: #22c55e; background: rgba(34,197,94,0.18); }
+    .quiz-option.incorrect { border-color: #ef4444; background: rgba(239,68,68,0.18); }
+    .diagram { background: linear-gradient(135deg, #0f172a, #1e293b); padding: 18px; border-radius: 12px; border: 1px solid rgba(59,130,246,0.25); margin: 16px 0; }
+    .nav-buttons { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 32px; }
+    .nav-btn { text-decoration: none; padding: 12px 24px; border-radius: 10px; font-weight: bold; color: white; background: linear-gradient(135deg, #3b82f6, #2563eb); box-shadow: 0 4px 15px rgba(59,130,246,0.35); }
+    .nav-btn.secondary { background: linear-gradient(135deg, #6b7280, #4b5563); box-shadow: 0 4px 15px rgba(107,114,128,0.35); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <h1>🚀 Módulo 3</h1>
+      <h2 style="font-size: 1.9em; margin-bottom: 12px; color: white;">Aplicaciones GenAI en Negocios</h2>
+      <p>Casos de uso, patrones técnicos y captura de valor</p>
+      <div style="margin-top: 18px; padding: 12px 18px; background: rgba(255,255,255,0.2); border-radius: 10px; display: inline-block;">
+        <span style="font-size: 1.05em;">⏱️ Tiempo estimado: <strong>45-60 minutos</strong></span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-number">📋</div>
+        <div class="section-title">
+          <h2>Objetivos de Aprendizaje</h2>
+          <p>Lo que lograrás al finalizar</p>
+        </div>
+      </div>
+      <div style="background: #020617; padding: 14px 16px; border-radius: 12px; border: 1px solid #1f2937;">
+        <h3 style="color: #e5e7eb; margin: 0 0 6px; font-size: 1em;">✅ Al terminar este módulo podrás:</h3>
+        <ul style="color: #9ca3af; font-size: 0.92em; margin: 0 0 0 18px; line-height: 1.9;">
+          <li>Identificar casos de alto valor por industria y función</li>
+          <li>Elegir patrones técnicos (RAG, agentes, workflows) según necesidad</li>
+          <li>Diseñar un MVP con guardrails, métricas y estimación de ROI</li>
+          <li>Definir arquitectura de referencia para chatbots, asistentes y generación de contenido</li>
+          <li>Medir impacto: precisión, cobertura, ahorro de tiempo y calidad percibida</li>
+          <li>Planear adopción: change management, capacitación y gobierno</li>
+        </ul>
+      </div>
+    </div>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-number">1</div>
+        <div class="section-title">
+          <h2>Panorama de Casos de Uso</h2>
+          <p>¿Dónde aporta GenAI en el negocio?</p>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <h4>Servicio al Cliente</h4>
+          <p>Chatbots de soporte, autoservicio, resúmenes de tickets, QA sobre base de conocimiento.</p>
+          <div><span class="pill">CSAT</span><span class="pill">AHT</span><span class="pill">Deflexión</span></div>
+        </div>
+        <div class="card">
+          <h4>Operaciones</h4>
+          <p>RPA + LLM para validar documentos, extraction, routing inteligente, SOP copilots.</p>
+          <div><span class="pill">Tiempos</span><span class="pill">Errores</span><span class="pill">Throughput</span></div>
+        </div>
+        <div class="card">
+          <h4>Ventas y Marketing</h4>
+          <p>Generación de copys, segmentación, personalización de emails y propuestas.</p>
+          <div><span class="pill">CTR</span><span class="pill">Conversión</span><span class="pill">Velocity</span></div>
+        </div>
+        <div class="card">
+          <h4>Finanzas</h4>
+          <p>Conciliación asistida, resúmenes de pólizas, análisis de gastos, Q&A sobre ERP.</p>
+          <div><span class="pill">Cierre</span><span class="pill">Compliance</span><span class="pill">Errores</span></div>
+        </div>
+        <div class="card">
+          <h4>Legal / Riesgo</h4>
+          <p>Lectura de contratos, cláusulas riesgosas, resúmenes, búsqueda de precedentes.</p>
+          <div><span class="pill">Tiempo</span><span class="pill">Cobertura</span><span class="pill">Consistencia</span></div>
+        </div>
+        <div class="card">
+          <h4>TI / Ingeniería</h4>
+          <p>Copilots de código, generación de tests, explicación de logs, runbooks.</p>
+          <div><span class="pill">Productividad</span><span class="pill">MTTR</span><span class="pill">Calidad</span></div>
+        </div>
+      </div>
+      <div class="highlight info">
+        <div>💡 Prioriza casos con alto volumen repetitivo, textos estructurados/semi, y riesgo moderado con revisión humana.</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-number">10</div>
+        <div class="section-title">
+          <h2>Aplicaciones GenAI en Consultoría Financiera</h2>
+          <p>Casos prácticos, beneficios y controles</p>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <h4>Due Diligence acelerada</h4>
+          <p style="line-height: 1.7;">Ingesta de data rooms, extracción de cláusulas clave, resúmenes de riesgos y variaciones vs. market terms.</p>
+          <div><span class="pill">Velocidad</span><span class="pill">Cobertura</span><span class="pill">Consistencia</span></div>
+        </div>
+        <div class="card">
+          <h4>Modelos financieros asistidos</h4>
+          <p style="line-height: 1.7;">Explicación de drivers, detección de supuestos inconsistentes, generación de escenarios y notas ejecutivas.</p>
+          <div><span class="pill">Calidad</span><span class="pill">Transparencia</span><span class="pill">Velocidad</span></div>
+        </div>
+        <div class="card">
+          <h4>Valuación y research</h4>
+          <p style="line-height: 1.7;">Búsqueda de comparables, extracción de múltiplos, drafting de equity stories y memos de inversión con citas.</p>
+          <div><span class="pill">Precisión</span><span class="pill">Citas</span><span class="pill">Narrativa</span></div>
+        </div>
+        <div class="card">
+          <h4>Riesgo y cumplimiento</h4>
+          <p style="line-height: 1.7;">Screening de sanciones/PEP, explicación de alertas AML, redacción de SAR/ROS con plantillas consistentes.</p>
+          <div><span class="pill">Cobertura</span><span class="pill">Trazabilidad</span><span class="pill">Tiempo</span></div>
+        </div>
+        <div class="card">
+          <h4>Finanzas corporativas</h4>
+          <p style="line-height: 1.7;">Generar decks de refinanciación, covenant checks, simulación de sensibilidad y FAQs para deal teams.</p>
+          <div><span class="pill">Agilidad</span><span class="pill">Control</span><span class="pill">HIL</span></div>
+        </div>
+        <div class="card">
+          <h4>PMI y sinergias</h4>
+          <p style="line-height: 1.7;">Mapeo de sinergias operativas/financieras, tracking de iniciativas, resúmenes de status para Steering Committees.</p>
+          <div><span class="pill">Seguimiento</span><span class="pill">Valor</span><span class="pill">Governanza</span></div>
+        </div>
+      </div>
+      <div class="highlight warning">
+        <div>⚠️ Controles recomendados: RAG con fuentes financieras verificadas, citas obligatorias, revisión humana (HIL) en outputs para clientes, filtrado de PII y datos regulatorios sensibles.</div>
+      </div>
+
+      <h3 style="color: #a5f3fc; margin: 18px 0 10px;">Flujos sugeridos (paso a paso)</h3>
+      <div class="grid-2">
+        <div class="card">
+          <h4>Due Diligence / Data Room</h4>
+          <ol style="margin-left: 18px; color: #cbd5f5; line-height: 1.7; font-size: 0.95em;">
+            <li>Ingesta docs (contratos, estados financieros) → OCR/limpieza → metadata (fecha, confidencialidad)</li>
+            <li>Indexar con embeddings + search híbrido</li>
+            <li>Preguntas guiadas y plantillas de riesgos</li>
+            <li>RAG con citas obligatorias → resumen ejecutivo</li>
+            <li>Revisión humana y checklist de hallazgos</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h4>Modelo financiero asistido</h4>
+          <ol style="margin-left: 18px; color: #cbd5f5; line-height: 1.7; font-size: 0.95em;">
+            <li>Conectar hoja de cálculo (lectura sola) y diccionario de tabs</li>
+            <li>Validar supuestos: detectar celdas extremas o inconsistentes</li>
+            <li>Generar escenarios (base/bajo/alto) con justificación</li>
+            <li>RAG sobre inputs y notas → memo ejecutivo</li>
+            <li>HIL: analista confirma cambios antes de escribir de vuelta</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h4>Research y comparables</h4>
+          <ol style="margin-left: 18px; color: #cbd5f5; line-height: 1.7; font-size: 0.95em;">
+            <li>Extraer tickers/peers desde brief del analista</li>
+            <li>Consultar fuentes aprobadas (filtrado dominios) y almacenar citas</li>
+            <li>Normalizar múltiplos (EV/EBITDA, P/E) y fechas</li>
+            <li>Generar tabla de comps + narrativas de variación</li>
+            <li>Exportar a deck con secciones estándar</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h4>AML / Riesgo</h4>
+          <ol style="margin-left: 18px; color: #cbd5f5; line-height: 1.7; font-size: 0.95em;">
+            <li>Screening PEP/sanciones → clasificación riesgo</li>
+            <li>RAG sobre alertas previas y políticas internas</li>
+            <li>Explicación de alerta + evidencia con enlaces</li>
+            <li>Generar borrador de SAR/ROS con plantilla</li>
+            <li>HIL obligatorio antes de envío</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-number">2</div>
+        <div class="section-title">
+          <h2>Patrones Técnicos Clave</h2>
+          <p>Elegir la receta correcta</p>
+        </div>
+      </div>
+      <table class="comparison-table">
+        <thead>
+          <tr><th>Patrón</th><th>Cuándo usar</th><th>Ejemplo</th><th>Riesgo</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>RAG</strong></td><td>Necesitas factualidad y fuentes internas</td><td>Chat con base de conocimiento, búsqueda contractual</td><td>Embeddings pobres → respuestas vagas</td>
+          </tr>
+          <tr>
+            <td><strong>Agentes + Tools</strong></td><td>Requiere accionar: leer, escribir, consultar APIs</td><td>Actualizar ticket, consultar CRM y generar respuesta</td><td>Loops o acciones no deseadas si no hay guardrails</td>
+          </tr>
+          <tr>
+            <td><strong>Plantillas + Prompting</strong></td><td>Formatos fijos, bajo riesgo creativo</td><td>Emails, resúmenes ejecutivos, respuestas estándar</td><td>Alucinación contextual si input es pobre</td>
+          </tr>
+          <tr>
+            <td><strong>Fine-tuning ligero</strong></td><td>Estilo/tono específico, tareas repetitivas</td><td>Respuestas de marca, clasificación propia</td><td>Sobreajuste, drift de estilo</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="diagram">
+        <h4 style="color: #7dd3fc; margin-bottom: 8px;">Arquitectura base RAG</h4>
+        <p style="color: #cbd5f5; line-height: 1.7;">Ingesta → Limpieza → Chunking → Embeddings → Vector DB → Recuperación → Prompt seguro → LLM → Post-procesado → Citas + filtros → Log/monitor.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-number">3</div>
+        <div class="section-title">
+          <h2>Diseño de MVP y ROI</h2>
+          <p>Cómo justificar el caso</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h4>Hipótesis de valor</h4>
+          <ul style="margin-left: 16px; line-height: 1.8; color: #cbd5f5; font-size: 0.95em;">
+            <li>Ahorro de tiempo por interacción (min/operación)</li>
+            <li>Deflexión de tickets o reducción AHT</li>
+            <li>Mejora en conversión/CTR en campañas</li>
+            <li>Calidad percibida (CSAT/NPS) y consistencia</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Medición</h4>
+          <ul style="margin-left: 16px; line-height: 1.8; color: #cbd5f5; font-size: 0.95em;">
+            <li>Grupo control vs. tratamiento</li>
+            <li>Revisión humana de precisión factual</li>
+            <li>Tiempo ahorrado * costo hora = beneficio</li>
+            <li>Uso efectivo: sesiones, completitud, caídas</li>
+          </ul>
+        </div>
+      </div>
+      <div class="highlight success">
+        <div>✅ Pilota con 1-2 flujos, mide 2 semanas, ajusta prompts y retrieval; luego escala.</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-number">4</div>
+        <div class="section-title">
+          <h2>Arquitecturas Típicas</h2>
+          <p>Chat, copilots y generación</p>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <h4>Chat Empresarial</h4>
+          <p>Front (web/Teams) → Gateway → RAG → LLM → Postfiltros → Logs.</p>
+          <div><span class="pill">Auth SSO</span><span class="pill">Trazas</span><span class="pill">Auditoría</span></div>
+        </div>
+        <div class="card">
+          <h4>Copiloto de Documentos</h4>
+          <p>OCR → Clasificar → Extraer → RAG contextual → Resumen/validación.</p>
+          <div><span class="pill">QA</span><span class="pill">Validación</span><span class="pill">HIL</span></div>
+        </div>
+        <div class="card">
+          <h4>Generación de Contenido</h4>
+          <p>Brief + tono → Plantilla + LLM → Checker factual → Revisión humana → Publicar.</p>
+          <div><span class="pill">Brand</span><span class="pill">Checker</span><span class="pill">Flows</span></div>
+        </div>
+      </div>
+      <div class="highlight warning">
+        <div>⚠️ Siempre separa instrucciones del sistema, del usuario y herramientas; añade filtros toxicity/PII.</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-number">5</div>
+        <div class="section-title">
+          <h2>Gestión de Conocimiento (RAG)</h2>
+          <p>Calidad de datos primero</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h4>Buenas prácticas de ingesta</h4>
+          <ul style="margin-left: 16px; line-height: 1.8; color: #cbd5f5; font-size: 0.95em;">
+            <li>Limpieza de duplicados y versiones</li>
+            <li>Chunking con contexto (títulos, jerarquía)</li>
+            <li>Metadatos: fecha, owner, confidencialidad</li>
+            <li>Embeddings adecuados al idioma</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Recuperación eficaz</h4>
+          <ul style="margin-left: 16px; line-height: 1.8; color: #cbd5f5; font-size: 0.95em;">
+            <li>Hybrid search: vector + keyword</li>
+            <li>Re-ranking para precisión</li>
+            <li>Top-k moderado (3-5) + contexto de citas</li>
+            <li>Evaluar recall/precision con conjuntos etiquetados</li>
+          </ul>
+        </div>
+      </div>
+      <div class="highlight info">
+        <div>🧪 Evalúa mensualmente la calidad de retrieval (nDCG, recall@k) y refresca embeddings si cambian los datos.</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-number">6</div>
+        <div class="section-title">
+          <h2>Guardrails y Riesgos</h2>
+          <p>Operar con seguridad</p>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <h4>Riesgos</h4>
+          <p style="line-height: 1.7;">Alucinaciones, PII leakage, contenido tóxico, acciones erróneas de agentes, falta de citas.</p>
+        </div>
+        <div class="card">
+          <h4>Controles</h4>
+          <p style="line-height: 1.7;">Clasificador toxicity/PII, RAG con citas, límites de herramientas, revisión humana en flujos críticos, logs firmados.</p>
+        </div>
+        <div class="card">
+          <h4>Métricas</h4>
+          <p style="line-height: 1.7;">Tasa de alucinación, % respuestas con cita, % prompts bloqueados, tiempo de revisión humana.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-number">7</div>
+        <div class="section-title">
+          <h2>Experiencia de Usuario</h2>
+          <p>Diseño conversacional y feedback</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h4>UX conversacional</h4>
+          <ul style="margin-left: 16px; line-height: 1.8; color: #cbd5f5; font-size: 0.95em;">
+            <li>Personas y tono alineados a la marca</li>
+            <li>Mensajes de error útiles, no genéricos</li>
+            <li>Controles rápidos: botones, intents sugeridos</li>
+            <li>Mostrar fuentes y pasos usados</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Feedback y mejora</h4>
+          <ul style="margin-left: 16px; line-height: 1.8; color: #cbd5f5; font-size: 0.95em;">
+            <li>Botón de thumbs + razón</li>
+            <li>Canal de reporte de errores sensibles</li>
+            <li>Bucles de re-etiquetado con ejemplos reales</li>
+            <li>AB testing de prompts y plantillas</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-number">8</div>
+        <div class="section-title">
+          <h2>Adopción y Cambio</h2>
+          <p>Personas y procesos</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h4>Change Management</h4>
+          <ul style="margin-left: 16px; line-height: 1.8; color: #cbd5f5; font-size: 0.95em;">
+            <li>Comunicar alcance y límites del copiloto</li>
+            <li>Capacitación práctica con casos reales</li>
+            <li>Champions en áreas clave</li>
+            <li>Política de uso aceptable y privacidad</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Métricas de adopción</h4>
+          <ul style="margin-left: 16px; line-height: 1.8; color: #cbd5f5; font-size: 0.95em;">
+            <li>Usuarios activos/semana</li>
+            <li>Sesiones completadas / drop-off</li>
+            <li>Feedback positivo vs. negativo</li>
+            <li>Impacto percibido por rol</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-number">9</div>
+        <div class="section-title">
+          <h2>Checklist de Salida a Producción</h2>
+          <p>Control rápido</p>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <h4>Producto</h4>
+          <p style="line-height: 1.7;">Casos permitidos/no permitidos, HIL donde aplique, UX con feedback.</p>
+        </div>
+        <div class="card">
+          <h4>Técnico</h4>
+          <p style="line-height: 1.7;">RAG probado, filtros PII/toxicity, logging, observabilidad, rollback.</p>
+        </div>
+        <div class="card">
+          <h4>Governanza</h4>
+          <p style="line-height: 1.7;">Model/data cards, owners, revisión de riesgos, plan de monitoreo.</p>
+        </div>
+      </div>
+      <div class="highlight success">
+        <div>📌 No lances sin métricas base: precisión factual, % con citas, % bloqueos correctos, adopción esperada.</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-number">🎯</div>
+        <div class="section-title">
+          <h2>Quiz de Aplicaciones</h2>
+          <p>Evalúa tu comprensión</p>
+        </div>
+      </div>
+
+      <div class="quiz-container">
+        <p class="quiz-question">1. ¿Cuándo prefieres RAG sobre fine-tuning?</p>
+        <div class="quiz-option" data-correct="true" onclick="checkAnswer(this)">Cuando necesitas respuestas basadas en conocimiento interno actualizado</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">Cuando buscas creatividad sin restricciones</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">Cuando el modelo ya es perfecto</div>
+        <div class="quiz-feedback" style="display:none; margin-top: 10px; padding: 12px; border-radius: 8px;"></div>
+      </div>
+
+      <div class="quiz-container">
+        <p class="quiz-question">2. ¿Qué métrica usarías para medir mejora en soporte?</p>
+        <div class="quiz-option" data-correct="true" onclick="checkAnswer(this)">Reducción de AHT o deflexión de tickets</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">Tamaño del modelo</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">Cantidad de emojis en el chat</div>
+        <div class="quiz-feedback" style="display:none; margin-top: 10px; padding: 12px; border-radius: 8px;"></div>
+      </div>
+
+      <div class="quiz-container">
+        <p class="quiz-question">3. Un agente debe actualizar datos en CRM. ¿Qué control aplicas?</p>
+        <div class="quiz-option" data-correct="true" onclick="checkAnswer(this)">Limitar acciones y exigir confirmación humana en cambios críticos</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">Dar acceso total sin logs</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">Subir la temperatura del modelo</div>
+        <div class="quiz-feedback" style="display:none; margin-top: 10px; padding: 12px; border-radius: 8px;"></div>
+      </div>
+
+      <div class="quiz-container">
+        <p class="quiz-question">4. ¿Qué es clave para UX conversacional?</p>
+        <div class="quiz-option" data-correct="true" onclick="checkAnswer(this)">Errores explicativos y mostrar fuentes</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">Respuestas sin contexto</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">Ocultar toda trazabilidad</div>
+        <div class="quiz-feedback" style="display:none; margin-top: 10px; padding: 12px; border-radius: 8px;"></div>
+      </div>
+
+      <div class="quiz-container">
+        <p class="quiz-question">5. ¿Qué mide la tasa de alucinación?</p>
+        <div class="quiz-option" data-correct="true" onclick="checkAnswer(this)">% de respuestas sin respaldo en fuentes confiables</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">% de usuarios activos</div>
+        <div class="quiz-option" data-correct="false" onclick="checkAnswer(this)">% de prompts con emojis</div>
+        <div class="quiz-feedback" style="display:none; margin-top: 10px; padding: 12px; border-radius: 8px;"></div>
+      </div>
+    </section>
+
+    <section class="section" style="background: linear-gradient(135deg, #0f172a, #0b3b2e);">
+      <div class="section-header">
+        <div class="section-number" style="background: linear-gradient(135deg, #22c55e, #16a34a);">✓</div>
+        <div class="section-title">
+          <h2 style="color: #a5f3fc;">Resumen del Módulo</h2>
+          <p style="color: #cbd5f5;">Lo esencial para operar GenAI en negocio</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card" style="background: rgba(255,255,255,0.06);">
+          <h4 style="color: #34d399;">📌 Conceptos</h4>
+          <ul style="margin-left: 16px; line-height: 1.8; color: #d1fae5; font-size: 0.95em;">
+            <li>Casos por función: soporte, operaciones, marketing, finanzas, legal, TI</li>
+            <li>Patrones: RAG, agentes con tools, plantillas, fine-tuning ligero</li>
+            <li>Arquitecturas: chat empresarial, copilotos de documentos, generación</li>
+            <li>Métricas: AHT/deflexión, precisión factual, citas, adopción</li>
+          </ul>
+        </div>
+        <div class="card" style="background: rgba(255,255,255,0.06);">
+          <h4 style="color: #34d399;">🚀 Próximos pasos</h4>
+          <ul style="margin-left: 16px; line-height: 1.8; color: #d1fae5; font-size: 0.95em;">
+            <li>Elige 1 caso con datos disponibles y riesgo moderado</li>
+            <li>Define métricas base y plan de piloto de 2 semanas</li>
+            <li>Implementa RAG con fuentes confiables y filtros PII/toxicity</li>
+            <li>Publica model/data cards y activa monitoreo continuo</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <div class="nav-buttons">
+      <a href="2_Etica_IA.html" class="nav-btn secondary">← Volver a Módulo 2</a>
+      <a href="4_Graph_Isomorphism_Network.html" class="nav-btn">Siguiente: Módulo 4 →</a>
+    </div>
+
+  </div>
+
+  <script>
+    function checkAnswer(element) {
+      const container = element.parentElement;
+      const options = container.querySelectorAll('.quiz-option');
+      const feedback = container.querySelector('.quiz-feedback');
+      const isCorrect = element.dataset.correct === 'true';
+      options.forEach(opt => {
+        opt.style.pointerEvents = 'none';
+        if (opt.dataset.correct === 'true') { opt.classList.add('correct'); }
+        if (opt === element && !isCorrect) { opt.classList.add('incorrect'); }
+      });
+      feedback.style.display = 'block';
+      if (isCorrect) {
+        feedback.style.background = 'rgba(34,197,94,0.2)';
+        feedback.innerHTML = '✅ ¡Correcto!';
+      } else {
+        feedback.style.background = 'rgba(239,68,68,0.2)';
+        feedback.innerHTML = '❌ Revisa la sección para mejorar.';
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Introducción: Funciones de Pérdida para Regresión</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header .emoji {
+            font-size: 4em;
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.95;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section h2 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .objectives {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .objectives h3 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+        
+        .objectives ul {
+            list-style: none;
+        }
+        
+        .objectives li {
+            padding: 10px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+        
+        .objectives li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+        
+        .card-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            display: block;
+        }
+        
+        .card h3 {
+            color: #667eea;
+            font-size: 1.4em;
+            margin-bottom: 15px;
+        }
+        
+        .card p {
+            color: #666;
+            line-height: 1.8;
+        }
+        
+        .formula-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+        
+        .use-cases {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+        
+        .use-cases h3 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        
+        .use-cases ul {
+            list-style: none;
+        }
+        
+        .use-cases li {
+            padding: 12px 0;
+            padding-left: 35px;
+            position: relative;
+            font-size: 1.1em;
+        }
+        
+        .use-cases li:before {
+            content: "🎯";
+            position: absolute;
+            left: 0;
+            font-size: 1.2em;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .comparison-table th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-size: 1.1em;
+        }
+        
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .highlight {
+            background: linear-gradient(120deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .footer {
+            background: #2d3748;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .footer p {
+            margin: 10px 0;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+        
+        /* Menú Hamburguesa */
+        .hamburger-menu {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.3);
+        }
+        
+        .hamburger-menu.active {
+            transform: translateX(0);
+        }
+        
+        .hamburger-toggle {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 1001;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .hamburger-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        
+        .hamburger-toggle span {
+            width: 25px;
+            height: 3px;
+            background: white;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .hamburger-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translate(8px, 8px);
+        }
+        
+        .hamburger-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .hamburger-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
+        }
+        
+        .menu-header {
+            padding: 30px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+        }
+        
+        .menu-header h3 {
+            font-size: 1.3em;
+            margin-bottom: 5px;
+        }
+        
+        .menu-nav {
+            padding: 20px 0;
+        }
+        
+        .menu-nav a {
+            display: block;
+            color: #e2e8f0;
+            text-decoration: none;
+            padding: 15px 25px;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+        
+        .menu-nav a:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-left-color: #667eea;
+            color: white;
+        }
+        
+        /* Cuestionario */
+        .quiz-container {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border: 2px solid #667eea;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+        
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .quiz-header h3 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+        
+        .quiz-question {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .quiz-question h4 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .quiz-option {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .quiz-option:hover {
+            background: #667eea15;
+            border-color: #667eea;
+        }
+        
+        .quiz-option input[type="radio"] {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        
+        .quiz-option.correct {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+        
+        .quiz-option.incorrect {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+        
+        .quiz-submit {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+        
+        .quiz-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .quiz-result {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+        
+        .quiz-result.show {
+            display: block;
+        }
+        
+        .quiz-score {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .hamburger-menu {
+                width: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Botón Hamburguesa -->
+    <button class="hamburger-toggle" id="hamburgerToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    
+    <!-- Menú Lateral -->
+    <nav class="hamburger-menu" id="hamburgerMenu">
+        <div class="menu-header">
+            <h3>📚 Navegación</h3>
+            <p style="font-size: 0.9em; opacity: 0.9;">Regresión</p>
+        </div>
+        <div class="menu-nav">
+            <a href="#quiz">📝 Cuestionario</a>
+            <a href="#objetivos">🎯 Objetivos</a>
+            <a href="#que-es">📚 ¿Qué es Función de Pérdida?</a>
+            <a href="#funciones">🔧 Funciones Principales</a>
+            <a href="#comparacion">📊 Tabla Comparativa</a>
+            <a href="#casos-uso">💼 Casos de Uso</a>
+            <a href="#notebook">🚀 En el Notebook</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="header">
+            <span class="emoji">📊</span>
+            <h1>Funciones de Pérdida para REGRESIÓN</h1>
+            <p>Aprende a medir y optimizar predicciones de valores continuos con PyTorch</p>
+        </div>
+        
+        <div class="content">
+            <!-- Cuestionario -->
+            <div id="quiz" class="quiz-container">
+                <div class="quiz-header">
+                    <h3>📝 Cuestionario de Diagnóstico</h3>
+                    <p style="color: #666; font-size: 1.1em;">Evalúa tus conocimientos previos antes de comenzar</p>
+                </div>
+                
+                <div class="quiz-question">
+                    <h4>1. ¿Qué diferencia a la regresión de la clasificación?</h4>
+                    <div class="quiz-options">
+                        <label class="quiz-option">
+                            <input type="radio" name="q1" value="a">
+                            <span>a) Regresión predice categorías, clasificación predice números</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q1" value="b">
+                            <span>b) Regresión predice valores continuos, clasificación predice categorías</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q1" value="c">
+                            <span>c) No hay diferencia</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q1" value="d">
+                            <span>d) Regresión es más fácil que clasificación</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="quiz-question">
+                    <h4>2. ¿Cuál es la fórmula de MSE (Mean Squared Error)?</h4>
+                    <div class="quiz-options">
+                        <label class="quiz-option">
+                            <input type="radio" name="q2" value="a">
+                            <span>a) (1/n) · Σ|y - ŷ|</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q2" value="b">
+                            <span>b) (1/n) · Σ(y - ŷ)²</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q2" value="c">
+                            <span>c) √[(1/n) · Σ(y - ŷ)²]</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q2" value="d">
+                            <span>d) (1/n) · Σ(y - ŷ)</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="quiz-question">
+                    <h4>3. ¿Qué función de pérdida es MÁS robusta ante outliers (valores atípicos)?</h4>
+                    <div class="quiz-options">
+                        <label class="quiz-option">
+                            <input type="radio" name="q3" value="a">
+                            <span>a) MSE (Mean Squared Error)</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q3" value="b">
+                            <span>b) MAE (Mean Absolute Error)</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q3" value="c">
+                            <span>c) RMSE (Root Mean Squared Error)</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q3" value="d">
+                            <span>d) Todas son igual de robustas</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="quiz-question">
+                    <h4>4. En PyTorch, ¿cuál es el nombre de la función para MAE?</h4>
+                    <div class="quiz-options">
+                        <label class="quiz-option">
+                            <input type="radio" name="q4" value="a">
+                            <span>a) nn.MAELoss()</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q4" value="b">
+                            <span>b) nn.L1Loss()</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q4" value="c">
+                            <span>c) nn.AbsoluteLoss()</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q4" value="d">
+                            <span>d) nn.MeanAbsoluteError()</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="quiz-question">
+                    <h4>5. Smooth L1 Loss (Huber) combina características de:</h4>
+                    <div class="quiz-options">
+                        <label class="quiz-option">
+                            <input type="radio" name="q5" value="a">
+                            <span>a) MSE y RMSE</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q5" value="b">
+                            <span>b) MSE y MAE</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q5" value="c">
+                            <span>c) MAE y RMSE</span>
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q5" value="d">
+                            <span>d) Cross-Entropy y MSE</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <button class="quiz-submit" onclick="checkQuiz()">Verificar Respuestas</button>
+                
+                <div class="quiz-result" id="quizResult">
+                    <h3>Resultados</h3>
+                    <div class="quiz-score" id="quizScore"></div>
+                    <p id="quizFeedback"></p>
+                </div>
+            </div>
+            
+            <div id="objetivos" class="objectives">
+                <h3>🎯 ¿Qué aprenderás?</h3>
+                <ul>
+                    <li>Comprender qué son las funciones de pérdida y por qué son fundamentales</li>
+                    <li>Dominar las 3 funciones principales de regresión en PyTorch</li>
+                    <li>Comparar cálculos manuales vs PyTorch (¡entender la teoría!)</li>
+                    <li>Saber cuándo usar cada función en problemas reales</li>
+                    <li>Aplicar funciones de pérdida en casos de uso profesionales</li>
+                </ul>
+            </div>
+            
+            <div id="que-es" class="section">
+                <h2>📚 ¿Qué es una Función de Pérdida?</h2>
+                <p>Una <span class="highlight">función de pérdida</span> (loss function) mide qué tan <strong>lejos</strong> están nuestras predicciones de los valores reales. Es la brújula que guía al modelo durante el entrenamiento.</p>
+                <br>
+                <p><strong>Analogía:</strong> Si estás aprendiendo a tirar dardos, la función de pérdida es como medir la distancia entre donde diste y el centro del blanco. ¡Mientras más pequeña, mejor!</p>
+            </div>
+            
+            <div id="funciones" class="section">
+                <h2>🔧 Las 4 Funciones Principales</h2>
+                <div class="cards">
+                    <div class="card">
+                        <span class="card-icon">📐</span>
+                        <h3>MSE - Mean Squared Error</h3>
+                        <p><strong>Error Cuadrático Medio</strong></p>
+                        <div class="formula-box">
+                            MSE = (1/n) · Σ(y - ŷ)²
+                        </div>
+                        <p>✅ <strong>Ventaja:</strong> Penaliza mucho los errores grandes</p>
+                        <p>❌ <strong>Desventaja:</strong> Sensible a outliers</p>
+                        <p>🎯 <strong>Usa cuando:</strong> Quieres castigar errores grandes (ej: precios de casas)</p>
+                    </div>
+                    
+                    <div class="card">
+                        <span class="card-icon">📏</span>
+                        <h3>MAE - Mean Absolute Error</h3>
+                        <p><strong>Error Absoluto Medio</strong></p>
+                        <div class="formula-box">
+                            MAE = (1/n) · Σ|y - ŷ|
+                        </div>
+                        <p>✅ <strong>Ventaja:</strong> Fácil de interpretar, robusto</p>
+                        <p>❌ <strong>Desventaja:</strong> Trata todos los errores igual</p>
+                        <p>🎯 <strong>Usa cuando:</strong> Tienes outliers o quieres interpretabilidad directa</p>
+                    </div>
+                    
+                    <div class="card">
+                        <span class="card-icon">⚖️</span>
+                        <h3>Smooth L1 Loss (Huber)</h3>
+                        <p><strong>Lo Mejor de Ambos Mundos</strong></p>
+                        <div class="formula-box">
+                            Smooth L1 = {
+                              0.5 · error²     si |error| < 1
+                              |error| - 0.5    si |error| ≥ 1
+                            }
+                            
+                            Promedio de todas las losses
+                        </div>
+                        <p>✅ <strong>Ventaja:</strong> Combina MSE + MAE inteligentemente</p>
+                        <p>✅ <strong>Ventaja:</strong> Suave cerca de 0, lineal para errores grandes</p>
+                        <p>🎯 <strong>Usa cuando:</strong> Object detection, vision computacional</p>
+                    </div>
+                    
+                    <div class="card">
+                        <span class="card-icon">📊</span>
+                        <h3>RMSE - Root Mean Squared Error</h3>
+                        <p><strong>MSE en Unidades Originales</strong></p>
+                        <div class="formula-box">
+                            RMSE = √MSE = √[(1/n) · Σ(y - ŷ)²]
+                        </div>
+                        <p>✅ <strong>Ventaja:</strong> Mismas unidades que los datos</p>
+                        <p>✅ <strong>Ventaja:</strong> Fácil de interpretar</p>
+                        <p>🎯 <strong>Usa cuando:</strong> Necesitas comunicar resultados (ej: ±5k de error)</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="comparacion" class="section">
+                <h2>📊 Comparación Rápida</h2>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Función</th>
+                            <th>PyTorch</th>
+                            <th>Mejor Para</th>
+                            <th>Sensibilidad a Outliers</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>MSE</strong></td>
+                            <td><code>nn.MSELoss()</code></td>
+                            <td>Predicción de precios, temperaturas</td>
+                            <td>⚠️ Alta</td>
+                        </tr>
+                        <tr>
+                            <td><strong>MAE</strong></td>
+                            <td><code>nn.L1Loss()</code></td>
+                            <td>Datos con outliers, estimaciones</td>
+                            <td>✅ Baja</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Smooth L1</strong></td>
+                            <td><code>nn.SmoothL1Loss()</code></td>
+                            <td>Object detection, bounding boxes</td>
+                            <td>✅ Media</td>
+                        </tr>
+                        <tr>
+                            <td><strong>RMSE</strong></td>
+                            <td><code>torch.sqrt(nn.MSELoss())</code></td>
+                            <td>Reportes, interpretación fácil</td>
+                            <td>⚠️ Alta (como MSE)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="casos-uso" class="use-cases">
+                <h3>💼 Casos de Uso en el Mundo Real</h3>
+                <ul>
+                    <li><strong>Bienes Raíces:</strong> Predicción de precios de casas (MSE)</li>
+                    <li><strong>Finanzas:</strong> Predicción de precios de acciones (MAE o Smooth L1)</li>
+                    <li><strong>Retail:</strong> Forecasting de ventas (MSE)</li>
+                    <li><strong>Clima:</strong> Predicción de temperaturas (MAE)</li>
+                    <li><strong>Computer Vision:</strong> Detection de objetos (Smooth L1)</li>
+                    <li><strong>IoT:</strong> Predicción de consumo energético (MSE)</li>
+                </ul>
+            </div>
+            
+            <div id="notebook" class="section">
+                <h2>🚀 En el Notebook Aprenderás</h2>
+                <p>El notebook te guiará paso a paso con:</p>
+                <ul style="list-style: none; padding-left: 0; margin-top: 20px;">
+                    <li style="padding: 10px 0; padding-left: 30px; position: relative;">
+                        <span style="position: absolute; left: 0;">1️⃣</span>
+                        <strong>Cálculos manuales detallados</strong> - Entenderás la matemática detrás
+                    </li>
+                    <li style="padding: 10px 0; padding-left: 30px; position: relative;">
+                        <span style="position: absolute; left: 0;">2️⃣</span>
+                        <strong>Implementación en PyTorch</strong> - Código profesional en 1 línea
+                    </li>
+                    <li style="padding: 10px 0; padding-left: 30px; position: relative;">
+                        <span style="position: absolute; left: 0;">3️⃣</span>
+                        <strong>Verificación</strong> - Comprobar que manual = PyTorch
+                    </li>
+                    <li style="padding: 10px 0; padding-left: 30px; position: relative;">
+                        <span style="position: absolute; left: 0;">4️⃣</span>
+                        <strong>Visualizaciones</strong> - Gráficos comparativos hermosos
+                    </li>
+                    <li style="padding: 10px 0; padding-left: 30px; position: relative;">
+                        <span style="position: absolute; left: 0;">5️⃣</span>
+                        <strong>Ejercicios prácticos</strong> - ¡Pon en práctica lo aprendido!
+                    </li>
+                </ul>
+            </div>
+            
+            <div style="text-align: center; margin-top: 50px;">
+                <h2 style="color: #667eea; margin-bottom: 20px;">¿Listo para comenzar?</h2>
+                <p style="font-size: 1.2em; color: #666; margin-bottom: 30px;">
+                    Abre el notebook y comienza tu viaje en el mundo de las funciones de pérdida
+                </p>
+                <a href="3_Funciones_Perdida_Regresion_PyTorch.ipynb" class="cta-button">
+                    📓 Abrir Notebook de Regresión
+                </a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>💡 Consejo Pro:</strong> No te saltes los cálculos manuales. Entender la teoría te hará un mejor ML Engineer.</p>
+            <p style="margin-top: 20px; opacity: 0.8;">© 2026 - Capacitación en Machine Learning con PyTorch</p>
+        </div>
+    </div>
+    
+    <script>
+        // Menú Hamburguesa
+        const hamburgerToggle = document.getElementById('hamburgerToggle');
+        const hamburgerMenu = document.getElementById('hamburgerMenu');
+        
+        hamburgerToggle.addEventListener('click', () => {
+            hamburgerToggle.classList.toggle('active');
+            hamburgerMenu.classList.toggle('active');
+        });
+        
+        // Cerrar menú al hacer click en un enlace
+        document.querySelectorAll('.menu-nav a').forEach(link => {
+            link.addEventListener('click', () => {
+                hamburgerToggle.classList.remove('active');
+                hamburgerMenu.classList.remove('active');
+            });
+        });
+        
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // Cuestionario
+        const correctAnswers = {
+            q1: 'b',  // Regresión predice valores continuos
+            q2: 'b',  // (1/n) · Σ(y - ŷ)²
+            q3: 'b',  // MAE
+            q4: 'b',  // nn.L1Loss()
+            q5: 'b'   // MSE y MAE
+        };
+        
+        function checkQuiz() {
+            let score = 0;
+            const totalQuestions = Object.keys(correctAnswers).length;
+            
+            // Verificar cada pregunta
+            for (let question in correctAnswers) {
+                const selectedAnswer = document.querySelector(`input[name="${question}"]:checked`);
+                const options = document.querySelectorAll(`input[name="${question}"]`);
+                
+                options.forEach(option => {
+                    const label = option.parentElement;
+                    label.classList.remove('correct', 'incorrect');
+                    
+                    if (option.value === correctAnswers[question]) {
+                        label.classList.add('correct');
+                    }
+                });
+                
+                if (selectedAnswer && selectedAnswer.value === correctAnswers[question]) {
+                    score++;
+                } else if (selectedAnswer) {
+                    selectedAnswer.parentElement.classList.add('incorrect');
+                }
+            }
+            
+            // Mostrar resultado
+            const resultDiv = document.getElementById('quizResult');
+            const scoreDiv = document.getElementById('quizScore');
+            const feedbackDiv = document.getElementById('quizFeedback');
+            
+            resultDiv.classList.add('show');
+            scoreDiv.textContent = `${score} / ${totalQuestions}`;
+            
+            let feedback = '';
+            if (score === totalQuestions) {
+                feedback = '🎉 ¡Excelente! Tienes una base sólida. ¡Adelante con el notebook!';
+                feedbackDiv.style.color = '#28a745';
+            } else if (score >= 3) {
+                feedback = '👍 ¡Bien! Tienes conocimientos previos. El notebook te ayudará a profundizar.';
+                feedbackDiv.style.color = '#007bff';
+            } else {
+                feedback = '📚 ¡No te preocupes! Este material es perfecto para ti. Presta atención al contenido.';
+                feedbackDiv.style.color = '#ffc107';
+            }
+            
+            feedbackDiv.innerHTML = `<strong>${feedback}</strong>`;
+            
+            // Scroll al resultado
+            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
+</body>
+</html>

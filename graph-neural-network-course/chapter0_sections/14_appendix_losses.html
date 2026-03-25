@@ -1,0 +1,36 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     APÉNDICE B: FUNCIONES DE PÉRDIDA DETALLADAS
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="section" id="apendice-b">
+  <div class="section-header">
+    <div class="section-number">B</div>
+    <div class="section-title">
+      <h2>Pérdidas: Ejemplos Numéricos</h2>
+      <p>Regresión, binaria y multiclase</p>
+    </div>
+  </div>
+
+  <div class="highlight">
+    <div class="icon">📏</div>
+    <div>
+      <strong>MSE (batch=3):</strong><br>
+      <span style="font-size: 0.9em; color: #cbd5e1;">y = [2, 0, 1], ŷ = [1, 1, 2]<br>
+      Errores: (2-1)²=1, (0-1)²=1, (1-2)²=1 → Σ=3<br>
+      MSE = 3/3 = <strong>1.0</strong></span>
+    </div>
+  </div>
+
+  <div style="background: linear-gradient(135deg, #831843, #be185d); padding: 14px; border-radius: 12px; color: #fde7f3;">
+    <strong>CrossEntropy multiclase (4 clases):</strong><br>
+    <span style="font-size: 0.9em;">Logits z=[2,1,-1,0] → Softmax=[0.62,0.23,0.08,0.17]<br>
+    Clase real = 1 → CE = -log(0.23) = <strong>1.47</strong><br>
+    Si la red mejora a 0.60 para la clase real → CE baja a 0.51.</span>
+  </div>
+
+  <div style="background: linear-gradient(135deg, #1e3a8a, #1d4ed8); padding: 14px; border-radius: 12px; color: #e0f2fe; margin-top: 12px;">
+    <strong>BCEWithLogits (binaria robusta):</strong><br>
+    <span style="font-size: 0.9em;">Usa log-sum-exp estable: loss = log(1+exp(-y·z)) donde y∈{-1,1}.<br>
+    Ej: z=2.0, y=1 → loss ≈ 0.126; z=-2.0, y=1 → loss ≈ 2.126.</span>
+    <div style="margin-top: 8px; font-size: 0.85em; color: #bfdbfe;">Tip: preferir <code style="color: #e0e7ff;">BCEWithLogitsLoss</code> sobre Sigmoid+BCELoss por estabilidad.</div>
+  </div>
+</section>

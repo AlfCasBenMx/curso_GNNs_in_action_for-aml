@@ -1,0 +1,41 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     APÉNDICE C: BACKPROP PASO A PASO (2 CAPAS)
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="section" id="apendice-c">
+  <div class="section-header">
+    <div class="section-number">C</div>
+    <div class="section-title">
+      <h2>Backprop en Mini-Red</h2>
+      <p>2 capas, ReLU intermedia</p>
+    </div>
+  </div>
+
+  <div class="highlight">
+    <div class="icon">🧾</div>
+    <div>
+      <strong>Setup:</strong><br>
+      <span style="font-size: 0.9em; color: #cbd5e1;">x=1.0<br>
+      Capa 1: z1 = w1·x + b1 = 0.5·1 + 0.0 = 0.5 → a1 = ReLU(z1)=0.5<br>
+      Capa 2: z2 = w2·a1 + b2 = 2.0·0.5 + 0.0 = 1.0 → ŷ = z2 (regresión)<br>
+      y_real = 0.2; Loss = (ŷ - y)² = (1.0-0.2)² = 0.64</span>
+    </div>
+  </div>
+
+  <div style="background: linear-gradient(135deg, #1e293b, #334155); padding: 16px; border-radius: 12px; color: #e2e8f0;">
+    <strong>Gradientes:</strong><br>
+    <span style="font-size: 0.9em; color: #cbd5e1;">∂Loss/∂ŷ = 2(ŷ - y) = 1.6<br>
+    ∂ŷ/∂w2 = a1 = 0.5 → ∂Loss/∂w2 = 1.6 × 0.5 = 0.8<br>
+    ∂ŷ/∂a1 = w2 = 2.0 → ∂Loss/∂a1 = 1.6 × 2.0 = 3.2<br>
+    ReLU'(z1)=1 (porque z1>0) → ∂Loss/∂z1 = 3.2<br>
+    ∂z1/∂w1 = x = 1.0 → ∂Loss/∂w1 = 3.2 × 1 = 3.2<br>
+    ∂Loss/∂b1 = 3.2, ∂Loss/∂b2 = 1.6</span>
+  </div>
+
+  <div style="background: linear-gradient(135deg, #166534, #15803d); padding: 16px; border-radius: 12px; color: #dcfce7; margin-top: 12px;">
+    <strong>Update (lr = 0.1):</strong><br>
+    <span style="font-size: 0.9em;">w2_new = 2.0 - 0.1×0.8 = 1.92<br>
+    w1_new = 0.5 - 0.1×3.2 = 0.18<br>
+    b2_new = -0.16; b1_new = -0.32</span>
+    <div style="margin-top: 8px; font-size: 0.85em; color: #bbf7d0;">Idea clave: la regla de la cadena pasa el error hacia atrás multiplicando gradientes locales.</div>
+  </div>
+</section>

@@ -1,0 +1,39 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     APÉNDICE D: REGULARIZACIÓN PRÁCTICA
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="section" id="apendice-d">
+  <div class="section-header">
+    <div class="section-number">D</div>
+    <div class="section-title">
+      <h2>Regularización: Qué, Cómo y Cuándo</h2>
+      <p>Dropout, L2, Early Stopping y más</p>
+    </div>
+  </div>
+
+  <div class="highlight">
+    <div class="icon">🎯</div>
+    <div>
+      <strong>Dropout (p=0.5) flujo:</strong><br>
+      <span style="font-size: 0.9em; color: #cbd5e1;">Train: apaga 50% neuronas → fuerza redundancia. Eval: no apaga nada, pero escala activaciones automáticamente (PyTorch lo hace).</span>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 12px 0;">
+    <div style="background: linear-gradient(135deg, #1e3a8a, #1d4ed8); padding: 12px; border-radius: 12px; color: #e0f2fe;">
+      <strong style="color: #bfdbfe;">Weight Decay (L2)</strong><br>
+      <span style="font-size: 0.9em;">Actualización: w = w - lr(grad + λw). Penaliza pesos grandes → modelos más suaves.</span>
+    </div>
+    <div style="background: linear-gradient(135deg, #92400e, #b45309); padding: 12px; border-radius: 12px; color: #fef3c7;">
+      <strong style="color: #fbbf24;">Early Stopping</strong><br>
+      <span style="font-size: 0.9em;">Si el loss de validación no mejora en N épocas, se detiene y se restaura el mejor checkpoint.</span>
+    </div>
+    <div style="background: linear-gradient(135deg, #166534, #15803d); padding: 12px; border-radius: 12px; color: #dcfce7;">
+      <strong style="color: #bbf7d0;">BatchNorm</strong><br>
+      <span style="font-size: 0.9em;">Normaliza activaciones por batch, actúa como regularizador ligero y acelera convergencia.</span>
+    </div>
+    <div style="background: linear-gradient(135deg, #312e81, #4c1d95); padding: 12px; border-radius: 12px; color: #e9d5ff;">
+      <strong style="color: #c4b5fd;">Data Augmentation</strong><br>
+      <span style="font-size: 0.9em;">Más variedad (rotar, recortar, ruido) → la red aprende invariancias y generaliza mejor.</span>
+    </div>
+  </div>
+</section>

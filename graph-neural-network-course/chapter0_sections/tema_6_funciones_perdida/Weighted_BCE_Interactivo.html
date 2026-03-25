@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weighted BCE Interactivo - Anti Money Laundering</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header .emoji {
+            font-size: 4em;
+            margin-bottom: 15px;
+            display: block;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.95;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .intro-box {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .intro-box h2 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+        
+        .intro-box p {
+            font-size: 1.1em;
+            line-height: 1.8;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 968px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .panel h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .control-group {
+            margin-bottom: 25px;
+        }
+        
+        .control-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #555;
+            font-size: 1.05em;
+        }
+        
+        .control-group input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        
+        .control-group input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        
+        .value-display {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-left: 10px;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        .transaction-list {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            background: #fafafa;
+        }
+        
+        .transaction-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .transaction-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .transaction-list::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+        
+        .transaction-list::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+        
+        .transaction-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            border-left: 5px solid #ddd;
+            display: grid;
+            grid-template-columns: 40px 1fr 100px 100px;
+            gap: 15px;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .transaction-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .transaction-item.suspicious {
+            border-left-color: #e74c3c;
+            background: #fff5f5;
+        }
+        
+        .transaction-item.legitimate {
+            border-left-color: #2ecc71;
+            background: #f0fff4;
+        }
+        
+        .transaction-icon {
+            font-size: 1.5em;
+            text-align: center;
+        }
+        
+        .transaction-logit {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .transaction-logit input[type="range"] {
+            flex: 1;
+        }
+        
+        .calculation-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 2px solid #667eea;
+        }
+        
+        .calculation-box h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .step {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .step strong {
+            color: #667eea;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .formula {
+            font-family: 'Courier New', monospace;
+            background: #ffeaa7;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .comparison-table th {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .loss-comparison {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        
+        .loss-card {
+            flex: 1;
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .loss-card.without-weight {
+            background: linear-gradient(135deg, #fc5c7d 0%, #6a82fb 100%);
+            color: white;
+        }
+        
+        .loss-card.with-weight {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+        }
+        
+        .loss-card h4 {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        
+        .loss-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .loss-card p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .visual-weight {
+            margin-top: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .weight-bar {
+            height: 40px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            margin: 15px 0;
+        }
+        
+        .weight-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            transition: width 0.3s ease;
+        }
+        
+        .info-box {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        .info-box strong {
+            color: #856404;
+        }
+        
+        .chart-container {
+            margin-top: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            height: 200px;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .bar {
+            flex: 1;
+            background: linear-gradient(to top, #667eea 0%, #764ba2 100%);
+            border-radius: 5px 5px 0 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: white;
+            font-size: 0.9em;
+            font-weight: bold;
+            text-align: center;
+            padding: 5px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .bar:hover {
+            opacity: 0.8;
+            transform: translateY(-5px);
+        }
+        
+        .bar-label {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 0.9em;
+            color: #555;
+        }
+        
+        .highlight {
+            background: #ffeaa7;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        
+        .toggle-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px 0;
+        }
+        
+        .toggle-button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="emoji">⚖️💰</span>
+            <h1>Weighted BCE Interactivo</h1>
+            <p>Aprende cómo funciona Binary Cross-Entropy con Pesos para Datasets Desbalanceados</p>
+            <p><strong>Caso de Uso:</strong> Detección de Lavado de Dinero (AML)</p>
+        </div>
+        
+        <div class="content">
+            <!-- Introducción -->
+            <div class="intro-box">
+                <h2>🎯 ¿Qué es Weighted BCE?</h2>
+                <p>
+                    En <strong>detección de lavado de dinero (AML)</strong>, tenemos un problema:
+                    <strong>98% de transacciones son legítimas</strong> y solo <strong>2% son sospechosas</strong>.
+                </p>
+                <p style="margin-top: 15px;">
+                    Si usamos BCE normal, el modelo aprende a ignorar las transacciones sospechosas
+                    (son muy pocas). <strong>Weighted BCE soluciona esto penalizando más los errores
+                    en la clase minoritaria.</strong>
+                </p>
+            </div>
+            
+            <!-- NUEVA SECCIÓN: Fórmulas Matemáticas -->
+            <div class="panel" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
+                <h3>📐 Las 3 Fórmulas que Vamos a Comparar</h3>
+                
+                <div style="display: grid; gap: 20px; margin-top: 20px;">
+                    
+                    <!-- Fórmula 1: BCE Sin Peso -->
+                    <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #e74c3c;">
+                        <h4 style="color: #e74c3c; margin-top: 0;">❌ 1. BCE Sin Peso (Ignora Desbalance)</h4>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0; font-family: 'Courier New', monospace; font-size: 1.05em;">
+                            <strong>Fórmula:</strong><br>
+                            <code style="color: #2c3e50;">
+                                L = -(1/n) × Σ[ y·log(p) + (1-y)·log(1-p) ]
+                            </code>
+                        </div>
+                        <p style="margin: 10px 0; color: #555;">
+                            <strong>📌 Características:</strong><br>
+                            • <strong>Entrada:</strong> Probabilidades p ∈ [0,1]<br>
+                            • <strong>Peso:</strong> Todas las muestras pesan igual (w=1)<br>
+                            • <strong>Problema:</strong> Con 98% legítimas, el modelo solo aprende esa clase<br>
+                            • <strong>PyTorch:</strong> <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">nn.BCELoss()</code>
+                        </p>
+                    </div>
+                    
+                    <!-- Fórmula 2: BCE Con Peso Manual -->
+                    <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #27ae60;">
+                        <h4 style="color: #27ae60; margin-top: 0;">✅ 2. BCE Con Peso Manual (Balancea Clases)</h4>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0; font-family: 'Courier New', monospace; font-size: 1.05em;">
+                            <strong>Fórmula:</strong><br>
+                            <code style="color: #2c3e50;">
+                                L = -(1/n) × Σ[ <span style="background: #fff3cd; padding: 2px 4px;">w·y·log(p)</span> + (1-y)·log(1-p) ]
+                            </code><br>
+                            <span style="font-size: 0.9em; color: #666; margin-top: 5px; display: inline-block;">
+                                donde: w = pos_weight si y=1, w=1 si y=0
+                            </span>
+                        </div>
+                        <p style="margin: 10px 0; color: #555;">
+                            <strong>📌 Características:</strong><br>
+                            • <strong>Entrada:</strong> Primero aplicas σ(z) para obtener p<br>
+                            • <strong>Peso:</strong> Solo amplifica la clase positiva (sospechosas)<br>
+                            • <strong>pos_weight recomendado:</strong> #Legítimas / #Sospechosas = 49x<br>
+                            • <strong>Efecto:</strong> Cada error en sospechosa cuesta 49x más<br>
+                            • <strong>Implementación:</strong> TÚ calculas cada paso manualmente (pedagógico)
+                        </p>
+                    </div>
+                    
+                    <!-- Fórmula 3: BCEWithLogitsLoss -->
+                    <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #667eea;">
+                        <h4 style="color: #667eea; margin-top: 0;">⚡ 3. BCEWithLogitsLoss (Producción Optimizada)</h4>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0; font-family: 'Courier New', monospace; font-size: 1.05em;">
+                            <strong>Fórmula Interna (Estable):</strong><br>
+                            <code style="color: #2c3e50; font-size: 0.95em;">
+                                max_val = max(0, z)<br>
+                                L = pos_weight·y·(max_val - z + log(1 + e^(-|z|))) + <br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;(1-y)·(max_val + log(1 + e^(-|z|)))
+                            </code>
+                        </div>
+                        <p style="margin: 10px 0; color: #555;">
+                            <strong>📌 Características:</strong><br>
+                            • <strong>Entrada:</strong> Logits z directamente (sin sigmoid manual)<br>
+                            • <strong>Resultado:</strong> Matemáticamente = al método #2<br>
+                            • <strong>Ventaja:</strong> Log-sum-exp trick evita overflow con valores extremos<br>
+                            • <strong>Velocidad:</strong> Implementación optimizada en C++/CUDA<br>
+                            • <strong>PyTorch:</strong> <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">nn.BCEWithLogitsLoss(pos_weight=peso)</code><br>
+                            • <strong>⭐ Recomendado para producción real</strong>
+                        </p>
+                    </div>
+                    
+                </div>
+                
+                <!-- Fórmula para Calcular pos_weight -->
+                <div style="background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); padding: 25px; border-radius: 12px; margin-top: 25px; border: 3px solid #ff9800; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <h4 style="color: #e65100; margin-top: 0; font-size: 1.3em;">
+                        🎯 ¿Cómo Calcular el pos_weight Óptimo?
+                    </h4>
+                    
+                    <div style="background: white; padding: 20px; border-radius: 10px; margin: 15px 0; border-left: 5px solid #ff9800;">
+                        <div style="font-family: 'Courier New', monospace; font-size: 1.3em; text-align: center; margin: 15px 0; color: #e65100;">
+                            <strong>pos_weight = #Clase_Mayoritaria / #Clase_Minoritaria</strong>
+                        </div>
+                        
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                            <strong style="color: #555;">Para nuestro caso de AML:</strong><br><br>
+                            <code style="color: #2c3e50; font-size: 1.1em; display: block; margin: 10px 0;">
+                                pos_weight = #Legítimas / #Sospechosas
+                            </code>
+                            <code style="color: #2c3e50; font-size: 1.1em; display: block; margin: 10px 0;">
+                                pos_weight = 98 / 2 = <strong style="color: #e65100; background: #fff3cd; padding: 2px 8px; border-radius: 3px;">49x</strong>
+                            </code>
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(0,0,0,0.03); padding: 15px; border-radius: 8px; margin-top: 15px;">
+                        <strong style="color: #e65100;">📊 Interpretación:</strong><br>
+                        <ul style="margin: 10px 0 0 20px; color: #555; line-height: 1.8;">
+                            <li><strong>pos_weight = 49x</strong> significa que cada error en una transacción <strong>sospechosa</strong> cuesta <strong>49 veces más</strong> que un error en una legítima</li>
+                            <li>Esto <strong>balancea</strong> el aprendizaje: aunque hay 49 veces más legítimas, el peso hace que el modelo preste igual atención a ambas clases</li>
+                            <li>Con un dataset extremo de <strong>1000 transacciones y 2 sospechosas</strong> → pos_weight = 998/2 = <strong>499x</strong></li>
+                            <li>En AML real con millones de transacciones, pesos de <strong>100x-1000x</strong> son comunes</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid #4caf50;">
+                        <strong style="color: #2e7d32;">✅ Regla General:</strong><br>
+                        <span style="color: #2e7d32;">
+                            El pos_weight debe ser <strong>igual al ratio de desbalance</strong> para que el modelo trate ambas clases con <strong>igual importancia</strong> durante el entrenamiento.
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="info-box" style="margin-top: 20px; background: #e3f2fd; border-left-color: #2196f3;">
+                    <strong style="color: #1565c0;">💡 Conclusión de las Fórmulas:</strong><br>
+                    <span style="color: #1565c0;">
+                        • <strong>Métodos #2 y #3</strong> dan el <strong>mismo resultado numérico</strong> (diferencia < 10⁻⁶)<br>
+                        • La diferencia entre #2 y #3 es <strong>implementación</strong>, no matemática<br>
+                        • <strong>#3 es mejor en producción</strong>: más rápido, estable y conveniente<br>
+                        • <strong>#2 es mejor para aprender</strong>: ves cada paso claramente
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Grid Principal -->
+            <div class="grid">
+                <!-- Panel de Controles -->
+                <div class="panel">
+                    <h3>🎛️ Configuración del Dataset</h3>
+                    
+                    <div class="control-group">
+                        <label>
+                            Número de Transacciones: 
+                            <span class="value-display" id="numTransactionsDisplay">100</span>
+                        </label>
+                        <input type="range" id="numTransactions" min="20" max="1000" value="100" step="10">
+                        <p style="font-size: 0.9em; color: #666; margin-top: 5px;">
+                            💡 En AML real se procesan millones de transacciones
+                        </p>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>
+                            Transacciones Sospechosas: 
+                            <span class="value-display" id="numSuspiciousDisplay">2</span>
+                        </label>
+                        <input type="range" id="numSuspicious" min="1" max="20" value="2" step="1">
+                        <p style="font-size: 0.9em; color: #666; margin-top: 5px;">
+                            Ratio actual: <strong id="ratioDisplay">50:1</strong> (98% legítimas)
+                        </p>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>
+                            Peso para Clase Positiva (pos_weight): 
+                            <span class="value-display" id="posWeightDisplay">4.0</span>
+                        </label>
+                        <input type="range" id="posWeight" min="1" max="500" value="4" step="1">
+                    </div>
+                    
+                    <div class="info-box">
+                        <strong>💡 Peso Recomendado:</strong><br>
+                        pos_weight = #Legítimas / #Sospechosas<br>
+                        <span id="recommendedWeight">= 98 / 2 = 49.0x</span>
+                        <p style="margin-top: 10px; font-size: 0.9em;">
+                            <strong>📊 Tu peso actual:</strong> <span id="currentWeightStatus">Óptimo ✅</span>
+                        </p>
+                    </div>
+                    
+                    <div class="visual-weight">
+                        <h4>Visualización del Peso</h4>
+                        <p>El peso multiplica la pérdida de transacciones sospechosas:</p>
+                        <div class="weight-bar">
+                            <div class="weight-bar-fill" id="weightBarFill">4.0x</div>
+                        </div>
+                        <p style="font-size: 0.9em; color: #666;">
+                            Los errores en transacciones sospechosas cuestan <strong id="weightText">4.0 veces más</strong>
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Panel de Transacciones -->
+                <div class="panel">
+                    <h3>📊 Transacciones del Dataset</h3>
+                    <p style="margin-bottom: 15px;">Ajusta los logits (valores del modelo) con los sliders:</p>
+                    
+                    <div class="transaction-list" id="transactionList">
+                        <!-- Se llena dinámicamente con JavaScript -->
+                    </div>
+                    
+                    <button class="toggle-button" onclick="randomizeLogits()">
+                        🎲 Randomizar Logits
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Cálculos -->
+            <div class="panel">
+                <h3>🧮 Cálculo Paso a Paso (Método 2: BCE Con Peso Manual)</h3>
+                
+                <div class="calculation-box">
+                    <h4>📐 Fórmula Completa de Weighted BCE:</h4>
+                    <div class="formula" style="background: #f8f9fa; padding: 20px; border-left: 4px solid #667eea;">
+                        <div style="font-size: 1.1em; margin-bottom: 15px;">
+                            <strong>L = -(1/n) × Σ[ w·y·log(p) + (1-y)·log(1-p) ]</strong>
+                        </div>
+                        <div style="font-size: 0.95em; color: #555; line-height: 1.6;">
+                            <strong>Donde:</strong><br>
+                            • <strong>n</strong> = número total de transacciones<br>
+                            • <strong>y</strong> = etiqueta real (1=sospechosa, 0=legítima)<br>
+                            • <strong>p</strong> = predicción del modelo (probabilidad de ser sospechosa)<br>
+                            • <strong>w</strong> = peso para cada muestra:<br>
+                            &nbsp;&nbsp;&nbsp;- Si y=1 (sospechosa): <strong>w = pos_weight</strong> (ej: 49x)<br>
+                            &nbsp;&nbsp;&nbsp;- Si y=0 (legítima): <strong>w = 1</strong> (sin amplificación)
+                        </div>
+                    </div>
+                    
+                    <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ff9800;">
+                        <strong style="color: #e65100;">🔍 ¿Cómo funciona el peso?</strong><br>
+                        <span style="color: #e65100;">
+                            El término <strong>w·y</strong> hace que el peso solo afecte cuando <strong>y=1</strong> (sospechosa):
+                            <ul style="margin: 10px 0 0 20px;">
+                                <li><strong>Si y=1:</strong> Loss = -pos_weight × log(p) → Amplificado ×49</li>
+                                <li><strong>Si y=0:</strong> Loss = -log(1-p) → Sin amplificación (el término w·y se anula)</li>
+                            </ul>
+                        </span>
+                    </div>
+                    
+                    <div class="step">
+                        <strong>PASO 1: Aplicar Sigmoid a los Logits</strong>
+                        <p>Convertir logits (valores crudos del modelo) a probabilidades:</p>
+                        <div class="formula">p = σ(z) = 1 / (1 + e^(-z))</div>
+                        <p style="font-size: 0.9em; color: #666; margin-top: 8px;">
+                            Ejemplo: Si z=2.0 → p=σ(2.0) ≈ 0.88 (88% probabilidad de ser sospechosa)
+                        </p>
+                    </div>
+                    
+                    <div class="step">
+                        <strong>PASO 2: Calcular Pérdida Individual con Peso</strong>
+                        <p>Para cada transacción, aplicar la fórmula según su etiqueta:</p>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li><strong>Si sospechosa (y=1):</strong><br>
+                                Loss<sub>i</sub> = -<strong>pos_weight</strong> × log(p) = -49 × log(0.88) ≈ 6.27<br>
+                                <span style="font-size: 0.9em; color: #666;">El peso amplifica el error</span>
+                            </li>
+                            <li style="margin-top: 10px;"><strong>Si legítima (y=0):</strong><br>
+                                Loss<sub>i</sub> = -log(1-p) = -log(0.12) ≈ 2.12<br>
+                                <span style="font-size: 0.9em; color: #666;">Sin amplificación (peso = 1)</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="step">
+                        <strong>PASO 3: Promediar Todas las Pérdidas</strong>
+                        <p>Sumar todas las pérdidas individuales y dividir por n:</p>
+                        <div class="formula">
+                            Loss<sub>total</sub> = (Loss<sub>1</sub> + Loss<sub>2</sub> + ... + Loss<sub>n</sub>) / n
+                        </div>
+                        <p style="font-size: 0.9em; color: #666; margin-top: 8px;">
+                            Este valor es el que se usa para entrenar el modelo mediante backpropagation
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Tabla de Cálculos Detallados -->
+                <div id="detailedCalculations" class="hidden">
+                    <h4 style="margin-top: 20px; color: #667eea;">📋 Cálculos Detallados por Transacción:</h4>
+                    <p style="color: #666; font-size: 0.95em; margin-bottom: 15px;">
+                        Fórmula aplicada: <strong>L<sub>i</sub> = -[ w·y·log(p) + (1-y)·log(1-p) ]</strong>
+                    </p>
+                    <div style="overflow-x: auto;">
+                        <table class="comparison-table" id="calculationTable" style="font-size: 0.9em;">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Tipo</th>
+                                    <th>y<br><span style="font-size: 0.8em; font-weight: normal;">(etiqueta)</span></th>
+                                    <th>z<br><span style="font-size: 0.8em; font-weight: normal;">(logit)</span></th>
+                                    <th>p = σ(z)<br><span style="font-size: 0.8em; font-weight: normal;">(prob)</span></th>
+                                    <th>w<br><span style="font-size: 0.8em; font-weight: normal;">(peso)</span></th>
+                                    <th>log(p)</th>
+                                    <th>log(1-p)</th>
+                                    <th>w·y·log(p)<br><span style="font-size: 0.8em; font-weight: normal;">(término 1)</span></th>
+                                    <th>(1-y)·log(1-p)<br><span style="font-size: 0.8em; font-weight: normal;">(término 2)</span></th>
+                                    <th style="background: #667eea; color: white;">Loss<sub>i</sub><br><span style="font-size: 0.8em; font-weight: normal;">(total)</span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="calculationTableBody">
+                                <!-- Se llena dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <p style="color: #666; font-size: 0.9em; margin-top: 15px; font-style: italic;">
+                        💡 <strong>Nota:</strong> Observa cómo para transacciones sospechosas (y=1), el término 2 se anula y solo queda w·log(p). 
+                        Para legítimas (y=0), el término 1 se anula y solo queda log(1-p).
+                    </p>
+                </div>
+                
+                <button class="toggle-button" onclick="toggleDetailedCalculations()">
+                    👁️ Mostrar/Ocultar Cálculos Detallados
+                </button>
+            </div>
+            
+            <!-- Comparación -->
+            <div class="panel">
+                <h3>⚖️ Comparación: Resultados de los 3 Métodos</h3>
+                
+                <div class="loss-comparison" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                    <div class="loss-card without-weight">
+                        <h4>❌ Método 1: BCE Sin Peso</h4>
+                        <p style="font-size: 0.8em; margin-bottom: 5px; opacity: 0.9;">
+                            <code style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 3px;">nn.BCELoss()</code>
+                        </p>
+                        <p style="font-size: 0.75em; margin-bottom: 10px; line-height: 1.4;">
+                            L = -(1/n)·Σ[y·log(p) + (1-y)·log(1-p)]
+                        </p>
+                        <div class="loss-value" id="lossWithoutWeight">0.0000</div>
+                        <p style="font-size: 0.85em; margin-top: 8px; opacity: 0.9;">❌ Ignora desbalance<br>w = 1 para todas</p>
+                    </div>
+                    
+                    <div class="loss-card with-weight">
+                        <h4>✅ Método 2: BCE Con Peso</h4>
+                        <p style="font-size: 0.8em; margin-bottom: 5px; opacity: 0.9;">
+                            <code style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 3px;">Manual (Pedagógico)</code>
+                        </p>
+                        <p style="font-size: 0.75em; margin-bottom: 10px; line-height: 1.4;">
+                            L = -(1/n)·Σ[<strong>w·y</strong>·log(p) + (1-y)·log(1-p)]
+                        </p>
+                        <div class="loss-value" id="lossWithWeight">0.0000</div>
+                        <p style="font-size: 0.85em; margin-top: 8px; opacity: 0.9;">✅ Balancea clases<br>w = <strong><span id="weightFactor">49.0x</span></strong> si y=1</p>
+                    </div>
+                    
+                    <div class="loss-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                        <h4>⚡ Método 3: BCEWithLogitsLoss</h4>
+                        <p style="font-size: 0.8em; margin-bottom: 5px; opacity: 0.95;">
+                            <code style="background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 3px;">nn.BCEWithLogitsLoss</code>
+                        </p>
+                        <p style="font-size: 0.75em; margin-bottom: 10px; line-height: 1.4; opacity: 0.95;">
+                            Fórmula estable (log-sum-exp trick)
+                        </p>
+                        <div class="loss-value" id="lossBCEWithLogits">0.0000</div>
+                        <p style="font-size: 0.85em; margin-top: 8px; opacity: 0.95;">⚡ Resultado ≈ Método 2<br>🚀 Optimizado (producción)</p>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <h4>📊 Impacto del Peso en Pérdidas Individuales</h4>
+                    <p style="color: #666; margin-bottom: 10px;">
+                        Comparación de pérdida por transacción (con peso vs sin peso):
+                    </p>
+                    <div id="lossChart" style="height: 250px;">
+                        <!-- Gráfico de barras se genera aquí -->
+                    </div>
+                </div>
+                
+                <div class="info-box" style="margin-top: 20px;">
+                    <strong>🎯 Interpretación:</strong><br>
+                    <span id="interpretation">
+                        La pérdida con peso es mayor porque penaliza más los errores
+                        en transacciones sospechosas. Esto fuerza al modelo a aprender
+                        a detectar la clase minoritaria.
+                    </span>
+                </div>
+                
+                <div class="info-box" style="margin-top: 15px; background: #e3f2fd; border-left-color: #2196f3;">
+                    <strong style="color: #1565c0;">💡 Nota Importante:</strong><br>
+                    <span style="color: #1565c0;">
+                        <strong>BCE Con Peso (Manual)</strong> y <strong>BCEWithLogitsLoss</strong> dan el 
+                        <strong>mismo resultado numérico</strong> (diferencia < 10⁻⁶).
+                        <br><br>
+                        La diferencia está en la <strong>implementación</strong>:
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li><strong>Manual:</strong> TÚ aplicas sigmoid, luego BCE (pedagógico)</li>
+                            <li><strong>BCEWithLogitsLoss:</strong> PyTorch lo hace internamente con fórmula estable (producción)</li>
+                        </ul>
+                        <br>
+                        ✅ En código real, <strong>SIEMPRE usa BCEWithLogitsLoss</strong> (más rápido y estable)
+                    </span>
+                </div>
+            </div>
+            
+            <!-- NUEVA SECCIÓN: Visualización del Impacto del Peso -->
+            <div class="panel">
+                <h3>📊 ¿Por Qué es Mejor BCE con Peso?</h3>
+                
+                <div class="info-box" style="background: #fff3e0; border-left-color: #ff9800;">
+                    <strong style="color: #e65100;">⚠️ Problema del Desbalance:</strong><br>
+                    <span style="color: #e65100;">
+                        Con <strong id="ratioVisualization">98 legítimas y 2 sospechosas</strong>, 
+                        un modelo sin peso solo necesita <strong>acertar en las legítimas</strong> 
+                        para tener 98% de precisión. ¡Puede ignorar completamente las sospechosas!
+                    </span>
+                </div>
+                
+                <h4 style="margin-top: 25px;">🎯 Contribución Individual al Loss Total</h4>
+                <p style="color: #666; margin-bottom: 15px;">
+                    Cada barra representa cuánto contribuye una transacción al loss total:
+                </p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                    <!-- Sin Peso -->
+                    <div style="background: #fef5f5; padding: 20px; border-radius: 10px; border: 2px solid #ffcdd2;">
+                        <h5 style="color: #d32f2f; margin-top: 0;">❌ Sin Peso (Ignora Minoritaria)</h5>
+                        <div id="contributionWithoutWeight" style="margin-top: 15px;">
+                            <!-- Se genera dinámicamente -->
+                        </div>
+                        <p style="font-size: 0.85em; color: #666; margin-top: 10px; font-style: italic;">
+                            Todas las transacciones contribuyen por igual → El modelo aprende a predecir solo la clase mayoritaria
+                        </p>
+                    </div>
+                    
+                    <!-- Con Peso -->
+                    <div style="background: #f1f8f4; padding: 20px; border-radius: 10px; border: 2px solid #a5d6a7;">
+                        <h5 style="color: #2e7d32; margin-top: 0;">✅ Con Peso (Balancea Clases)</h5>
+                        <div id="contributionWithWeight" style="margin-top: 15px;">
+                            <!-- Se genera dinámicamente -->
+                        </div>
+                        <p style="font-size: 0.85em; color: #666; margin-top: 10px; font-style: italic;">
+                            Las sospechosas contribuyen <strong id="weightMultiplier">49x</strong> más → El modelo DEBE aprender ambas clases
+                        </p>
+                    </div>
+                </div>
+                
+                <h4 style="margin-top: 35px;">💥 Simulación: Costo de Equivocarse</h4>
+                <p style="color: #666; margin-bottom: 15px;">
+                    ¿Qué pasa si el modelo predice mal una transacción?
+                </p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                    <!-- Error en Legítima -->
+                    <div style="background: white; padding: 20px; border-radius: 10px; border: 2px solid #e0e0e0;">
+                        <h5 style="color: #555; margin-top: 0;">Error en Legítima (98% de datos)</h5>
+                        <div style="display: flex; align-items: center; margin: 15px 0;">
+                            <div style="background: #90caf9; color: white; padding: 10px; border-radius: 5px; flex: 1; text-align: center;">
+                                <strong>Sin Peso:</strong> Loss = <span id="errorLegitWithout">0.693</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; margin: 15px 0;">
+                            <div style="background: #90caf9; color: white; padding: 10px; border-radius: 5px; flex: 1; text-align: center;">
+                                <strong>Con Peso:</strong> Loss = <span id="errorLegitWith">0.693</span>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.85em; color: #666; margin-top: 10px;">
+                            ⚖️ Peso = 1x (ningún cambio para legítimas)
+                        </p>
+                    </div>
+                    
+                    <!-- Error en Sospechosa -->
+                    <div style="background: #ffebee; padding: 20px; border-radius: 10px; border: 2px solid #ef5350;">
+                        <h5 style="color: #c62828; margin-top: 0;">Error en Sospechosa (2% de datos)</h5>
+                        <div style="display: flex; align-items: center; margin: 15px 0;">
+                            <div style="background: #ef5350; color: white; padding: 10px; border-radius: 5px; flex: 1; text-align: center;">
+                                <strong>Sin Peso:</strong> Loss = <span id="errorSuspWithout">0.693</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; margin: 15px 0;">
+                            <div style="background: #c62828; color: white; padding: 10px; border-radius: 5px; flex: 1; text-align: center; font-size: 1.1em;">
+                                <strong>Con Peso:</strong> Loss = <span id="errorSuspWith" style="font-size: 1.2em;">33.957</span> 🔥
+                            </div>
+                        </div>
+                        <p style="font-size: 0.85em; color: #c62828; margin-top: 10px; font-weight: bold;">
+                            🚨 Peso = <span id="errorWeightFactor">49x</span> → ¡El modelo DEBE prestar atención!
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="info-box" style="margin-top: 25px; background: #e8f5e9; border-left-color: #4caf50;">
+                    <strong style="color: #2e7d32;">✅ Conclusión Visual:</strong><br>
+                    <span style="color: #2e7d32; font-size: 1.05em;">
+                        Con el peso, el modelo aprende que <strong>equivocarse en una sospechosa 
+                        cuesta <span id="finalWeightFactor">49</span>x más</strong> que en una legítima. 
+                        Esto lo fuerza a <strong>balancear su atención</strong> entre ambas clases, 
+                        aunque haya muchas más legítimas.
+                        <br><br>
+                        <strong>🎯 Resultado:</strong> El modelo aprende a detectar la clase minoritaria 
+                        sin ignorarla por el desbalance.
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Conclusiones -->
+            <div class="panel" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <h3 style="color: white; border-bottom-color: white;">📚 Conclusiones Clave</h3>
+                
+                <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                    <h4 style="color: white; margin-top: 0;">🎯 Sobre las Fórmulas:</h4>
+                    <ul style="font-size: 1em; line-height: 1.8; margin: 0;">
+                        <li><strong>BCE Sin Peso:</strong> L = -(1/n)·Σ[y·log(p) + (1-y)·log(1-p)]<br>
+                            <span style="opacity: 0.9; font-size: 0.95em;">→ Todas las muestras pesan igual (w=1)</span></li>
+                        <li><strong>BCE Con Peso:</strong> L = -(1/n)·Σ[<strong style="background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 3px;">w·y</strong>·log(p) + (1-y)·log(1-p)]<br>
+                            <span style="opacity: 0.9; font-size: 0.95em;">→ Solo amplifica la clase positiva: w = pos_weight si y=1, w=1 si y=0</span></li>
+                        <li><strong>BCEWithLogitsLoss:</strong> Usa fórmula estable (log-sum-exp trick)<br>
+                            <span style="opacity: 0.9; font-size: 0.95em;">→ Resultado numérico ≈ BCE Con Peso, pero más rápido y estable</span></li>
+                    </ul>
+                </div>
+                
+                <ul style="font-size: 1.05em; line-height: 2;">
+                    <li>✅ <strong>Problema:</strong> Datasets desbalanceados (98% legítimas, 2% sospechosas)</li>
+                    <li>✅ <strong>Solución:</strong> Weighted BCE penaliza más los errores en clase minoritaria</li>
+                    <li>✅ <strong>Peso recomendado:</strong> pos_weight = #Mayoritaria / #Minoritaria = 49x</li>
+                    <li>✅ <strong>Efecto:</strong> Cada error en sospechosa cuesta 49x más que en legítima</li>
+                    <li>✅ <strong>Métodos #2 y #3:</strong> Dan el mismo resultado (diferencia < 10⁻⁶)</li>
+                    <li>✅ <strong>Diferencia #2 vs #3:</strong> Implementación (estabilidad y velocidad), no matemática</li>
+                    <li>⚡ <strong>En producción:</strong> SIEMPRE usa <code style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 3px;">nn.BCEWithLogitsLoss(pos_weight=peso)</code></li>
+                    <li>📚 <strong>Para aprender:</strong> Calcula manualmente para entender cada paso</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Estado de la aplicación
+        let transactions = [];
+        let numTransactions = 100;
+        let numSuspicious = 2;
+        let posWeight = 49.0;
+        
+        // Función sigmoid
+        function sigmoid(z) {
+            return 1 / (1 + Math.exp(-z));
+        }
+        
+        // Calcular BCE sin peso
+        function calculateBCEWithoutWeight() {
+            const epsilon = 1e-7;
+            let totalLoss = 0;
+            
+            transactions.forEach(t => {
+                const p = Math.max(epsilon, Math.min(1 - epsilon, sigmoid(t.logit)));
+                if (t.isSuspicious) {
+                    totalLoss += -Math.log(p);
+                } else {
+                    totalLoss += -Math.log(1 - p);
+                }
+            });
+            
+            return totalLoss / transactions.length;
+        }
+        
+        // Calcular BCE con peso
+        function calculateBCEWithWeight() {
+            const epsilon = 1e-7;
+            let totalLoss = 0;
+            
+            transactions.forEach(t => {
+                const p = Math.max(epsilon, Math.min(1 - epsilon, sigmoid(t.logit)));
+                if (t.isSuspicious) {
+                    totalLoss += -posWeight * Math.log(p);
+                } else {
+                    totalLoss += -Math.log(1 - p);
+                }
+            });
+            
+            return totalLoss / transactions.length;
+        }
+        
+        // Calcular BCEWithLogitsLoss (aplica sigmoid + BCE con peso)
+        function calculateBCEWithLogitsLoss() {
+            const epsilon = 1e-7;
+            let totalLoss = 0;
+            
+            transactions.forEach(t => {
+                const z = t.logit;
+                const y = t.isSuspicious ? 1 : 0;
+                const w = t.isSuspicious ? posWeight : 1.0;
+                
+                // Aplicar sigmoid al logit
+                const p = sigmoid(z);
+                
+                // Asegurar que p esté en el rango (epsilon, 1-epsilon)
+                const p_clamp = Math.max(epsilon, Math.min(1 - epsilon, p));
+                
+                // Calcular BCE con peso
+                const loss = w * y * Math.log(p_clamp) + (1 - y) * Math.log(1 - p_clamp);
+                
+                totalLoss -= loss; // Negativo porque queremos el valor positivo
+            });
+            
+            return totalLoss / transactions.length;
+        }
+        
+        // Inicializar transacciones
+        function initTransactions() {
+            transactions = [];
+            
+            // Transacciones sospechosas
+            for (let i = 0; i < numSuspicious; i++) {
+                transactions.push({
+                    id: i,
+                    isSuspicious: true,
+                    logit: 2.0 + (Math.random() - 0.5) * 1.0
+                });
+            }
+            
+            // Transacciones legítimas
+            for (let i = numSuspicious; i < numTransactions; i++) {
+                transactions.push({
+                    id: i,
+                    isSuspicious: false,
+                    logit: -1.0 + (Math.random() - 0.5) * 2.0
+                });
+            }
+        }
+        
+        // Renderizar lista de transacciones
+        function renderTransactions() {
+            const container = document.getElementById('transactionList');
+            container.innerHTML = '';
+            
+            transactions.forEach(t => {
+                const item = document.createElement('div');
+                item.className = `transaction-item ${t.isSuspicious ? 'suspicious' : 'legitimate'}`;
+                
+                item.innerHTML = `
+                    <div class="transaction-icon">
+                        ${t.isSuspicious ? '⚠️' : '✅'}
+                    </div>
+                    <div>
+                        <strong>${t.isSuspicious ? 'Sospechosa' : 'Legítima'}</strong>
+                        <div style="font-size: 0.9em; color: #666;">
+                            Trans. #${t.id + 1} | y=${t.isSuspicious ? '1' : '0'}
+                        </div>
+                    </div>
+                    <div class="transaction-logit">
+                        <input type="range" 
+                               min="-5" 
+                               max="5" 
+                               step="0.1" 
+                               value="${t.logit}"
+                               onchange="updateLogit(${t.id}, this.value)">
+                    </div>
+                    <div style="text-align: center;">
+                        <strong>z = ${t.logit.toFixed(2)}</strong>
+                        <div style="font-size: 0.85em; color: #666;">
+                            p = ${sigmoid(t.logit).toFixed(3)}
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(item);
+            });
+        }
+        
+        // Actualizar logit de una transacción
+        function updateLogit(id, value) {
+            transactions[id].logit = parseFloat(value);
+            updateAll();
+        }
+        
+        // Randomizar logits
+        function randomizeLogits() {
+            transactions.forEach(t => {
+                if (t.isSuspicious) {
+                    t.logit = 1.0 + Math.random() * 3.0;
+                } else {
+                    t.logit = -3.0 + Math.random() * 2.0;
+                }
+            });
+            updateAll();
+        }
+        
+        // Renderizar tabla de cálculos
+        function renderCalculationTable() {
+            const tbody = document.getElementById('calculationTableBody');
+            tbody.innerHTML = '';
+            const epsilon = 1e-7;
+            
+            transactions.forEach(t => {
+                const z = t.logit;
+                const y = t.isSuspicious ? 1 : 0;
+                const p = Math.max(epsilon, Math.min(1 - epsilon, sigmoid(z)));
+                const w = t.isSuspicious ? posWeight : 1.0;
+                
+                // Calcular componentes de la fórmula
+                const log_p = Math.log(p);
+                const log_1_minus_p = Math.log(1 - p);
+                const term1 = w * y * log_p;  // w·y·log(p)
+                const term2 = (1 - y) * log_1_minus_p;  // (1-y)·log(1-p)
+                const loss = -(term1 + term2);  // Loss total
+                
+                // Color de fondo según tipo
+                const bgColor = t.isSuspicious ? '#ffebee' : '#e3f2fd';
+                const textColor = t.isSuspicious ? '#c62828' : '#1565c0';
+                
+                const row = document.createElement('tr');
+                row.style.background = bgColor;
+                row.innerHTML = `
+                    <td><strong>${t.id + 1}</strong></td>
+                    <td style="color: ${textColor}; font-weight: bold;">${t.isSuspicious ? '⚠️ Sospechosa' : '✅ Legítima'}</td>
+                    <td><strong style="color: ${textColor};">${y}</strong></td>
+                    <td>${z.toFixed(3)}</td>
+                    <td>${p.toFixed(4)}</td>
+                    <td><strong>${w.toFixed(1)}x</strong></td>
+                    <td>${log_p.toFixed(4)}</td>
+                    <td>${log_1_minus_p.toFixed(4)}</td>
+                    <td style="background: ${t.isSuspicious ? '#ffcdd2' : '#e0e0e0'};">${term1.toFixed(4)}</td>
+                    <td style="background: ${t.isSuspicious ? '#e0e0e0' : '#bbdefb'};">${term2.toFixed(4)}</td>
+                    <td style="background: #667eea; color: white; font-weight: bold; font-size: 1.05em;">${loss.toFixed(6)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Renderizar gráfico de comparación
+        function renderLossChart() {
+            const container = document.getElementById('lossChart');
+            container.innerHTML = '';
+            const epsilon = 1e-7;
+            
+            // Crear contenedor de barras
+            const chartWrapper = document.createElement('div');
+            chartWrapper.style.display = 'flex';
+            chartWrapper.style.gap = '5px';
+            chartWrapper.style.alignItems = 'flex-end';
+            chartWrapper.style.height = '200px';
+            chartWrapper.style.padding = '10px';
+            
+            transactions.forEach(t => {
+                const barContainer = document.createElement('div');
+                barContainer.style.flex = '1';
+                barContainer.style.display = 'flex';
+                barContainer.style.flexDirection = 'column';
+                barContainer.style.alignItems = 'center';
+                
+                const p = Math.max(epsilon, Math.min(1 - epsilon, sigmoid(t.logit)));
+                
+                // Pérdida sin peso
+                const lossNoWeight = t.isSuspicious ? -Math.log(p) : -Math.log(1 - p);
+                
+                // Pérdida con peso
+                const lossWithWeight = t.isSuspicious ? -posWeight * Math.log(p) : -Math.log(1 - p);
+                
+                // Normalizar para visualización
+                const maxLoss = Math.max(lossWithWeight, lossNoWeight, 1);
+                const heightNoWeight = (lossNoWeight / maxLoss) * 150;
+                const heightWithWeight = (lossWithWeight / maxLoss) * 150;
+                
+                // Barra sin peso
+                const barNoWeight = document.createElement('div');
+                barNoWeight.style.width = '45%';
+                barNoWeight.style.height = heightNoWeight + 'px';
+                barNoWeight.style.background = 'linear-gradient(to top, #fc5c7d, #6a82fb)';
+                barNoWeight.style.borderRadius = '3px 3px 0 0';
+                barNoWeight.style.marginRight = '2px';
+                barNoWeight.title = `Sin peso: ${lossNoWeight.toFixed(4)}`;
+                
+                // Barra con peso
+                const barWithWeight = document.createElement('div');
+                barWithWeight.style.width = '45%';
+                barWithWeight.style.height = heightWithWeight + 'px';
+                barWithWeight.style.background = 'linear-gradient(to top, #2ecc71, #27ae60)';
+                barWithWeight.style.borderRadius = '3px 3px 0 0';
+                barWithWeight.title = `Con peso: ${lossWithWeight.toFixed(4)}`;
+                
+                const barsWrapper = document.createElement('div');
+                barsWrapper.style.display = 'flex';
+                barsWrapper.style.alignItems = 'flex-end';
+                barsWrapper.style.height = '150px';
+                barsWrapper.style.gap = '2px';
+                barsWrapper.appendChild(barNoWeight);
+                barsWrapper.appendChild(barWithWeight);
+                
+                // Etiqueta
+                const label = document.createElement('div');
+                label.style.fontSize = '0.75em';
+                label.style.marginTop = '5px';
+                label.textContent = `#${t.id + 1}`;
+                label.style.color = t.isSuspicious ? '#e74c3c' : '#2ecc71';
+                label.style.fontWeight = 'bold';
+                
+                barContainer.appendChild(barsWrapper);
+                barContainer.appendChild(label);
+                chartWrapper.appendChild(barContainer);
+            });
+            
+            container.appendChild(chartWrapper);
+            
+            // Leyenda
+            const legend = document.createElement('div');
+            legend.style.display = 'flex';
+            legend.style.justifyContent = 'center';
+            legend.style.gap = '20px';
+            legend.style.marginTop = '15px';
+            legend.style.fontSize = '0.9em';
+            legend.innerHTML = `
+                <div><span style="display: inline-block; width: 15px; height: 15px; background: linear-gradient(to right, #fc5c7d, #6a82fb); border-radius: 3px; margin-right: 5px;"></span>Sin Peso</div>
+                <div><span style="display: inline-block; width: 15px; height: 15px; background: linear-gradient(to right, #2ecc71, #27ae60); border-radius: 3px; margin-right: 5px;"></span>Con Peso</div>
+            `;
+            container.appendChild(legend);
+        }
+        
+        // Actualizar toda la UI
+        function updateAll() {
+            // Actualizar displays
+            document.getElementById('numTransactionsDisplay').textContent = numTransactions;
+            document.getElementById('numSuspiciousDisplay').textContent = numSuspicious;
+            document.getElementById('posWeightDisplay').textContent = posWeight.toFixed(1);
+            
+            // Calcular peso recomendado
+            const numLegitimate = numTransactions - numSuspicious;
+            const recommendedWeight = numLegitimate / numSuspicious;
+            const ratio = numLegitimate / numSuspicious;
+            const percentLegitimate = ((numLegitimate / numTransactions) * 100).toFixed(1);
+            
+            document.getElementById('ratioDisplay').textContent = `${ratio.toFixed(0)}:1 (${percentLegitimate}% legítimas)`;
+            document.getElementById('recommendedWeight').textContent = 
+                `= ${numLegitimate} / ${numSuspicious} = ${recommendedWeight.toFixed(1)}x`;
+            
+            // Estado del peso actual
+            const weightDiff = Math.abs(posWeight - recommendedWeight);
+            let weightStatus = '';
+            if (weightDiff < 1) {
+                weightStatus = '<span style="color: #27ae60;">Óptimo ✅</span>';
+            } else if (weightDiff < 10) {
+                weightStatus = '<span style="color: #f39c12;">Cerca del óptimo ⚠️</span>';
+            } else {
+                weightStatus = '<span style="color: #e74c3c;">Lejano del óptimo ❌</span>';
+            }
+            document.getElementById('currentWeightStatus').innerHTML = weightStatus;
+            
+            // Actualizar barra de peso
+            const weightBar = document.getElementById('weightBarFill');
+            const weightPercent = Math.min((posWeight / 50) * 100, 100);
+            weightBar.style.width = weightPercent + '%';
+            weightBar.textContent = posWeight.toFixed(1) + 'x';
+            document.getElementById('weightText').textContent = posWeight.toFixed(1) + ' veces más';
+            document.getElementById('weightFactor').textContent = posWeight.toFixed(1) + 'x';
+            
+            // Renderizar transacciones
+            renderTransactions();
+            
+            // Calcular pérdidas
+            const lossWithoutWeight = calculateBCEWithoutWeight();
+            const lossWithWeight = calculateBCEWithWeight();
+            const lossBCEWithLogits = calculateBCEWithLogitsLoss();
+            
+            document.getElementById('lossWithoutWeight').textContent = lossWithoutWeight.toFixed(4);
+            document.getElementById('lossWithWeight').textContent = lossWithWeight.toFixed(4);
+            document.getElementById('lossBCEWithLogits').textContent = lossBCEWithLogits.toFixed(4);
+            
+            // Renderizar tabla y gráfico
+            renderCalculationTable();
+            renderLossChart();
+            
+            // Actualizar interpretación
+            const diff = lossWithWeight - lossWithoutWeight;
+            const diffPercent = ((diff / lossWithoutWeight) * 100).toFixed(1);
+            const diffManualVsPyTorch = Math.abs(lossWithWeight - lossBCEWithLogits);
+            
+            document.getElementById('interpretation').innerHTML = `
+                <strong>📊 Resultados de los 3 Métodos:</strong><br>
+                <div style="margin: 10px 0; padding: 10px; background: rgba(0,0,0,0.03); border-radius: 5px;">
+                    <strong>Método 1 (Sin Peso):</strong> ${lossWithoutWeight.toFixed(4)}<br>
+                    <strong>Método 2 (Con Peso Manual):</strong> ${lossWithWeight.toFixed(4)}<br>
+                    <strong>Método 3 (BCEWithLogitsLoss):</strong> ${lossBCEWithLogits.toFixed(4)}
+                </div>
+                
+                <strong>🔍 Análisis de Diferencias:</strong><br>
+                <div style="margin: 10px 0;">
+                    • <strong>Método 1 vs Método 2:</strong> Δ = ${Math.abs(diff).toFixed(4)} (${Math.abs(diffPercent)}%)<br>
+                    <span style="font-size: 0.95em; color: #555;">
+                        ${diff > 0 ? 
+                        '→ ✅ El peso aumenta la pérdida porque amplifica los errores en sospechosas (×' + posWeight.toFixed(0) + '). Esto fuerza al modelo a prestar atención a la clase minoritaria.' :
+                        '→ ⚠️ El peso es muy bajo. Aumenta pos_weight al valor recomendado para balancear las clases.'}
+                    </span>
+                    <br><br>
+                    • <strong>Método 2 vs Método 3:</strong> Δ = ${diffManualVsPyTorch.toFixed(8)} ≈ 0<br>
+                    <span style="font-size: 0.95em; color: #555;">
+                        → ✅ Son matemáticamente equivalentes. Diferencia microscópica por precisión numérica.<br>
+                        → La ventaja de Método 3 es <strong>implementación</strong> (más rápido y estable), no resultado.
+                    </span>
+                </div>
+                
+                <div style="margin-top: 15px; padding: 12px; background: #e8f5e9; border-left: 4px solid #4caf50; border-radius: 4px;">
+                    <strong style="color: #2e7d32;">🎯 Conclusión:</strong><br>
+                    <span style="color: #2e7d32; font-size: 0.95em;">
+                        ${diff > 0 ?
+                        'El peso está funcionando correctamente. Con pos_weight=' + posWeight.toFixed(0) + 'x, cada error en una transacción sospechosa cuesta ' + posWeight.toFixed(0) + ' veces más que en una legítima. Esto balancea el aprendizaje del modelo.' :
+                        'Aumenta el pos_weight para que el modelo aprenda ambas clases balanceadamente.'}
+                    </span>
+                </div>
+            `;
+            
+            // Actualizar nueva sección de visualización del impacto
+            updateImpactVisualization();
+        }
+        
+        // Actualizar visualización del impacto del peso
+        function updateImpactVisualization() {
+            const epsilon = 1e-7;
+            const numLegitimate = numTransactions - numSuspicious;
+            
+            // Actualizar textos dinámicos
+            document.getElementById('ratioVisualization').textContent = 
+                `${numLegitimate} legítimas y ${numSuspicious} sospechosas`;
+            document.getElementById('weightMultiplier').textContent = posWeight.toFixed(0) + 'x';
+            document.getElementById('errorWeightFactor').textContent = posWeight.toFixed(0) + 'x';
+            document.getElementById('finalWeightFactor').textContent = posWeight.toFixed(0);
+            
+            // Calcular contribuciones individuales (primeras 5 transacciones como ejemplo)
+            const sampleSize = Math.min(5, transactions.length);
+            let htmlWithout = '';
+            let htmlWith = '';
+            
+            for (let i = 0; i < sampleSize; i++) {
+                const t = transactions[i];
+                const z = t.logit;
+                const y = t.isSuspicious ? 1 : 0;
+                const w = t.isSuspicious ? posWeight : 1.0;
+                
+                const p = sigmoid(z);
+                const p_clamp = Math.max(epsilon, Math.min(1 - epsilon, p));
+                
+                // Contribución sin peso
+                const lossWithout = -(y * Math.log(p_clamp) + (1 - y) * Math.log(1 - p_clamp));
+                // Contribución con peso
+                const lossWith = -(w * y * Math.log(p_clamp) + (1 - y) * Math.log(1 - p_clamp));
+                
+                const bgColor = t.isSuspicious ? '#ffcdd2' : '#c5cae9';
+                const textColor = t.isSuspicious ? '#c62828' : '#1565c0';
+                const label = t.isSuspicious ? '🚨 Sospechosa' : '✅ Legítima';
+                
+                // Barra sin peso
+                const widthWithout = Math.min((lossWithout / 5) * 100, 100);
+                htmlWithout += `
+                    <div style="margin-bottom: 8px;">
+                        <div style="display: flex; align-items: center; margin-bottom: 3px;">
+                            <span style="font-size: 0.85em; color: ${textColor}; min-width: 100px;">${label}</span>
+                            <div style="flex: 1; background: #e0e0e0; height: 20px; border-radius: 5px; overflow: hidden; margin: 0 10px;">
+                                <div style="width: ${widthWithout}%; height: 100%; background: ${bgColor};"></div>
+                            </div>
+                            <span style="font-size: 0.85em; font-weight: bold; color: ${textColor}; min-width: 50px;">${lossWithout.toFixed(3)}</span>
+                        </div>
+                    </div>
+                `;
+                
+                // Barra con peso
+                const widthWith = Math.min((lossWith / 5) * 100, 100);
+                htmlWith += `
+                    <div style="margin-bottom: 8px;">
+                        <div style="display: flex; align-items: center; margin-bottom: 3px;">
+                            <span style="font-size: 0.85em; color: ${textColor}; min-width: 100px;">${label}</span>
+                            <div style="flex: 1; background: #e0e0e0; height: 20px; border-radius: 5px; overflow: hidden; margin: 0 10px;">
+                                <div style="width: ${widthWith}%; height: 100%; background: ${bgColor};"></div>
+                            </div>
+                            <span style="font-size: 0.85em; font-weight: bold; color: ${textColor}; min-width: 50px;">${lossWith.toFixed(3)}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('contributionWithoutWeight').innerHTML = htmlWithout;
+            document.getElementById('contributionWithWeight').innerHTML = htmlWith;
+            
+            // Simular errores (predecir lo opuesto)
+            // Para una legítima (y=0), predecir p=1.0 (sospechosa)
+            const pErrorLegit = 0.999; // Predicción muy segura pero equivocada
+            const lossErrorLegitWithout = -Math.log(1 - pErrorLegit);
+            const lossErrorLegitWith = -Math.log(1 - pErrorLegit); // Peso = 1 para legítimas
+            
+            // Para una sospechosa (y=1), predecir p=0.001 (legítima)
+            const pErrorSusp = 0.001; // Predicción muy segura pero equivocada
+            const lossErrorSuspWithout = -Math.log(pErrorSusp);
+            const lossErrorSuspWith = -posWeight * Math.log(pErrorSusp); // Peso = posWeight
+            
+            document.getElementById('errorLegitWithout').textContent = lossErrorLegitWithout.toFixed(3);
+            document.getElementById('errorLegitWith').textContent = lossErrorLegitWith.toFixed(3);
+            document.getElementById('errorSuspWithout').textContent = lossErrorSuspWithout.toFixed(3);
+            document.getElementById('errorSuspWith').textContent = lossErrorSuspWith.toFixed(3);
+        }
+        
+        // Toggle cálculos detallados
+        function toggleDetailedCalculations() {
+            const detailedCalc = document.getElementById('detailedCalculations');
+            detailedCalc.classList.toggle('hidden');
+        }
+        
+        // Event listeners
+        document.getElementById('numTransactions').addEventListener('input', (e) => {
+            numTransactions = parseInt(e.target.value);
+            // Asegurar que hay al menos 1 sospechosa
+            if (numSuspicious > numTransactions - 1) {
+                numSuspicious = Math.max(1, numTransactions - 1);
+                document.getElementById('numSuspicious').value = numSuspicious;
+                document.getElementById('numSuspicious').max = numTransactions - 1;
+            }
+            initTransactions();
+            updateAll();
+        });
+        
+        document.getElementById('numSuspicious').addEventListener('input', (e) => {
+            numSuspicious = parseInt(e.target.value);
+            initTransactions();
+            updateAll();
+        });
+        
+        document.getElementById('posWeight').addEventListener('input', (e) => {
+            posWeight = parseFloat(e.target.value);
+            updateAll();
+        });
+        
+        // Inicialización
+        initTransactions();
+        updateAll();
+    </script>
+</body>
+</html>

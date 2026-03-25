@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GAT — Mecanismo de Atención Paso a Paso</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+.header{text-align:center;padding:28px 20px 18px;background:linear-gradient(135deg,#4c0519,#881337,#9f1239,#e11d48);border-bottom:2px solid #e11d48}
+.header h1{font-size:1.8em;margin-bottom:4px}.header h1 span{color:#fbbf24}
+.header p{color:#fda4af;font-size:.95em}
+.header .sub{color:#94a3b8;font-size:.82em;margin-top:6px}
+
+.stage-tabs{display:flex;justify-content:center;gap:8px;padding:16px;background:#1e293b;border-bottom:1px solid #334155;flex-wrap:wrap}
+.stage-tab{padding:10px 22px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.9em;border:2px solid transparent;transition:all .25s;color:#fff}
+.stage-tab:hover{transform:translateY(-2px)}
+.stage-tab.active{transform:translateY(-2px);border-color:#fff}
+.s0{background:#3b82f6}.s1{background:#e11d48}.s2{background:#f59e0b}.s3{background:#10b981}
+
+.controls{display:flex;justify-content:center;gap:12px;padding:14px;align-items:center;flex-wrap:wrap}
+.controls button{background:#334155;color:#e2e8f0;border:1px solid #475569;border-radius:6px;padding:7px 18px;font-size:.9em;cursor:pointer;font-weight:600;transition:background .2s}
+.controls button:hover{background:#475569}
+.controls button.play-btn{background:#e11d48;border-color:#e11d48}
+.controls button.play-btn:hover{background:#be123c}
+.controls .speed-group{display:flex;align-items:center;gap:6px;color:#94a3b8;font-size:.85em}
+.controls .speed-group input{width:100px}
+
+.stage-info{text-align:center;padding:10px 20px;font-size:1em;color:#cbd5e1}
+.stage-info .formula{color:#fbbf24;font-size:1.1em;margin-top:8px}
+.stage-info .formula .katex{color:#fbbf24}
+.dot-product-display .katex{font-size:1em}
+
+.matrix-area{display:flex;justify-content:center;align-items:center;gap:16px;padding:20px;overflow-x:auto;overflow-y:visible;flex-wrap:nowrap;min-height:280px}
+
+.mat-block{display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0}
+.mat-label{font-size:.82em;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border-radius:4px;color:#fff}
+.mat-dims{font-size:.72em;color:#94a3b8;font-family:Consolas,monospace}
+.mat-grid{display:grid;gap:1px;background:#1e293b;border:2px solid #334155;border-radius:8px;overflow:hidden}
+.mat-cell{display:flex;align-items:center;justify-content:center;font-family:'Cascadia Code',Consolas,monospace;background:#0f172a;transition:background .15s,color .15s,transform .15s;position:relative}
+.mat-cell.hl-row{background:#1e3a5f;color:#93c5fd}
+.mat-cell.hl-col{background:#3b1f54;color:#d8b4fe}
+.mat-cell.hl-both{background:#7c3aed;color:#fff;transform:scale(1.08);z-index:2;font-weight:700}
+.mat-cell.hl-result{background:#854d0e;color:#fde68a;font-weight:700;transform:scale(1.1);z-index:2}
+.mat-cell.computed{background:#164e3a;color:#6ee7b7}
+.mat-cell.relu-zero{background:#7f1d1d;color:#fca5a5}
+.mat-cell.relu-pos{background:#14532d;color:#86efac}
+.mat-cell.adj-one{background:#92400e;color:#fbbf24}
+.mat-cell.adj-zero{background:#0c0f1a;color:#1e293b;font-size:.65em !important}
+.mat-cell.attn-high{background:#7f1d1d;color:#fda4af;font-weight:700}
+.mat-cell.attn-low{background:#1c1917;color:#a8a29e}
+.mat-cell.concat-i{background:#1e3a5f;color:#93c5fd;font-weight:700}
+.mat-cell.concat-j{background:#3b1f54;color:#d8b4fe;font-weight:700}
+
+.op-symbol{font-size:2em;color:#64748b;font-weight:700;padding:0 6px;align-self:center}
+
+@keyframes pulseConcat{0%{box-shadow:0 0 0 0 rgba(168,85,247,0.6)}50%{box-shadow:0 0 18px 6px rgba(168,85,247,0.4)}100%{box-shadow:0 0 0 0 rgba(168,85,247,0.6)}}
+@keyframes slideIn{0%{opacity:0;transform:translateX(-20px)}100%{opacity:1;transform:translateX(0)}}
+.concat-block{animation:pulseConcat 1.2s ease-in-out infinite}
+.concat-block .mat-grid{border-color:#a855f7 !important;border-width:3px !important}
+.stage1-layout{display:flex;flex-direction:column;align-items:center;gap:16px;width:100%}
+.stage1-top{display:flex;justify-content:center;align-items:center;gap:14px;flex-wrap:nowrap;animation:slideIn .4s ease-out}
+.stage1-connector{color:#a855f7;font-size:1.8em;font-weight:bold}
+.stage1-bottom{display:flex;justify-content:center;align-items:center;gap:14px}
+
+.dot-product-display{text-align:center;padding:10px 20px;min-height:60px}
+.dot-product-display .calc{font-family:'Cascadia Code',Consolas,monospace;font-size:.88em;color:#e2e8f0;line-height:1.8;max-width:900px;margin:0 auto;word-wrap:break-word}
+.dot-product-display .result-val{font-size:1.2em;font-weight:700;color:#fbbf24;margin-top:4px}
+
+.progress-bar-ct{max-width:600px;margin:0 auto;padding:8px 20px}
+.progress-bar-ct .bar-bg{background:#1e293b;border-radius:6px;height:8px;overflow:hidden}
+.progress-bar-ct .bar-fill{height:100%;border-radius:6px;transition:width .2s}
+.progress-bar-ct .bar-text{font-size:.75em;color:#64748b;text-align:center;margin-top:3px}
+
+.bottom-area{display:flex;gap:20px;max-width:1100px;margin:10px auto;padding:0 20px;flex-wrap:wrap;justify-content:center}
+.bottom-area canvas{border-radius:10px;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🔴 <span>GAT</span> — Mecanismo de Atención Paso a Paso</h1>
+  <p>Visualiza cómo un nodo aprende a prestar atención diferente a cada vecino</p>
+  <div class="sub">X × W → Scores e<sub>ij</sub> → Softmax α<sub>ij</sub> → Agregación ponderada → ELU &nbsp;|&nbsp; 6 nodos, 8 aristas, 1 cabeza de atención</div>
+</div>
+
+<!-- PANEL: ¿De dónde sale X? -->
+<div id="xExplainPanel" style="max-width:1100px;margin:0 auto;background:linear-gradient(135deg,#1e293b,#0f172a);border:1px solid #334155;border-radius:12px;padding:20px 28px;margin-top:0">
+  <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleXPanel()">
+    <h3 style="color:#fbbf24;font-size:1.05em;margin:0">📊 ¿De dónde sale la matriz X de features? <span style="color:#94a3b8;font-size:.85em">(clic para expandir)</span></h3>
+    <span id="xPanelArrow" style="color:#fbbf24;font-size:1.3em;transition:transform .3s">▼</span>
+  </div>
+  <div id="xPanelBody" style="display:none;margin-top:16px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div>
+        <h4 style="color:#93c5fd;margin-bottom:8px">🌐 ¿Qué es bag-of-words?</h4>
+        <p style="color:#cbd5e1;font-size:.9em;line-height:1.6">
+          <strong>Paso 1:</strong> Se lee el texto de <em>todos</em> los papers y se construye un <strong>vocabulario</strong> — la lista de las palabras más frecuentes (eliminando "the", "is", etc.).<br><br>
+          <strong>Paso 2:</strong> Para <em>cada</em> paper, se revisa palabra por palabra: ¿aparece "<em>network</em>" en el texto? → <strong style="color:#86efac">1</strong>. ¿Aparece "<em>graph</em>"? → <strong style="color:#fca5a5">0</strong>.<br><br>
+          <strong>Paso 3:</strong> Eso genera un vector binario por paper.
+        </p>
+
+        <!-- EJEMPLO CONCRETO -->
+        <div style="background:#0c0f1a;border-radius:8px;padding:12px;margin-top:12px;border:1px solid #334155">
+          <p style="color:#fbbf24;font-size:.85em;font-weight:700;margin-bottom:8px">📝 Ejemplo concreto:</p>
+          <p style="color:#94a3b8;font-size:.82em;line-height:1.5;margin-bottom:6px">
+            Vocabulario preseleccionado: <span style="color:#93c5fd">["network", "graph", "learning", "text"]</span>
+          </p>
+          <p style="color:#94a3b8;font-size:.82em;margin-bottom:4px">
+            Paper dice: <em style="color:#e2e8f0">"We propose a <strong style="color:#86efac">network</strong> model for <strong style="color:#86efac">learning</strong> representations..."</em>
+          </p>
+          <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+            <span style="color:#64748b;font-size:.8em">→ Vector:</span>
+            <div style="display:flex;gap:2px">
+              <span style="background:#14532d;color:#86efac;padding:4px 10px;border-radius:4px;font-family:Consolas;font-size:.85em;font-weight:700">1</span>
+              <span style="background:#7f1d1d;color:#fca5a5;padding:4px 10px;border-radius:4px;font-family:Consolas;font-size:.85em">0</span>
+              <span style="background:#14532d;color:#86efac;padding:4px 10px;border-radius:4px;font-family:Consolas;font-size:.85em;font-weight:700">1</span>
+              <span style="background:#7f1d1d;color:#fca5a5;padding:4px 10px;border-radius:4px;font-family:Consolas;font-size:.85em">0</span>
+            </div>
+          </div>
+          <p style="color:#64748b;font-size:.72em;margin-top:6px">
+            network ✅ | graph ❌ | learning ✅ | text ❌ → [1, 0, 1, 0]
+          </p>
+        </div>
+
+        <p style="color:#94a3b8;font-size:.82em;margin-top:12px">
+          <strong>CiteSeer real:</strong> 3,327 papers × 3,703 palabras = X de 0s y 1s (muy sparse, ~99% ceros). No son "temas" ni "dominios" — son <strong>palabras individuales</strong> del vocabulario.
+        </p>
+      </div>
+      <div>
+        <h4 style="color:#fda4af;margin-bottom:8px">🔬 En este ejemplo simplificado</h4>
+        <p style="color:#cbd5e1;font-size:.9em;line-height:1.6">
+          Usamos <strong>6 papers</strong> con un vocabulario de solo <strong>4 palabras</strong>.<br>
+          Cada valor es <strong style="color:#86efac">1</strong> (¿aparece?) o <strong style="color:#fca5a5">0</strong> (no aparece):
+        </p>
+        <table style="margin-top:8px;font-size:.82em;border-collapse:collapse;width:100%">
+          <tr style="color:#fbbf24"><th style="text-align:left;padding:3px 8px">Paper</th><th>f₀<br><span style="font-weight:400;color:#94a3b8">redes</span></th><th>f₁<br><span style="font-weight:400;color:#94a3b8">grafos</span></th><th>f₂<br><span style="font-weight:400;color:#94a3b8">ML</span></th><th>f₃<br><span style="font-weight:400;color:#94a3b8">texto</span></th><th style="text-align:left;padding-left:12px;color:#94a3b8">Significado</th></tr>
+          <tr><td colspan="6" style="border-top:1px solid #334155;padding-top:4px"></td></tr>
+          <tr style="color:#8b5cf6"><td style="padding:2px 8px">0 Redes Soc.</td><td style="text-align:center;color:#fca5a5">0</td><td style="text-align:center;color:#86efac">1</td><td style="text-align:center;color:#fca5a5">0</td><td style="text-align:center;color:#86efac">1</td><td style="font-size:.9em;color:#94a3b8;padding-left:12px">habla de grafos y texto</td></tr>
+          <tr style="color:#3b82f6"><td style="padding:2px 8px">1 Deep Learn.</td><td style="text-align:center;color:#86efac">1</td><td style="text-align:center;color:#fca5a5">0</td><td style="text-align:center;color:#86efac">1</td><td style="text-align:center;color:#fca5a5">0</td><td style="font-size:.9em;color:#94a3b8;padding-left:12px">habla de redes y ML</td></tr>
+          <tr style="color:#10b981"><td style="padding:2px 8px">2 Grafos+NLP</td><td style="text-align:center;color:#86efac">1</td><td style="text-align:center;color:#86efac">1</td><td style="text-align:center;color:#fca5a5">0</td><td style="text-align:center;color:#86efac">1</td><td style="font-size:.9em;color:#94a3b8;padding-left:12px">redes + grafos + texto</td></tr>
+          <tr style="color:#f59e0b"><td style="padding:2px 8px">3 ML Grafos</td><td style="text-align:center;color:#86efac">1</td><td style="text-align:center;color:#fca5a5">0</td><td style="text-align:center;color:#86efac">1</td><td style="text-align:center;color:#fca5a5">0</td><td style="font-size:.9em;color:#94a3b8;padding-left:12px">redes y ML (como nodo 1)</td></tr>
+          <tr style="color:#ef4444"><td style="padding:2px 8px">4 Anál. Texto</td><td style="text-align:center;color:#fca5a5">0</td><td style="text-align:center;color:#fca5a5">0</td><td style="text-align:center;color:#fca5a5">0</td><td style="text-align:center;color:#86efac">1</td><td style="font-size:.9em;color:#94a3b8;padding-left:12px">solo habla de texto</td></tr>
+          <tr style="color:#06b6d4"><td style="padding:2px 8px">5 Teoría Graf.</td><td style="text-align:center;color:#fca5a5">0</td><td style="text-align:center;color:#86efac">1</td><td style="text-align:center;color:#86efac">1</td><td style="text-align:center;color:#fca5a5">0</td><td style="font-size:.9em;color:#94a3b8;padding-left:12px">grafos y ML</td></tr>
+        </table>
+        <p style="color:#64748b;font-size:.78em;margin-top:8px">Nota: nodos 1 y 3 tienen features idénticos — ¿podrá la atención distinguirlos usando sus vecinos?</p>
+      </div>
+    </div>
+    <div style="margin-top:16px;padding:12px 16px;background:#0c0f1a;border-radius:8px;border-left:4px solid #e11d48">
+      <p style="color:#fda4af;font-size:.88em;margin:0">
+        💡 <strong>Idea clave:</strong> X no se "calcula" — se <strong>construye</strong> directamente del texto de cada paper. Es la <em>representación inicial</em> del contenido. La GAT toma esta X cruda y aprende (con W y la atención) a transformarla en algo útil para clasificar cada paper en su categoría.
+      </p>
+    </div>
+    <!-- EMBEDDING CONNECTION -->
+    <div style="margin-top:16px;padding:14px 18px;background:linear-gradient(135deg,#1e1b4b,#312e81);border-radius:10px;border-left:4px solid #818cf8">
+      <p style="color:#c7d2fe;font-size:.9em;margin:0;line-height:1.7">
+        🔗 <strong style="color:#a5b4fc">Conexión con Capítulo 1 — Embeddings:</strong><br>
+        En el Capítulo 1 (GCN) vimos que un <strong>embedding</strong> es una representación numérica aprendida de un nodo. Aquí en GAT <strong>también se generan embeddings</strong>:
+      </p>
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:8px 14px;margin-top:10px;font-size:.85em">
+        <span style="color:#fbbf24;font-weight:700">X</span>
+        <span style="color:#94a3b8">= features crudas (bag-of-words) — <strong style="color:#fca5a5">NO</strong> es un embedding, es la entrada sin procesar</span>
+        <span style="color:#a78bfa;font-weight:700">H'</span>
+        <span style="color:#94a3b8">= <strong style="color:#a78bfa">primer embedding</strong> — representación aprendida al multiplicar X × W (transforma 4 dim → 3 dim)</span>
+        <span style="color:#34d399;font-weight:700">H''</span>
+        <span style="color:#94a3b8">= <strong style="color:#34d399">embedding final</strong> — enriquecido con información de vecinos vía atención. Cada nodo "sabe" sobre su contexto</span>
+      </div>
+      <p style="color:#818cf8;font-size:.82em;margin-top:10px;margin-bottom:0">
+        💡 La diferencia con GCN: aquí cada vecino contribuye con un <em>peso diferente</em> (α<sub>ij</sub>) al embedding final, no un promedio uniforme.
+      </p>
+    </div>
+  </div>
+</div>
+<script>
+function toggleXPanel(){
+  var body=document.getElementById('xPanelBody');
+  var arrow=document.getElementById('xPanelArrow');
+  if(body.style.display==='none'){body.style.display='block';arrow.style.transform='rotate(180deg)';}
+  else{body.style.display='none';arrow.style.transform='rotate(0)';}
+}
+</script>
+
+<div class="stage-tabs">
+  <div class="stage-tab s0 active" onclick="setStage(0)">0️⃣ Lineal: X×W=H'</div>
+  <div class="stage-tab s1" onclick="setStage(1)">1️⃣ Scores e<sub>ij</sub></div>
+  <div class="stage-tab s2" onclick="setStage(2)">2️⃣ Softmax α<sub>ij</sub></div>
+  <div class="stage-tab s3" onclick="setStage(3)">3️⃣ Embedding Final H''</div>
+</div>
+
+<div class="controls">
+  <button onclick="stepBack()" style="background:#475569;font-size:1.1em;padding:10px 20px">◀ Atrás</button>
+  <button onclick="stepOne()" style="background:#e11d48;border-color:#e11d48;font-size:1.2em;padding:12px 28px;color:#fff;letter-spacing:1px">▶ UN PASO</button>
+  <button onclick="resetStage()">⏮ Reiniciar</button>
+  <span style="color:#334155;font-size:1.5em">│</span>
+  <button class="play-btn" id="btnPlay" onclick="togglePlay()">▶▶ Auto</button>
+  <button onclick="randomize()">🔄 Nuevos pesos</button>
+  <div class="speed-group">
+    <span>Velocidad auto:</span>
+    <input type="range" id="speedSlider" min="50" max="1500" value="500" step="50">
+  </div>
+</div>
+
+<div class="stage-info" id="stageInfo"></div>
+<div class="matrix-area" id="matrixArea"></div>
+<div class="dot-product-display" id="dotDisplay"></div>
+
+<div class="progress-bar-ct">
+  <div class="bar-bg"><div class="bar-fill" id="progBar" style="width:0%"></div></div>
+  <div class="bar-text" id="progText">0 / 0</div>
+</div>
+
+<div class="bottom-area" id="bottomArea">
+  <canvas id="graphCanvas" width="520" height="380"></canvas>
+  <canvas id="archCanvas" width="520" height="380"></canvas>
+</div>
+
+<script>
+// ===================== DATA =====================
+var N=6, F=4, HD=3;
+var nodeNames=['Paper 0:\n"Redes sociales"','Paper 1:\n"Deep Learning"','Paper 2:\n"Grafos + NLP"','Paper 3:\n"ML para grafos"','Paper 4:\n"Análisis texto"','Paper 5:\n"Teoría grafos"'];
+var featureNames=['network','graph','learning','text'];
+
+// Node features: cada fila = un paper, cada columna = ¿aparece esa palabra? (bag-of-words: 0 o 1)
+var X=[
+  [0, 1, 0, 1],
+  [1, 0, 1, 0],
+  [1, 1, 0, 1],
+  [1, 0, 1, 0],
+  [0, 0, 0, 1],
+  [0, 1, 1, 0]
+];
+
+// Undirected edges
+var rawEdges=[[0,1],[0,2],[1,2],[1,3],[2,3],[2,4],[3,5],[4,5]];
+
+// Build neighbor lists (including self-loops, sorted)
+var nbrs=[];
+for(var i=0;i<N;i++) nbrs.push([i]);
+for(var e=0;e<rawEdges.length;e++){
+  nbrs[rawEdges[e][0]].push(rawEdges[e][1]);
+  nbrs[rawEdges[e][1]].push(rawEdges[e][0]);
+}
+for(var i=0;i<N;i++) nbrs[i].sort(function(a,b){return a-b;});
+
+// Directed edges for attention: [target, source]
+var attEdges=[];
+for(var i=0;i<N;i++) for(var k=0;k<nbrs[i].length;k++) attEdges.push([i,nbrs[i][k]]);
+// Total: 3+4+5+4+3+3 = 22 edges
+
+// Weights
+function rnd(){return +(Math.random()*1.6-0.8).toFixed(2)}
+var W=[], aVec=[];
+function makeWeights(){
+  W=[];for(var i=0;i<F;i++){var r=[];for(var j=0;j<HD;j++) r.push(rnd());W.push(r);}
+  aVec=[];for(var i=0;i<2*HD;i++) aVec.push(rnd());
+}
+makeWeights();
+
+// ===================== COMPUTE =====================
+function matmul(A,B){
+  var R=A.length,C=B[0].length,K=B.length,res=[];
+  for(var i=0;i<R;i++){var r=[];for(var j=0;j<C;j++){var s=0;for(var k=0;k<K;k++) s+=A[i][k]*B[k][j];r.push(+s.toFixed(4));}res.push(r);}
+  return res;
+}
+function leakyRelu(x){return x>0?x:0.2*x;}
+function elu(x){return x>0?x:(Math.exp(x)-1);}
+
+var Hp,E,Alpha,Hout;
+function computeAll(){
+  // Stage 0: H' = X * W [6x3]
+  Hp=matmul(X,W);
+
+  // Stage 1: e_ij = LeakyReLU(a^T [h'_i || h'_j])
+  E=[];for(var i=0;i<N;i++){E.push([]);for(var j=0;j<N;j++) E[i].push(null);}
+  for(var e=0;e<attEdges.length;e++){
+    var ti=attEdges[e][0],sj=attEdges[e][1];
+    var concat=Hp[ti].concat(Hp[sj]);
+    var dot=0;for(var k=0;k<concat.length;k++) dot+=concat[k]*aVec[k];
+    E[ti][sj]=+leakyRelu(dot).toFixed(4);
+  }
+
+  // Stage 2: alpha_ij = softmax_j(e_ij)
+  Alpha=[];for(var i=0;i<N;i++){Alpha.push([]);for(var j=0;j<N;j++) Alpha[i].push(null);}
+  for(var i=0;i<N;i++){
+    var mx=-Infinity;
+    for(var k=0;k<nbrs[i].length;k++){var v=E[i][nbrs[i][k]];if(v>mx) mx=v;}
+    var sm=0;for(var k=0;k<nbrs[i].length;k++) sm+=Math.exp(E[i][nbrs[i][k]]-mx);
+    for(var k=0;k<nbrs[i].length;k++){var j=nbrs[i][k];Alpha[i][j]=+(Math.exp(E[i][j]-mx)/sm).toFixed(4);}
+  }
+
+  // Stage 3: h''_i = ELU(sum_j alpha_ij * h'_j)
+  Hout=[];
+  for(var i=0;i<N;i++){
+    var r=[];
+    for(var d=0;d<HD;d++){
+      var s=0;for(var k=0;k<nbrs[i].length;k++) s+=Alpha[i][nbrs[i][k]]*Hp[nbrs[i][k]][d];
+      r.push(+elu(s).toFixed(4));
+    }
+    Hout.push(r);
+  }
+}
+computeAll();
+
+// ===================== STAGES =====================
+var currentStage=0,stepIdx=0,playing=false,timer=null;
+
+var stageConfigs=[
+  {title:'Etapa 0: Transformación Lineal — Primer Embedding \(H\' = X \cdot W\)',
+   formula:'H\'_{i,j} = \\sum_{k} X_{i,k} \\cdot W_{k,j}',color:'#3b82f6'},
+  {title:'Etapa 1: Scores de Atención \(e_{ij}\) — ¿Cuánto importa cada vecino?',
+   formula:'e_{ij} = \\text{LeakyReLU}\\!\\left(\\vec{a}^{\\,T} \\left[\\vec{h}\'_i \\,\\|\\, \\vec{h}\'_j\\right]\\right)',color:'#e11d48'},
+  {title:'Etapa 2: Softmax → Pesos de Atención \(\\alpha_{ij}\)',
+   formula:'\\alpha_{ij} = \\frac{\\exp(e_{ij})}{\\displaystyle\\sum_{k \\in \\mathcal{N}(i)} \\exp(e_{ik})}',color:'#f59e0b'},
+  {title:'Etapa 3: Agregación → Embedding Final \(H\'\'\)',
+   formula:'\\vec{h}\'\'_i = \\text{ELU}\\!\\left(\\sum_{j \\in \\mathcal{N}(i)} \\alpha_{ij}\\, \\vec{h}\'_j\\right)',color:'#10b981'}
+];
+
+function totalSteps(){
+  if(currentStage===0) return N*HD;       // 18
+  if(currentStage===1) return attEdges.length; // 22
+  if(currentStage===2) return N;           // 6
+  return N*HD;                              // 18
+}
+
+function setStage(s){stop();currentStage=s;stepIdx=0;computeAll();updateTabs();renderAll();}
+function updateTabs(){var tabs=document.querySelectorAll('.stage-tab');tabs.forEach(function(t,i){t.classList.toggle('active',i===currentStage);});}
+
+// ===================== RENDERING =====================
+function renderAll(){renderStageInfo();renderMatrices();moveGraphCanvas();renderDotProduct();renderProgress();renderGraph();renderArch();}
+
+function moveGraphCanvas(){
+  var cv=document.getElementById('graphCanvas');
+  var ph=document.getElementById('graphInStage1');
+  var ba=document.getElementById('bottomArea');
+  if(currentStage===1 && ph){
+    if(!ph.contains(cv)) ph.appendChild(cv);
+  } else if(ba){
+    if(!ba.contains(cv)) ba.insertBefore(cv,ba.firstChild);
+  }
+}
+
+function renderStageInfo(){
+  var c=stageConfigs[currentStage];
+  var el=document.getElementById('stageInfo');
+  el.innerHTML=c.title+'<div class="formula" id="stageFormula"></div>';
+  katex.render(c.formula,document.getElementById('stageFormula'),{displayMode:true,throwOnError:false});
+  var html=el.innerHTML;
+  html=html.replace(/\\\((.+?)\\\)/g,function(m,tex){var sp=document.createElement('span');katex.render(tex,sp,{throwOnError:false});return sp.innerHTML;});
+  el.innerHTML=html;
+}
+
+function buildMat(name,data,rows,cols,color,hlR,hlC,cellCls,colLabels){
+  var cw=52,ch=32,fs='.75em';
+  if(cols>6){cw=42;ch=28;fs='.68em';}
+  var h='<div class="mat-block"><div class="mat-label" style="background:'+color+'">'+name+'</div>';
+  h+='<div class="mat-dims">'+rows+'&times;'+cols+'</div>';
+  // Column labels row (if provided)
+  if(colLabels){
+    h+='<div style="display:grid;grid-template-columns:repeat('+cols+','+cw+'px);gap:1px">';
+    for(var j=0;j<cols;j++) h+='<div style="text-align:center;font-size:.6em;color:#94a3b8;padding:1px 0">'+colLabels[j]+'</div>';
+    h+='</div>';
+  }
+  h+='<div class="mat-grid" style="grid-template-columns:repeat('+cols+','+cw+'px)">';
+  for(var i=0;i<rows;i++){for(var j=0;j<cols;j++){
+    var val=data[i][j];
+    var cls='mat-cell';
+    if(cellCls&&cellCls[i]&&cellCls[i][j]) cls+=' '+cellCls[i][j];
+    else{
+      var isR=(hlR===i),isC=(hlC===j);
+      if(isR&&isC) cls+=' hl-both'; else if(isR) cls+=' hl-row'; else if(isC) cls+=' hl-col';
+    }
+    var txt=(Math.abs(val)<0.0001)?'0':val.toFixed(2);
+    h+='<div class="'+cls+'" style="width:'+cw+'px;height:'+ch+'px;font-size:'+fs+'">'+txt+'</div>';
+  }}
+  h+='</div></div>';
+  return h;
+}
+
+function renderMatrices(){
+  var area=document.getElementById('matrixArea');
+  // Rescue graphCanvas if it was moved inside matrixArea so it doesn't get destroyed by innerHTML
+  var cv=document.getElementById('graphCanvas');
+  if(cv && area.contains(cv)){
+    document.getElementById('bottomArea').appendChild(cv);
+  }
+  
+  var html='';
+
+  if(currentStage===0){
+    // X[6x4] * W[4x3] = H'[6x3]
+    var ri=Math.floor(stepIdx/HD),ci=stepIdx%HD;
+    if(stepIdx>=totalSteps()){ri=-1;ci=-1;}
+    var comp={};
+    for(var s=0;s<Math.min(stepIdx,totalSteps());s++){var r2=Math.floor(s/HD),c2=s%HD;if(!comp[r2])comp[r2]={};comp[r2][c2]=true;}
+    html+=buildMat('X (features)',X,N,F,'#3b82f6',ri,-1,null,featureNames);
+    html+='<div class="op-symbol">&times;</div>';
+    html+=buildMat('W (aprendible)',W,F,HD,'#60a5fa',-1,ci,null,['d₀','d₁','d₂']);
+    html+='<div class="op-symbol">=</div>';
+    var hS=[];var hC={};
+    for(var i=0;i<N;i++){hS.push([]);hC[i]={};for(var j=0;j<HD;j++){
+      if(comp[i]&&comp[i][j]){hS[i].push(Hp[i][j]);hC[i][j]='computed';}else hS[i].push(0);
+      if(i===ri&&j===ci) hC[i][j]='hl-result';
+    }}
+    html+=buildMat("H' (embedding)",hS,N,HD,'#8b5cf6',ri,ci,hC);
+
+  } else if(currentStage===1){
+    // Attention scores - TWO ROW LAYOUT
+    var cur=stepIdx<attEdges.length?attEdges[stepIdx]:null;
+    var cI=cur?cur[0]:-1,cJ=cur?cur[1]:-1;
+
+    html+='<div class="stage1-layout">';
+
+    // === TOP ROW: H' → [h'_i ∥ h'_j] · a → score ===
+    html+='<div class="stage1-top">';
+
+    // H' matrix with highlighted rows
+    var hC={};
+    for(var i=0;i<N;i++){hC[i]={};for(var j=0;j<HD;j++){
+      if(i===cI&&i===cJ) hC[i][j]='hl-both';
+      else if(i===cI) hC[i][j]='hl-row';
+      else if(i===cJ) hC[i][j]='hl-col';
+    }}
+    html+=buildMat("H' (embedding)",Hp,N,HD,'#8b5cf6',-1,-1,hC);
+    html+='<div class="op-symbol">&rarr;</div>';
+
+    // CONCATENATION: big animated block
+    if(cI>=0&&cJ>=0){
+      var concatVals=Hp[cI].concat(Hp[cJ]);
+      // Build as 2-row block: row 0 = labels, shown via concatData
+      var concatData=[concatVals];
+      var concatCls={0:{}};
+      for(var k=0;k<HD;k++) concatCls[0][k]='concat-i';
+      for(var k=HD;k<2*HD;k++) concatCls[0][k]='concat-j';
+      // Wrap in animated container
+      html+='<div class="concat-block" style="display:flex;flex-direction:column;align-items:center;gap:2px">';
+      html+='<div style="font-size:.75em;color:#a855f7;font-weight:700;letter-spacing:1px">CONCATENAR</div>';
+      html+='<div style="display:flex;align-items:center;gap:0">';
+      // Left brace + i-label
+      html+='<div style="display:flex;flex-direction:column;align-items:center;margin-right:2px">';
+      html+='<div style="font-size:.65em;color:#93c5fd;font-weight:700">nodo '+cI+'</div>';
+      html+='<div style="font-size:1.6em;color:#93c5fd">⟨</div></div>';
+      // The i-half cells
+      html+='<div style="display:grid;grid-template-columns:repeat('+HD+',52px);gap:1px">';
+      for(var k=0;k<HD;k++) html+='<div class="mat-cell concat-i" style="width:52px;height:36px;font-size:.8em;font-weight:700;border-radius:4px">'+Hp[cI][k].toFixed(2)+'</div>';
+      html+='</div>';
+      // Separator bar
+      html+='<div style="width:4px;height:36px;background:#fbbf24;margin:0 4px;border-radius:2px"></div>';
+      // The j-half cells
+      html+='<div style="display:grid;grid-template-columns:repeat('+HD+',52px);gap:1px">';
+      for(var k=0;k<HD;k++) html+='<div class="mat-cell concat-j" style="width:52px;height:36px;font-size:.8em;font-weight:700;border-radius:4px">'+Hp[cJ][k].toFixed(2)+'</div>';
+      html+='</div>';
+      // Right brace + j-label
+      html+='<div style="display:flex;flex-direction:column;align-items:center;margin-left:2px">';
+      html+='<div style="font-size:.65em;color:#d8b4fe;font-weight:700">nodo '+cJ+'</div>';
+      html+='<div style="font-size:1.6em;color:#d8b4fe">⟩</div></div>';
+      html+='</div>';
+      html+='<div style="font-size:.65em;color:#94a3b8">[h\'<sub>'+cI+'</sub> ∥ h\'<sub>'+cJ+'</sub>] &rarr; 1&times;'+(2*HD)+' vector</div>';
+      html+='</div>';
+    } else {
+      html+='<div style="display:flex;flex-direction:column;align-items:center;gap:4px;opacity:0.4">';
+      html+='<div style="font-size:.75em;color:#a855f7;font-weight:700">CONCATENAR</div>';
+      html+='<div style="display:grid;grid-template-columns:repeat('+(2*HD)+',44px);gap:1px">';
+      for(var k=0;k<2*HD;k++) html+='<div class="mat-cell" style="width:44px;height:32px;font-size:.7em">?</div>';
+      html+='</div>';
+      html+='<div style="font-size:.65em;color:#94a3b8">[h\'<sub>i</sub> ∥ h\'<sub>j</sub>] &mdash; presiona Paso</div>';
+      html+='</div>';
+    }
+
+    // Dot product symbol
+    html+='<div class="op-symbol">&sdot;</div>';
+
+    // a vector (as row)
+    var aRow=[aVec.slice()];
+    html+=buildMat('<span style="text-transform:none"><i>a</i><sup>T</sup></span> (atención)',aRow,1,2*HD,'#e11d48',-1,-1,null);
+
+    html+='</div>'; // end stage1-top
+
+    // === INLINE DOT PRODUCT DISPLAY (shown between matrices and E) ===
+    var dotHint=stepIdx>0?'':'<div style="color:#94a3b8;font-size:.85em">Presiona <b>▶ Paso</b> para ver el cálculo del producto punto aquí</div>';
+    html+='<div id="dotInline" style="text-align:center;padding:12px 20px;min-height:50px;background:rgba(30,41,59,0.6);border-radius:10px;margin:10px auto;border:1px solid #475569;max-width:950px">'+dotHint+'</div>';
+
+    // === CONNECTOR ARROW ===
+    html+='<div class="stage1-connector">⬇ LeakyReLU &rarr; E<sub>'+cI+','+cJ+'</sub></div>';
+
+    // === BOTTOM ROW: Graph + E score matrix side by side ===
+    html+='<div class="stage1-bottom" style="align-items:flex-start;flex-wrap:nowrap">';
+
+    // Placeholder where the graph canvas will be moved into
+    html+='<div id="graphInStage1" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px">';
+    html+='<div style="font-size:.78em;color:#fbbf24;font-weight:700;letter-spacing:.5px">🔗 Aristas del grafo → celdas con score en E</div>';
+    html+='</div>';
+
+    // E matrix
+    var eS=[],eC={};
+    var done={};for(var s=0;s<Math.min(stepIdx,attEdges.length);s++){var ti=attEdges[s][0],sj=attEdges[s][1];if(!done[ti])done[ti]={};done[ti][sj]=true;}
+    for(var i=0;i<N;i++){eS.push([]);eC[i]={};for(var j=0;j<N;j++){
+      if(E[i][j]===null){eS[i].push(0);eC[i][j]='adj-zero';}
+      else if(done[i]&&done[i][j]){eS[i].push(E[i][j]);eC[i][j]='computed';}
+      else{eS[i].push(0);}
+    }}
+    if(cI>=0&&cJ>=0) eC[cI][cJ]='hl-result';
+    html+='<div style="display:flex;align-items:center;gap:14px">';
+    html+=buildMat('E (scores)',eS,N,N,'#e11d48',-1,-1,eC);
+    // Legend
+    html+='<div style="max-width:150px;font-size:.78em;color:#94a3b8;line-height:1.5;padding:8px">';
+    html+='<div style="color:#6ee7b7">■ Score computado</div>';
+    html+='<div style="color:#1e293b">■ Sin arista (0)</div>';
+    html+='<div style="color:#fde68a">■ Calculando ahora</div>';
+    html+='<div style="margin-top:8px;color:#fbbf24;font-size:.9em">← Solo hay scores donde hay arista en el grafo</div>';
+    html+='</div>';
+    html+='</div>';
+    html+='</div>'; // end stage1-bottom
+
+    html+='</div>'; // end stage1-layout
+
+  } else if(currentStage===2){
+    // Softmax: E -> Alpha
+    var curN=stepIdx<N?stepIdx:-1;
+    var eS=[],eC={};
+    for(var i=0;i<N;i++){eS.push([]);eC[i]={};for(var j=0;j<N;j++){
+      if(E[i][j]===null){eS[i].push(0);eC[i][j]='adj-zero';}
+      else{eS[i].push(E[i][j]);if(i===curN) eC[i][j]='hl-row';}
+    }}
+    html+=buildMat('E (scores)',eS,N,N,'#e11d48',-1,-1,eC);
+    html+='<div class="op-symbol">&rarr;</div>';
+    html+='<div style="text-align:center;align-self:center;padding:0 10px"><div style="font-size:1.5em;color:#f59e0b;font-weight:700">softmax</div><div style="font-size:.8em;color:#94a3b8">por fila (vecinos)</div></div>';
+    html+='<div class="op-symbol">&rarr;</div>';
+    var aS=[],aC={};
+    for(var i=0;i<N;i++){aS.push([]);aC[i]={};for(var j=0;j<N;j++){
+      if(Alpha[i][j]===null){aS[i].push(0);aC[i][j]='adj-zero';}
+      else if(i<stepIdx){aS[i].push(Alpha[i][j]);aC[i][j]=Alpha[i][j]>0.3?'attn-high':'computed';}
+      else if(i===curN){aS[i].push(Alpha[i][j]);aC[i][j]='hl-result';}
+      else aS[i].push(0);
+    }}
+    html+=buildMat('&alpha; (pesos)',aS,N,N,'#f59e0b',-1,-1,aC);
+
+  } else {
+    // Aggregation: alpha * H' -> H'' with ELU
+    var ri=Math.floor(stepIdx/HD),ci=stepIdx%HD;
+    if(stepIdx>=totalSteps()){ri=-1;ci=-1;}
+    var comp={};for(var s=0;s<Math.min(stepIdx,totalSteps());s++){var r2=Math.floor(s/HD),c2=s%HD;if(!comp[r2])comp[r2]={};comp[r2][c2]=true;}
+    // Alpha matrix
+    var aS=[],aC={};
+    for(var i=0;i<N;i++){aS.push([]);aC[i]={};for(var j=0;j<N;j++){
+      if(Alpha[i][j]!==null){aS[i].push(Alpha[i][j]);if(i===ri)aC[i][j]='hl-row';}
+      else{aS[i].push(0);aC[i][j]='adj-zero';}
+    }}
+    html+=buildMat('&alpha;',aS,N,N,'#f59e0b',ri,-1,aC);
+    html+='<div class="op-symbol">&times;</div>';
+    html+=buildMat("H' (embedding)",Hp,N,HD,'#8b5cf6',-1,ci,null);
+    html+='<div class="op-symbol">=</div>';
+    var hS=[],hC={};
+    for(var i=0;i<N;i++){hS.push([]);hC[i]={};for(var j=0;j<HD;j++){
+      if(comp[i]&&comp[i][j]){hS[i].push(Hout[i][j]);hC[i][j]=Hout[i][j]>=0?'relu-pos':'relu-zero';}
+      else hS[i].push(0);
+      if(i===ri&&j===ci) hC[i][j]='hl-result';
+    }}
+    html+=buildMat("H'' embedding final",hS,N,HD,'#10b981',ri,ci,hC);
+  }
+  area.innerHTML=html;
+}
+
+function renderDotProduct(){
+  var el=document.getElementById('dotDisplay');
+  if(stepIdx>=totalSteps()){
+    el.innerHTML='<div class="result-val" style="color:#10b981">✅ Etapa completada</div>';
+    var inl=document.getElementById('dotInline');
+    if(inl) inl.innerHTML='<div class="result-val" style="color:#10b981;font-size:1.1em">✅ Todos los scores de atención calculados</div>';
+    return;
+  }
+
+  if(currentStage===0){
+    // Standard dot product X_row * W_col
+    var ri=Math.floor(stepIdx/HD),ci=stepIdx%HD;
+    var parts=[];var sum=0;
+    for(var k=0;k<F;k++){
+      var a=X[ri][k],b=W[k][ci],p=a*b;sum+=p;
+      var cv=p>=0?'#93c5fd':'#fca5a5';
+      parts.push('\\color{#94a3b8}{'+a.toFixed(2)+'}\\times\\color{#60a5fa}{'+b.toFixed(2)+'}=\\color{'+cv+'}{'+p.toFixed(4)+'}');
+    }
+    el.innerHTML='<div id="dotMain"></div><div class="result-val" id="dotRes"></div>';
+    katex.render("H'_{"+ri+','+ci+'} = '+parts.join(' + '),document.getElementById('dotMain'),{throwOnError:false});
+    katex.render('= '+sum.toFixed(4),document.getElementById('dotRes'),{throwOnError:false});
+
+  } else if(currentStage===1){
+    // Attention score: a^T [h'_i || h'_j] — render INLINE between matrices
+    var target=document.getElementById('dotInline');
+    if(target) el.innerHTML=''; // clear bottom display, use inline
+    else target=el; // fallback
+    var edge=attEdges[stepIdx];
+    var ti=edge[0],sj=edge[1];
+    var concat=Hp[ti].concat(Hp[sj]);
+    var dot=0;for(var k=0;k<concat.length;k++) dot+=concat[k]*aVec[k];
+    var raw=dot,lr=leakyRelu(dot);
+    // Step 1: Show concatenation explicitly
+    var hiStr=[];for(var k=0;k<HD;k++) hiStr.push('\\color{#93c5fd}{'+Hp[ti][k].toFixed(2)+'}');
+    var hjStr=[];for(var k=0;k<HD;k++) hjStr.push('\\color{#d8b4fe}{'+Hp[sj][k].toFixed(2)+'}');
+    var concatAll=[];
+    for(var k=0;k<HD;k++) concatAll.push('\\color{#93c5fd}{'+Hp[ti][k].toFixed(2)+'}');
+    for(var k=0;k<HD;k++) concatAll.push('\\color{#d8b4fe}{'+Hp[sj][k].toFixed(2)+'}');
+    // Step 2: Show dot product with a
+    var terms=[];var s2=0;
+    for(var k=0;k<2*HD;k++){var p=concat[k]*aVec[k];s2+=p;
+      var cv=p>=0?'#86efac':'#fca5a5';
+      terms.push(concat[k].toFixed(2)+'\\!\\cdot\\!\\color{#fda4af}{'+aVec[k].toFixed(2)+'}');
+    }
+    target.innerHTML='<div id="dotStep1" style="margin-bottom:4px"></div><div id="dotStep2" style="margin-bottom:4px"></div><div id="dotStep3"></div><div class="result-val" id="dotRes"></div>';
+    katex.render('\\underbrace{['+hiStr.join(',\\,')+']}_{ \\vec{h}\'_{'+ti+'}} \\;\\color{#fbbf24}{\\|}\\; \\underbrace{['+hjStr.join(',\\,')+']}_{ \\vec{h}\'_{'+sj+'}} \\;=\\; ['+concatAll.join(',\\,')+']',document.getElementById('dotStep1'),{throwOnError:false});
+    katex.render('\\vec{a}^T \\cdot [\\vec{h}\'_{'+ti+'} \\| \\vec{h}\'_{'+sj+'}] = '+terms.join(' + ')+' = '+raw.toFixed(4),document.getElementById('dotStep2'),{throwOnError:false});
+    var col=lr>=0?'#86efac':'#fca5a5';
+    katex.render('e_{'+ti+','+sj+'} = \\text{LeakyReLU}('+raw.toFixed(4)+') = \\color{'+col+'}{'+lr.toFixed(4)+'}',document.getElementById('dotRes'),{throwOnError:false});
+
+  } else if(currentStage===2){
+    // Softmax for node i
+    var ni=stepIdx;
+    var expParts=[];var sumExp=0;
+    var mx=-Infinity;for(var k=0;k<nbrs[ni].length;k++){var v=E[ni][nbrs[ni][k]];if(v>mx) mx=v;}
+    for(var k=0;k<nbrs[ni].length;k++){
+      var j=nbrs[ni][k];
+      var ev=Math.exp(E[ni][j]-mx);sumExp+=ev;
+      expParts.push('e^{e_{'+ni+','+j+'}}');
+    }
+    var alphaStr=[];
+    for(var k=0;k<nbrs[ni].length;k++){
+      var j=nbrs[ni][k];
+      alphaStr.push('\\alpha_{'+ni+','+j+'} = '+Alpha[ni][j].toFixed(4));
+    }
+    el.innerHTML='<div id="dotSoft1"></div><div id="dotSoft2"></div><div class="result-val" id="dotRes"></div>';
+    katex.render('\\text{Nodo }'+ni+': \\; \\text{vecinos} = \\{'+nbrs[ni].join(', ')+'\\}',document.getElementById('dotSoft1'),{throwOnError:false});
+    katex.render('\\alpha_{'+ni+',j} = \\frac{\\exp(e_{'+ni+',j})}{'+expParts.join('+')+'}',document.getElementById('dotSoft2'),{throwOnError:false});
+    katex.render('\\Rightarrow '+alphaStr.join(', \\;\\;'),document.getElementById('dotRes'),{throwOnError:false});
+
+  } else {
+    // Aggregation: h''_{i,d} = ELU(sum alpha * h')
+    var ri=Math.floor(stepIdx/HD),ci=stepIdx%HD;
+    var terms=[];var s=0;
+    for(var k=0;k<nbrs[ri].length;k++){
+      var j=nbrs[ri][k];
+      var a=Alpha[ri][j],h=Hp[j][ci],p=a*h;s+=p;
+      var cv=p>=0?'#93c5fd':'#fca5a5';
+      terms.push('\\color{#fbbf24}{'+a.toFixed(2)+'}\\!\\cdot\\!\\color{#a78bfa}{'+h.toFixed(2)+'}');
+    }
+    var eluVal=elu(s);
+    var col=eluVal>=0?'#86efac':'#fca5a5';
+    el.innerHTML='<div id="dotAgg"></div><div class="result-val" id="dotRes"></div>';
+    katex.render("H''_{"+ri+','+ci+'} = \\text{ELU}('+terms.join('+')+') = \\text{ELU}('+s.toFixed(4)+')',document.getElementById('dotAgg'),{throwOnError:false});
+    katex.render('= \\color{'+col+'}{'+eluVal.toFixed(4)+'}',document.getElementById('dotRes'),{throwOnError:false});
+  }
+}
+
+function renderProgress(){
+  var t=totalSteps(),pct=t>0?(stepIdx/t*100):0;
+  var colors=['#3b82f6','#e11d48','#f59e0b','#10b981'];
+  document.getElementById('progBar').style.width=Math.min(pct,100)+'%';
+  document.getElementById('progBar').style.background=colors[currentStage];
+  document.getElementById('progText').textContent=Math.min(stepIdx,t)+' / '+t+' operaciones';
+}
+
+// ===================== GRAPH CANVAS =====================
+var nodePos=[[100,65],[340,65],[220,175],[440,195],[80,310],[370,320]];
+var nodeCol=['#8b5cf6','#3b82f6','#10b981','#f59e0b','#ef4444','#06b6d4'];
+
+function renderGraph(){
+  var cv=document.getElementById('graphCanvas');
+  var c=cv.getContext('2d');
+  c.clearRect(0,0,cv.width,cv.height);
+  c.fillStyle='#0f172a';c.fillRect(0,0,cv.width,cv.height);
+
+  // Title
+  c.save();c.font='bold 13px Segoe UI';c.fillStyle='#64748b';c.textAlign='center';
+  c.fillText('Grafo de ejemplo (6 nodos, 8 aristas + self-loops)',cv.width/2,20);c.restore();
+
+  // Determine which edge is active
+  var activeI=-1,activeJ=-1;
+  if(currentStage===1&&stepIdx<attEdges.length){activeI=attEdges[stepIdx][0];activeJ=attEdges[stepIdx][1];}
+  if(currentStage===2&&stepIdx<N) activeI=stepIdx;
+  if(currentStage===3&&stepIdx<totalSteps()) activeI=Math.floor(stepIdx/HD);
+
+  // Draw edges
+  for(var e=0;e<rawEdges.length;e++){
+    var u=rawEdges[e][0],v=rawEdges[e][1];
+    var hasAlpha=(currentStage>=2&&Alpha[u][v]!==null);
+    var avgA=hasAlpha?(Alpha[u][v]+Alpha[v][u])/2:0;
+    var lw=hasAlpha?1.5+avgA*7:1.5;
+    var op=hasAlpha?0.3+avgA*0.7:0.25;
+    var isCur=false;
+    if(currentStage===1){
+      if((activeI===u&&activeJ===v)||(activeI===v&&activeJ===u)) isCur=true;
+    }
+    if(currentStage>=2&&(activeI===u||activeI===v)) isCur=true;
+
+    c.beginPath();
+    c.moveTo(nodePos[u][0],nodePos[u][1]);
+    c.lineTo(nodePos[v][0],nodePos[v][1]);
+    if(isCur){c.strokeStyle='#fbbf24';c.lineWidth=isCur&&hasAlpha?lw+2:4;c.shadowColor='#fbbf24';c.shadowBlur=10;}
+    else{c.strokeStyle='rgba(148,163,184,'+op+')';c.lineWidth=lw;c.shadowBlur=0;}
+    c.stroke();c.shadowBlur=0;
+
+    // Show alpha on edges after stage 2
+    if(hasAlpha&&(currentStage>=2)&&avgA>0.05){
+      var mx=(nodePos[u][0]+nodePos[v][0])/2,my=(nodePos[u][1]+nodePos[v][1])/2;
+      c.save();c.font='bold 10px Consolas';c.fillStyle='#fbbf24';c.textAlign='center';
+      c.fillText(avgA.toFixed(2),mx,my-6);c.restore();
+    }
+  }
+
+  // Self-loop indicators (small arc above each node)
+  for(var i=0;i<N;i++){
+    var px=nodePos[i][0],py=nodePos[i][1];
+    var isSelf=(currentStage===1&&activeI===i&&activeJ===i);
+    c.beginPath();
+    c.arc(px,py-24,10,0.3*Math.PI,0.7*Math.PI);
+    c.strokeStyle=isSelf?'#fbbf24':'rgba(148,163,184,0.15)';
+    c.lineWidth=isSelf?3:1;
+    c.stroke();
+  }
+
+  // Draw nodes
+  var shortNames=['Redes\nSociales','Deep\nLearning','Grafos\n+ NLP','ML para\nGrafos','Análisis\nTexto','Teoría\nGrafos'];
+  for(var i=0;i<N;i++){
+    var px=nodePos[i][0],py=nodePos[i][1];
+    var isActive=(i===activeI||i===activeJ);
+    var r=isActive?24:19;
+    c.beginPath();c.arc(px,py,r,0,Math.PI*2);
+    if(isActive){c.fillStyle=nodeCol[i];c.shadowColor=nodeCol[i];c.shadowBlur=18;}
+    else{c.fillStyle=nodeCol[i]+'60';c.shadowBlur=0;}
+    c.fill();c.shadowBlur=0;
+    c.strokeStyle=isActive?'#fff':nodeCol[i];c.lineWidth=isActive?2.5:1.5;c.stroke();
+    c.save();c.font='bold '+(isActive?'14':'12')+'px Segoe UI';c.fillStyle='#fff';c.textAlign='center';c.textBaseline='middle';
+    c.fillText(i.toString(),px,py);c.restore();
+    // Paper label below node
+    c.save();c.font='9px Segoe UI';c.fillStyle=isActive?'#fff':'#94a3b8';c.textAlign='center';
+    var lines=shortNames[i].split('\n');
+    for(var li=0;li<lines.length;li++) c.fillText(lines[li],px,py+r+10+li*11);
+    c.restore();
+  }
+
+  // Legend
+  c.save();c.font='11px Segoe UI';c.fillStyle='#94a3b8';c.textAlign='left';
+  var ly=cv.height-15;
+  if(currentStage===0) c.fillText('Etapa 0: Transformando features de cada nodo con W',15,ly);
+  else if(currentStage===1) c.fillText('Etapa 1: Calculando score de atención para arista '+activeI+'→'+activeJ+(activeI===activeJ?' (self-loop)':''),15,ly);
+  else if(currentStage===2) c.fillText('Etapa 2: Softmax sobre vecinos del nodo '+(activeI>=0?activeI:'...'),15,ly);
+  else c.fillText('Etapa 3: Agregando info de vecinos para nodo '+(activeI>=0?activeI:'...'),15,ly);
+  c.restore();
+}
+
+// ===================== ARCHITECTURE CANVAS =====================
+function renderArch(){
+  var cv=document.getElementById('archCanvas');
+  var c=cv.getContext('2d');
+  c.clearRect(0,0,cv.width,cv.height);
+  c.fillStyle='#0f172a';c.fillRect(0,0,cv.width,cv.height);
+
+  c.save();c.font='bold 13px Segoe UI';c.fillStyle='#64748b';c.textAlign='center';
+  c.fillText('Arquitectura GAT (1 cabeza de atención)',cv.width/2,20);c.restore();
+
+  var blocks=[
+    {x:25,w:75,label:'Input X',sub:'6×4 raw',color:'#64748b'},
+    {x:120,w:85,label:'Embedding',sub:'X·W → H\' 6×3',color:'#3b82f6'},
+    {x:225,w:85,label:'Atención',sub:'e_ij scores',color:'#e11d48'},
+    {x:330,w:75,label:'Softmax',sub:'α_ij pesos',color:'#f59e0b'},
+    {x:425,w:75,label:'Agregar',sub:'Σ α·h\'→H\'\'',color:'#10b981'}
+  ];
+
+  var midY=190;
+  // Draw blocks and arrows
+  for(var i=0;i<blocks.length;i++){
+    var b=blocks[i];
+    var isActive=(i === currentStage + 1);
+    // Arrow from previous
+    if(i>0){
+      c.beginPath();
+      c.moveTo(blocks[i-1].x+blocks[i-1].w+5,midY);
+      c.lineTo(b.x-5,midY);
+      c.strokeStyle='#475569';c.lineWidth=2;
+      c.stroke();
+      // arrowhead
+      c.beginPath();c.moveTo(b.x-5,midY-5);c.lineTo(b.x-5,midY+5);c.lineTo(b.x,midY);c.closePath();
+      c.fillStyle='#475569';c.fill();
+    }
+    // Block
+    var bh=70;
+    c.fillStyle=isActive?b.color:b.color+'40';
+    if(isActive){c.shadowColor=b.color;c.shadowBlur=15;}
+    roundRect(c,b.x,midY-bh/2,b.w,bh,10);
+    c.fill();c.shadowBlur=0;
+    c.strokeStyle=b.color;c.lineWidth=isActive?2:1;
+    roundRect(c,b.x,midY-bh/2,b.w,bh,10);c.stroke();
+    // Text
+    c.save();c.font='bold 11px Segoe UI';c.fillStyle='#fff';c.textAlign='center';
+    c.fillText(b.label,b.x+b.w/2,midY-5);
+    c.font='10px Consolas';c.fillStyle='#cbd5e1';
+    c.fillText(b.sub,b.x+b.w/2,midY+12);
+    c.restore();
+  }
+
+  // ELU at the end
+  c.beginPath();c.moveTo(500+5,midY);c.lineTo(505,midY);
+  c.strokeStyle='#475569';c.lineWidth=2;c.stroke();
+  var isLast=(currentStage===3);
+  c.fillStyle=isLast?'#10b981':'#10b98140';
+  if(isLast){c.shadowColor='#10b981';c.shadowBlur=15;}
+  roundRect(c,505,midY-25,15,50,5);c.fill();c.shadowBlur=0;
+  c.save();c.font='bold 10px Segoe UI';c.fillStyle='#fff';c.textAlign='center';
+  c.translate(512,midY);c.rotate(-Math.PI/2);c.fillText('ELU',0,0);c.restore();
+
+  // Processing indicator
+  c.save();c.font='10px Consolas';c.fillStyle='#fbbf24';c.textAlign='center';
+  var stepBlock = currentStage + 1;
+  var ax=blocks[stepBlock].x+blocks[stepBlock].w/2;
+  c.fillText('▼ procesando',ax,midY-50);c.restore();
+
+  // Bottom: Multi-head explanation
+  c.save();
+  c.fillStyle='rgba(255,255,255,0.05)';
+  roundRect(c,15,270,cv.width-30,95,10);c.fill();
+  c.strokeStyle='#334155';c.lineWidth=1;
+  roundRect(c,15,270,cv.width-30,95,10);c.stroke();
+
+  c.font='bold 12px Segoe UI';c.fillStyle='#fbbf24';c.textAlign='left';
+  c.fillText('🔮 Multi-Head Attention (en el modelo real: K=8 cabezas)',30,292);
+  c.font='11px Segoe UI';c.fillStyle='#94a3b8';
+  c.fillText('Aquí mostramos 1 cabeza. En el modelo real, 8 cabezas corren en paralelo,',30,312);
+  c.fillText('cada una con sus propios W y a. Sus salidas se concatenan:',30,328);
+  c.font='bold 11px Consolas';c.fillStyle='#fbbf24';
+  c.fillText('Capa 1: H\' = [head₁ ∥ head₂ ∥ ... ∥ head₈]  →  8×3 = 24 dim',30,350);
+  c.restore();
+}
+
+function roundRect(c,x,y,w,h,r){
+  c.beginPath();c.moveTo(x+r,y);c.lineTo(x+w-r,y);c.quadraticCurveTo(x+w,y,x+w,y+r);
+  c.lineTo(x+w,y+h-r);c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);c.lineTo(x+r,y+h);
+  c.quadraticCurveTo(x,y+h,x,y+h-r);c.lineTo(x,y+r);c.quadraticCurveTo(x,y,x+r,y);c.closePath();
+}
+
+// ===================== CONTROLS =====================
+// ONE STEP ONLY — does NOT jump to next stage
+function stepOne(){
+  stop();
+  if(stepIdx<totalSteps()){stepIdx++;renderAll();}
+}
+// STEP BACK
+function stepBack(){
+  stop();
+  if(stepIdx>0){stepIdx--;renderAll();}
+}
+// stepForward used by auto-play (can jump stages)
+function stepForward(){
+  if(stepIdx<totalSteps()){stepIdx++;renderAll();}
+  else if(currentStage<3){setStage(currentStage+1);}
+  else stop();
+}
+function togglePlay(){if(playing)stop();else play();}
+function play(){playing=true;document.getElementById('btnPlay').innerHTML='⏸ Parar';tick();}
+function stop(){playing=false;if(timer)clearTimeout(timer);timer=null;document.getElementById('btnPlay').innerHTML='▶▶ Auto';}
+function tick(){
+  if(!playing)return;
+  if(stepIdx<totalSteps()){stepIdx++;renderAll();timer=setTimeout(tick,parseInt(document.getElementById('speedSlider').value));}
+  else if(currentStage<3){timer=setTimeout(function(){setStage(currentStage+1);play();},800);}
+  else stop();
+}
+function resetStage(){stop();stepIdx=0;renderAll();}
+function randomize(){stop();makeWeights();computeAll();stepIdx=0;renderAll();}
+
+// INIT
+renderAll();
+</script>
+</body>
+</html>

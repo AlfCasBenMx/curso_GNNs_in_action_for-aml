@@ -1,0 +1,477 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECCIÓN 3.5: LOGITS Y SOFTMAX
+     Transición natural de binario a multiclase, después del círculo
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="section" style="background: linear-gradient(135deg, #4c1d95, #5b21b6); color: #e0e7ff;">
+  <div class="section-header">
+    <div class="section-number" style="background: linear-gradient(135deg, #a855f7, #7c3aed);">3.5</div>
+    <div class="section-title">
+      <h2 style="color: #e9d5ff;">Logits y Softmax</h2>
+      <p style="color: #c4b5fd;">De clasificación binaria a multiclase</p>
+    </div>
+  </div>
+
+  <div style="background: #020617; padding: 14px 16px; border-radius: 12px; margin: 16px 0; border: 1px solid #1f2937;">
+    <h3 style="color: #e5e7eb; margin: 0 0 6px; font-size: 0.98em;">✅ Al terminar esta sección deberías poder:</h3>
+    <ul style="color: #9ca3af; font-size: 0.9em; margin: 0 0 0 18px; line-height: 1.6;">
+      <li>Explicar qué es un logit y en qué se diferencia de una probabilidad.</li>
+      <li>Aplicar mentalmente o en código Softmax a un vector de logits y obtener probabilidades que suman 1.</li>
+      <li>Leer un ejemplo simple de clasificación multiclase con <code>nn.Linear</code>, <code>Softmax</code> y <code>CrossEntropyLoss</code>.</li>
+    </ul>
+  </div>
+
+  <!-- Conexión narrativa -->
+  <div style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.1)); border: 1px solid rgba(34, 197, 94, 0.4); border-radius: 12px; padding: 14px; margin-bottom: 18px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="font-size: 1.8em;">🔗</div>
+      <div>
+        <div style="color: #4ade80; font-weight: bold; margin-bottom: 4px;">Continuando desde el círculo...</div>
+        <p style="color: #e2e8f0; font-size: 0.9em; margin: 0;">Vimos cómo clasificar <strong style="color: #60a5fa;">2 clases</strong> (azul/rojo). Pero en el mundo real hay problemas con <strong style="color: #fbbf24;">10, 100 o 1000 clases</strong> (ej: reconocer dígitos 0-9, clasificar imágenes). Aquí es donde necesitamos <strong style="color: #c4b5fd;">Softmax</strong>.</p>
+    <div style="background: #020617; padding: 18px 20px; border-radius: 12px; margin: 20px 0; border: 1px solid #1f2937;">
+      <h4 style="color: #e5e7eb; margin: 0 0 8px;">📋 Código para copiar y pegar: clasificación multiclase con logits y Softmax</h4>
+      <p style="color: #9ca3af; font-size: 0.9em; margin: 0 0 8px;">
+        A partir de los imports del <strong>Paso 0</strong>, este ejemplo genera un pequeño dataset 2D con
+        <strong>3 clases</strong>, entrena una capa lineal que produce <strong>logits</strong> y luego aplica
+        <strong>Softmax</strong> y <strong>CrossEntropyLoss</strong> para entrenar y medir la exactitud.
+      </p>
+      <div style="background: #0b1120; border-radius: 10px; padding: 10px 12px; border: 1px solid #1e293b; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.8em; color: #e5e7eb; overflow-x: auto;">
+        <pre style="margin: 0;"><code>import torch.nn.functional as F
+
+  torch.manual_seed(0)
+
+  # Dataset sint&eacute;tico 2D con 3 clases
+      </div>
+      X = torch.randn(N, 2)
+      W_true = torch.tensor([
+          [2.0, -1.0],
+          [-1.5, 2.0],
+          [-1.0, -1.0],
+      ])  # shape: [3, 2]
+      b_true = torch.tensor([0.5, -0.5, 0.0])  # [3]
+      logits_true = X @ W_true.T + b_true  # [N, 3]
+      y = logits_true.argmax(dim=1)        # labels 0, 1, 2
+      return X, y
+
+  X, y = make_3class_data()
+  print("Clases y conteos:")
+  print(torch.stack([y.bincount(), torch.arange(y.bincount().numel())]))
+
+  # Modelo: capa lineal que produce logits [batch, num_classes]
+  modelo = nn.Linear(2, 3)  # 3 clases
+  criterio = nn.CrossEntropyLoss()  # espera logits crudos y labels enteros
+  opt = torch.optim.SGD(modelo.parameters(), lr=0.1)
+
+  for epoca in range(200):
+      logits = modelo(X)          # [N, 3]
+      loss = criterio(logits, y)  # softmax + log-softmax interno
+
+      opt.zero_grad()
+      loss.backward()
+      opt.step()
+
+      if epoca % 40 == 0:
+          print(f"Epoch {epoca} | Loss = {loss.item():.4f}")
+
+  with torch.no_grad():
+      logits = modelo(X)
+      probs = F.softmax(logits, dim=1)  # convertir logits a probs
+      preds = probs.argmax(dim=1)
+      acc = (preds == y).float().mean().item()
+
+  print(f"Exactitud final: {acc:.3f}")
+  print("\nEjemplo de logits y probabilidades para los primeros 5 puntos:")
+  print("logits:\n", logits[:5])
+  print("probs:\n", probs[:5])</code></pre>
+      </div>
+    </div>
+
+    </div>
+  </div>
+
+  <p style="margin-bottom: 15px; color: #e0e7ff;">Hasta ahora hemos visto clasificación binaria con Sigmoid. Pero, ¿qué pasa cuando hay <strong style="color: #fbbf24;">más de 2 clases</strong>? Aquí entran los <strong style="color: #c4b5fd;">logits</strong> y <strong style="color: #c4b5fd;">Softmax</strong>.</p>
+
+  <!-- Explicación de Logits -->
+  <div style="margin-top: 18px; background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.1)); border: 1px solid rgba(251, 191, 36, 0.4); border-radius: 12px; padding: 14px;">
+    <div style="font-weight: bold; color: #fbbf24; margin-bottom: 8px;">📊 ¿Qué son los Logits?</div>
+    <div style="font-size: 0.92em; color: #e0e7ff; line-height: 1.5;">
+      <p style="margin: 0 0 8px 0;">Los <strong style="color: #fcd34d;">logits</strong> son las <strong>salidas crudas</strong> de la última capa lineal de una red neuronal, <em>antes</em> de aplicar Sigmoid o Softmax.</p>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 10px;">
+        <div style="background: rgba(15, 23, 42, 0.6); border-radius: 8px; padding: 10px;">
+          <div style="color: #fbbf24; font-weight: bold; font-size: 0.85em; margin-bottom: 4px;">🔢 Características</div>
+          <ul style="margin: 0; padding-left: 16px; font-size: 0.88em; color: #e2e8f0;">
+            <li>Rango: <strong>−∞ a +∞</strong></li>
+            <li>No son probabilidades</li>
+            <li>Valor alto = más "confianza" en esa clase</li>
+          </ul>
+        </div>
+        <div style="background: rgba(15, 23, 42, 0.6); border-radius: 8px; padding: 10px;">
+          <div style="color: #fbbf24; font-weight: bold; font-size: 0.85em; margin-bottom: 4px;">🔄 Transformación</div>
+          <ul style="margin: 0; padding-left: 16px; font-size: 0.88em; color: #e2e8f0;">
+            <li><strong>Binario:</strong> Sigmoid(logit) → prob</li>
+            <li><strong>Multiclase:</strong> Softmax(logits) → probs</li>
+            <li>Resultado: valores entre 0 y 1</li>
+          </ul>
+        </div>
+      </div>
+      <div style="margin-top: 10px; background: rgba(15, 23, 42, 0.7); border-radius: 6px; padding: 8px; font-family: monospace; font-size: 0.85em;">
+        <span style="color: #94a3b8;"># Ejemplo:</span><br>
+        <span style="color: #e2e8f0;">logits = [2.0, 0.5, -1.0]</span> <span style="color: #64748b;">← salida de nn.Linear</span><br>
+        <span style="color: #4ade80;">probs = softmax(logits) = [0.71, 0.16, 0.04]</span> <span style="color: #64748b;">← ahora sí son probabilidades</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bloque Softmax para multiclase -->
+  <div style="margin-top: 20px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(168, 85, 247, 0.1)); border: 1px solid rgba(99, 102, 241, 0.4); border-radius: 14px; padding: 16px;">
+    <div style="font-weight: bold; color: #a78bfa; margin-bottom: 6px;">🎯 ¿Y para multiclase? Softmax en la última capa</div>
+    <div style="font-size: 0.92em; color: #e0e7ff; line-height: 1.5;">
+      <p style="margin: 0 0 8px 0;">Ahora que entiendes qué son los logits, veamos cómo manejar <strong style="color: #c4b5fd;">más de 2 clases</strong>:</p>
+      <ul style="margin: 0 0 6px 18px; padding: 0; color: #c4b5fd;">
+        <li style="color: #e2e8f0;">Softmax convierte logits en probabilidades <em>por clase</em> y garantiza Σ probs = 1.</li>
+        <li style="color: #e2e8f0;">Úsala cuando hay >2 clases (ej. gato, perro, pájaro); para binario, deja Sigmoid.</li>
+        <li style="color: #e2e8f0;">En código: salida logits → <strong style="color: #c4b5fd;">nn.Softmax(dim=1)</strong> o <strong style="color: #c4b5fd;">CrossEntropyLoss</strong> (que ya aplica softmax internamente).</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Fórmula Softmax Visual -->
+  <div style="margin-top: 20px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 12px; padding: 16px;">
+    <div style="text-align: center; margin-bottom: 14px;">
+      <div style="font-weight: bold; color: #c4b5fd; margin-bottom: 8px;">📐 Fórmula de Softmax</div>
+      <div style="background: rgba(30, 27, 75, 0.5); padding: 12px 20px; border-radius: 8px; display: inline-block;">
+        <span style="font-size: 1.3em; color: #e2e8f0; font-family: 'Times New Roman', serif;">
+          σ(z<sub>i</sub>) = 
+          <span style="display: inline-block; text-align: center; vertical-align: middle;">
+            <span style="border-bottom: 2px solid #a78bfa; padding-bottom: 2px;">e<sup style="color: #fbbf24;">z<sub>i</sub></sup></span><br>
+            <span style="font-size: 0.9em;">Σ<sub>j</sub> e<sup style="color: #60a5fa;">z<sub>j</sub></sup></span>
+          </span>
+        </span>
+      </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; font-size: 0.88em;">
+      <div style="background: rgba(30, 27, 75, 0.4); padding: 10px; border-radius: 8px;">
+        <div style="color: #4ade80; font-weight: bold; margin-bottom: 4px;">✅ Propiedades</div>
+        <ul style="margin: 0; padding-left: 16px; color: #d1fae5; font-size: 0.9em;">
+          <li>Cada salida ∈ (0, 1)</li>
+          <li>La suma de todas = 1</li>
+          <li>Preserva el orden de los logits</li>
+        </ul>
+      </div>
+      <div style="background: rgba(30, 27, 75, 0.4); padding: 10px; border-radius: 8px;">
+        <div style="color: #f87171; font-weight: bold; margin-bottom: 4px;">⚠️ Cuidado con la estabilidad</div>
+        <ul style="margin: 0; padding-left: 16px; color: #fecaca; font-size: 0.9em;">
+          <li>Exponenciales pueden <strong>explotar</strong> (overflow)</li>
+          <li>Solución: restar max(z) antes de aplicar exp</li>
+          <li>PyTorch/TensorFlow ya lo hacen internamente</li>
+        </ul>
+      </div>
+    </div>
+    
+    <!-- Nota sobre CrossEntropyLoss -->
+    <div style="margin-top: 12px; padding: 10px 14px; background: rgba(139, 92, 246, 0.15); border-left: 3px solid #8b5cf6; border-radius: 0 8px 8px 0; font-size: 0.85em;">
+      <strong style="color: #c4b5fd;">💡 Nota sobre Loss Functions:</strong>
+      <span style="color: #e2e8f0;">
+        En clasificación multiclase, la función de pérdida más común es <strong style="color: #fbbf24;">Cross-Entropy Loss</strong> 
+        (que mide qué tan diferentes son las probabilidades predichas vs las reales). 
+        En PyTorch, <code style="background: rgba(0,0,0,0.3); padding: 2px 5px; border-radius: 3px;">nn.CrossEntropyLoss</code> 
+        espera <em>logits crudos</em> (sin softmax) porque aplica log-softmax internamente de forma estable.
+        <span style="color: #94a3b8;">(Veremos más sobre funciones de pérdida en el Apéndice)</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- Simulador Softmax Interactivo -->
+  <div style="margin-top: 20px; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.08)); border: 2px solid rgba(34, 197, 94, 0.4); border-radius: 16px; padding: 20px;">
+    <div style="font-weight: bold; color: #4ade80; margin-bottom: 12px; font-size: 1.1em;">🎮 Simulador Interactivo: Softmax en Acción</div>
+    <p style="color: #d1fae5; font-size: 0.9em; margin-bottom: 16px;">Ajusta los <strong>logits</strong> de cada clase y observa cómo Softmax los convierte en probabilidades. Nota cómo valores más altos dominan exponencialmente.</p>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
+      
+      <!-- Panel de Control de Logits -->
+      <div style="background: rgba(15, 23, 42, 0.8); border-radius: 12px; padding: 16px;">
+        <div style="text-align: center; color: #fbbf24; font-weight: bold; font-size: 0.95em; margin-bottom: 12px;">🎛️ Logits (salidas crudas)</div>
+        
+        <!-- Slider para número de clases -->
+        <div style="margin-bottom: 14px; padding: 10px; background: rgba(30, 27, 75, 0.5); border-radius: 8px;">
+          <label for="softmax-num-classes" style="color: #c4b5fd; font-size: 0.85em; font-weight: bold;">Número de clases</label>
+          <div style="display: flex; align-items: center; gap: 10px; margin-top: 4px;">
+            <input id="softmax-num-classes" type="range" min="2" max="6" step="1" value="3" style="flex: 1; accent-color: #a78bfa;">
+            <span id="softmax-num-classes-val" style="color: #a78bfa; font-weight: bold; font-size: 1em; min-width: 20px;">3</span>
+          </div>
+        </div>
+        
+        <!-- Contenedor para sliders de logits -->
+        <div id="softmax-logits-container" style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- Los sliders se generan dinámicamente -->
+        </div>
+        
+        <!-- Botón reset -->
+        <button id="softmax-reset" style="width: 100%; margin-top: 12px; padding: 8px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85em;">
+          🔄 Resetear a [0, 0, ...]
+        </button>
+      </div>
+      
+      <!-- Visualización de Probabilidades -->
+      <div style="background: rgba(15, 23, 42, 0.8); border-radius: 12px; padding: 16px;">
+        <div style="text-align: center; color: #4ade80; font-weight: bold; font-size: 0.95em; margin-bottom: 12px;">📊 Probabilidades (Softmax)</div>
+        
+        <!-- Contenedor para barras de probabilidad -->
+        <div id="softmax-probs-container" style="display: flex; flex-direction: column; gap: 8px;">
+          <!-- Las barras se generan dinámicamente -->
+        </div>
+        
+        <!-- Verificación de suma -->
+        <div style="margin-top: 14px; padding: 10px; background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; text-align: center;">
+          <span style="color: #94a3b8; font-size: 0.85em;">Σ probabilidades = </span>
+          <span id="softmax-sum" style="color: #4ade80; font-weight: bold; font-size: 1.1em;">1.0000</span>
+          <span style="color: #4ade80; font-size: 0.85em;"> ✓</span>
+        </div>
+        
+        <!-- Predicción -->
+        <div style="margin-top: 10px; padding: 10px; background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 8px; text-align: center;">
+          <span style="color: #94a3b8; font-size: 0.85em;">Predicción: </span>
+          <span id="softmax-prediction" style="color: #fbbf24; font-weight: bold; font-size: 1.1em;">Clase 0</span>
+          <span style="color: #94a3b8; font-size: 0.85em;"> (argmax)</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Código de ejemplo corto -->
+    <div style="margin-top: 16px; padding: 12px; background: rgba(15, 23, 42, 0.7); border-radius: 10px;">
+      <div style="font-weight: bold; color: #c4b5fd; margin-bottom: 6px; font-size: 0.9em;">💻 En PyTorch (versión corta):</div>
+      <pre style="margin: 0; font-family: monospace; font-size: 0.85em; color: #e2e8f0; overflow-x: auto;"><code><span style="color: #94a3b8;"># Para clasificación multiclase</span>
+<span style="color: #f472b6;">import</span> torch.nn.functional <span style="color: #f472b6;">as</span> F
+
+logits = model(x)  <span style="color: #94a3b8;"># Salida de la red: [batch, num_classes]</span>
+probs = F.softmax(logits, dim=1)  <span style="color: #94a3b8;"># Probabilidades</span>
+pred = probs.argmax(dim=1)  <span style="color: #94a3b8;"># Clase predicha</span>
+
+<span style="color: #94a3b8;"># O mejor: usar CrossEntropyLoss (aplica softmax internamente)</span>
+loss = F.cross_entropy(logits, targets)  <span style="color: #4ade80;"># ← Recomendado</span></code></pre>
+    </div>
+  </div>
+
+  <div style="background: #020617; padding: 18px 20px; border-radius: 12px; margin: 20px 0; border: 1px solid #1f2937;">
+    <h4 style="color: #e5e7eb; margin: 0 0 8px;">📋 Código para copiar y pegar: clasificación multiclase con logits y Softmax</h4>
+    <p style="color: #9ca3af; font-size: 0.9em; margin: 0 0 8px;">
+      A partir de los imports del <strong>Paso 0</strong>, este ejemplo genera un pequeño dataset 2D con
+      <strong>3 clases</strong>, entrena una capa lineal que produce <strong>logits</strong> y luego aplica
+      <strong>Softmax</strong> y <strong>CrossEntropyLoss</strong> para entrenar y medir la exactitud.
+    </p>
+    <div style="background: #0b1120; border-radius: 10px; padding: 10px 12px; border: 1px solid #1e293b; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.8em; color: #e5e7eb; overflow-x: auto;">
+      <pre style="margin: 0;"><code>import torch.nn.functional as F
+
+torch.manual_seed(0)
+
+# Dataset sint&eacute;tico 2D con 3 clases
+def make_3class_data(N=300):
+    X = torch.randn(N, 2)
+    W_true = torch.tensor([
+        [2.0, -1.0],
+        [-1.5, 2.0],
+        [-1.0, -1.0],
+    ])  # shape: [3, 2]
+    b_true = torch.tensor([0.5, -0.5, 0.0])  # [3]
+    logits_true = X @ W_true.T + b_true  # [N, 3]
+    y = logits_true.argmax(dim=1)        # labels 0, 1, 2
+    return X, y
+
+X, y = make_3class_data()
+print("Clases y conteos:")
+print(torch.stack([y.bincount(), torch.arange(y.bincount().numel())]))
+
+# Modelo: capa lineal que produce logits [batch, num_classes]
+modelo = nn.Linear(2, 3)  # 3 clases
+criterio = nn.CrossEntropyLoss()  # espera logits crudos y labels enteros
+opt = torch.optim.SGD(modelo.parameters(), lr=0.1)
+
+for epoca in range(200):
+    logits = modelo(X)          # [N, 3]
+    loss = criterio(logits, y)  # softmax + log-softmax interno
+
+    opt.zero_grad()
+    loss.backward()
+    opt.step()
+
+    if epoca % 40 == 0:
+        print(f"Epoch {epoca} | Loss = {loss.item():.4f}")
+
+with torch.no_grad():
+    logits = modelo(X)
+    probs = F.softmax(logits, dim=1)  # convertir logits a probs
+    preds = probs.argmax(dim=1)
+    acc = (preds == y).float().mean().item()
+
+print(f"Exactitud final: {acc:.3f}")
+print("\nEjemplo de logits y probabilidades para los primeros 5 puntos:")
+print("logits:\n", logits[:5])
+print("probs:\n", probs[:5])</code></pre>
+    </div>
+  </div>
+
+  <div class="highlight" style="background: linear-gradient(135deg, #312e81, #3730a3); border-color: #818cf8;">
+    <div class="icon">💡</div>
+    <div style="color: #e0e7ff;">
+      <strong style="color: #c4b5fd;">Regla práctica:</strong> Usa <strong>Sigmoid</strong> para clasificación binaria (1 logit → 1 prob). Usa <strong>Softmax</strong> para multiclase (K logits → K probs que suman 1). En PyTorch, <code style="background: rgba(0,0,0,0.3); padding: 2px 5px; border-radius: 3px;">CrossEntropyLoss</code> espera logits crudos (aplica log-softmax internamente).
+    </div>
+  </div>
+</section>
+
+<script>
+(function() {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SIMULADOR SOFTMAX INTERACTIVO
+  // ═══════════════════════════════════════════════════════════════════════════
+  var numClassesSlider = document.getElementById('softmax-num-classes');
+  var numClassesVal = document.getElementById('softmax-num-classes-val');
+  var logitsContainer = document.getElementById('softmax-logits-container');
+  var probsContainer = document.getElementById('softmax-probs-container');
+  var softmaxSum = document.getElementById('softmax-sum');
+  var softmaxPrediction = document.getElementById('softmax-prediction');
+  var resetBtn = document.getElementById('softmax-reset');
+
+  if (!numClassesSlider || !logitsContainer || !probsContainer) return;
+
+  var classColors = ['#ef4444', '#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899'];
+  var classNames = ['Clase 0', 'Clase 1', 'Clase 2', 'Clase 3', 'Clase 4', 'Clase 5'];
+  var currentLogits = [2.0, 1.0, 0.0];
+
+  function softmax(logits) {
+    var maxLogit = Math.max.apply(null, logits);
+    var exps = [];
+    var sum = 0;
+    for (var i = 0; i < logits.length; i++) {
+      var e = Math.exp(logits[i] - maxLogit);
+      exps.push(e);
+      sum += e;
+    }
+    var probs = [];
+    for (var j = 0; j < exps.length; j++) {
+      probs.push(exps[j] / sum);
+    }
+    return probs;
+  }
+
+  function createLogitSliders(numClasses) {
+    logitsContainer.innerHTML = '';
+    while (currentLogits.length < numClasses) {
+      currentLogits.push(0);
+    }
+    currentLogits = currentLogits.slice(0, numClasses);
+
+    for (var i = 0; i < numClasses; i++) {
+      var div = document.createElement('div');
+      div.style.cssText = 'display: flex; align-items: center; gap: 8px;';
+      
+      var label = document.createElement('span');
+      label.style.cssText = 'color: ' + classColors[i] + '; font-weight: bold; min-width: 60px; font-size: 0.85em;';
+      label.textContent = classNames[i];
+      
+      var slider = document.createElement('input');
+      slider.type = 'range';
+      slider.min = '-5';
+      slider.max = '5';
+      slider.step = '0.1';
+      slider.value = currentLogits[i];
+      slider.style.cssText = 'flex: 1; accent-color: ' + classColors[i] + ';';
+      slider.dataset.index = i;
+      slider.addEventListener('input', onLogitChange);
+      
+      var valSpan = document.createElement('span');
+      valSpan.id = 'logit-val-' + i;
+      valSpan.style.cssText = 'color: ' + classColors[i] + '; font-weight: bold; min-width: 40px; text-align: right; font-size: 0.9em;';
+      valSpan.textContent = currentLogits[i].toFixed(1);
+      
+      div.appendChild(label);
+      div.appendChild(slider);
+      div.appendChild(valSpan);
+      logitsContainer.appendChild(div);
+    }
+  }
+
+  function createProbBars(numClasses) {
+    probsContainer.innerHTML = '';
+    for (var i = 0; i < numClasses; i++) {
+      var div = document.createElement('div');
+      div.style.cssText = 'display: flex; align-items: center; gap: 8px;';
+      
+      var label = document.createElement('span');
+      label.style.cssText = 'color: ' + classColors[i] + '; font-weight: bold; min-width: 60px; font-size: 0.85em;';
+      label.textContent = classNames[i];
+      
+      var barContainer = document.createElement('div');
+      barContainer.style.cssText = 'flex: 1; height: 20px; background: rgba(30, 27, 75, 0.5); border-radius: 4px; overflow: hidden;';
+      
+      var bar = document.createElement('div');
+      bar.id = 'prob-bar-' + i;
+      bar.style.cssText = 'height: 100%; background: ' + classColors[i] + '; transition: width 0.2s; width: 33%;';
+      barContainer.appendChild(bar);
+      
+      var valSpan = document.createElement('span');
+      valSpan.id = 'prob-val-' + i;
+      valSpan.style.cssText = 'color: #e2e8f0; font-weight: bold; min-width: 55px; text-align: right; font-size: 0.9em;';
+      valSpan.textContent = '33.3%';
+      
+      div.appendChild(label);
+      div.appendChild(barContainer);
+      div.appendChild(valSpan);
+      probsContainer.appendChild(div);
+    }
+  }
+
+  function onLogitChange(e) {
+    var idx = parseInt(e.target.dataset.index);
+    currentLogits[idx] = parseFloat(e.target.value);
+    var valSpan = document.getElementById('logit-val-' + idx);
+    if (valSpan) valSpan.textContent = currentLogits[idx].toFixed(1);
+    updateProbs();
+  }
+
+  function updateProbs() {
+    var probs = softmax(currentLogits);
+    var sum = 0;
+    var maxIdx = 0;
+    var maxProb = 0;
+    
+    for (var i = 0; i < probs.length; i++) {
+      var bar = document.getElementById('prob-bar-' + i);
+      var val = document.getElementById('prob-val-' + i);
+      if (bar) bar.style.width = (probs[i] * 100).toFixed(1) + '%';
+      if (val) val.textContent = (probs[i] * 100).toFixed(1) + '%';
+      sum += probs[i];
+      if (probs[i] > maxProb) {
+        maxProb = probs[i];
+        maxIdx = i;
+      }
+    }
+    
+    if (softmaxSum) softmaxSum.textContent = sum.toFixed(4);
+    if (softmaxPrediction) {
+      softmaxPrediction.textContent = classNames[maxIdx];
+      softmaxPrediction.style.color = classColors[maxIdx];
+    }
+  }
+
+  function onNumClassesChange() {
+    var n = parseInt(numClassesSlider.value);
+    if (numClassesVal) numClassesVal.textContent = n;
+    createLogitSliders(n);
+    createProbBars(n);
+    updateProbs();
+  }
+
+  function resetLogits() {
+    for (var i = 0; i < currentLogits.length; i++) {
+      currentLogits[i] = 0;
+    }
+    onNumClassesChange();
+  }
+
+  numClassesSlider.addEventListener('input', onNumClassesChange);
+  if (resetBtn) resetBtn.addEventListener('click', resetLogits);
+
+  // Inicializar
+  onNumClassesChange();
+})();
+</script>

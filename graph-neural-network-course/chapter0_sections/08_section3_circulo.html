@@ -1,0 +1,352 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECCIÓN 3: EL EJERCICIO DEL CÍRCULO + PRIMER SIMULADOR
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-number">3</div>
+    <div class="section-title">
+      <h2>¿Por Qué Necesitamos Más que Líneas?</h2>
+      <p>El ejercicio del círculo — el mismo concepto de XOR, ahora continuo</p>
+    </div>
+  </div>
+
+  <div style="background: #020617; padding: 14px 16px; border-radius: 12px; margin: 16px 0; border: 1px solid #1f2937;">
+    <h3 style="color: #e5e7eb; margin: 0 0 6px; font-size: 0.98em;">✅ Al terminar esta sección deberías poder:</h3>
+    <ul style="color: #9ca3af; font-size: 0.9em; margin: 0 0 0 18px; line-height: 1.6;">
+      <li>Relacionar el problema del círculo con XOR como otro ejemplo de no-linealidad.</li>
+      <li>Generar puntos en un círculo en tu notebook y entrenar un modelo lineal y otro con capa oculta.</li>
+      <li>Comparar el desempeño de ambos modelos y explicar por qué la red con capa oculta aprende una frontera curva.</li>
+    </ul>
+  </div>
+
+  <!-- Conexión narrativa con XOR -->
+  <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(99, 102, 241, 0.1)); border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+    <div style="display: flex; align-items: center; gap: 15px;">
+      <div style="font-size: 2em;">🔗</div>
+      <div>
+        <div style="color: #c4b5fd; font-weight: bold; margin-bottom: 4px;">Continuando desde XOR...</div>
+        <p style="color: #e2e8f0; font-size: 0.9em; margin: 0;">
+          En XOR vimos <strong style="color: #fbbf24;">4 puntos</strong> que no se pueden separar con una línea. 
+          Ahora verás el <strong style="color: #22c55e;">mismo problema</strong> con <strong style="color: #60a5fa;">datos continuos</strong>: 
+          puntos en un círculo. La solución es la misma: <strong style="color: #a78bfa;">capas ocultas</strong>.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="exec-prompt">
+    <span class="icon">▶️</span>
+    <div>
+      <strong>Ahora vas a recrear este experimento en tu propio notebook.</strong>
+      <div class="sub">Usa el bloque de <strong>código para copiar y pegar</strong> de abajo: primero generamos los puntos en círculo, luego probamos un modelo lineal y después uno con capa oculta.</div>
+    </div>
+  </div>
+
+  <div class="analogy">
+    <div class="icon">🎯</div>
+    <div>
+      <div class="analogy-title">El Problema</div>
+      <p>Imagina puntos <strong style="color: #3b82f6;">azules</strong> en el centro y puntos <strong style="color: #ef4444;">rojos</strong> alrededor. <strong>¿Puedes separarlos con una línea recta?</strong></p>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 25px 0;">
+    <div style="background: linear-gradient(135deg, #7f1d1d, #991b1b); padding: 20px; border-radius: 12px; border: 3px solid #ef4444; color: #fecaca;">
+      <h4 style="color: #fca5a5; margin: 0 0 15px; text-align: center;">❌ Sin Capas Ocultas</h4>
+      <svg viewBox="0 0 160 160" style="width: 100%; max-width: 140px; display: block; margin: 0 auto;">
+        <rect width="160" height="160" fill="#7f1d1d"/>
+        <circle cx="80" cy="80" r="6" fill="#3b82f6"/><circle cx="92" cy="72" r="6" fill="#3b82f6"/>
+        <circle cx="68" cy="72" r="6" fill="#3b82f6"/><circle cx="86" cy="92" r="6" fill="#3b82f6"/>
+        <circle cx="74" cy="88" r="6" fill="#3b82f6"/><circle cx="78" cy="68" r="6" fill="#3b82f6"/>
+        <circle cx="80" cy="28" r="6" fill="#fbbf24"/><circle cx="115" cy="42" r="6" fill="#fbbf24"/>
+        <circle cx="132" cy="80" r="6" fill="#fbbf24"/><circle cx="120" cy="118" r="6" fill="#fbbf24"/>
+        <circle cx="80" cy="135" r="6" fill="#fbbf24"/><circle cx="40" cy="118" r="6" fill="#fbbf24"/>
+        <circle cx="28" cy="80" r="6" fill="#fbbf24"/><circle cx="40" cy="42" r="6" fill="#fbbf24"/>
+        <line x1="15" y1="145" x2="145" y2="15" stroke="#94a3b8" stroke-width="3" stroke-dasharray="5,3"/>
+      </svg>
+      <p style="text-align: center; color: #fca5a5; font-size: 0.85em; margin-top: 12px;"><strong>¡IMPOSIBLE!</strong><br>No hay línea recta que los separe</p>
+    </div>
+
+    <div style="background: linear-gradient(135deg, #14532d, #166534); padding: 20px; border-radius: 12px; border: 3px solid #10b981; color: #dcfce7;">
+      <h4 style="color: #86efac; margin: 0 0 15px; text-align: center;">✅ Con 3 Neuronas Ocultas</h4>
+      <svg viewBox="0 0 160 160" style="width: 100%; max-width: 140px; display: block; margin: 0 auto;">
+        <rect width="160" height="160" fill="#14532d"/>
+        <circle cx="80" cy="80" r="42" fill="none" stroke="#4ade80" stroke-width="4"/>
+        <circle cx="80" cy="80" r="6" fill="#3b82f6"/><circle cx="92" cy="72" r="6" fill="#3b82f6"/>
+        <circle cx="68" cy="72" r="6" fill="#3b82f6"/><circle cx="86" cy="92" r="6" fill="#3b82f6"/>
+        <circle cx="74" cy="88" r="6" fill="#3b82f6"/><circle cx="78" cy="68" r="6" fill="#3b82f6"/>
+        <circle cx="80" cy="28" r="6" fill="#fbbf24"/><circle cx="115" cy="42" r="6" fill="#fbbf24"/>
+        <circle cx="132" cy="80" r="6" fill="#fbbf24"/><circle cx="120" cy="118" r="6" fill="#fbbf24"/>
+        <circle cx="80" cy="135" r="6" fill="#fbbf24"/><circle cx="40" cy="118" r="6" fill="#fbbf24"/>
+        <circle cx="28" cy="80" r="6" fill="#fbbf24"/><circle cx="40" cy="42" r="6" fill="#fbbf24"/>
+      </svg>
+      <p style="text-align: center; color: #86efac; font-size: 0.85em; margin-top: 12px;"><strong>¡PERFECTO!</strong><br>La red aprende una frontera curva</p>
+    </div>
+  </div>
+
+  <div style="background: linear-gradient(135deg, #312e81, #4c1d95); padding: 25px; border-radius: 16px; color: #e2e8f0;">
+    <h4 style="color: #c4b5fd; margin: 0 0 15px;">🧠 ¿Por Qué Funciona?</h4>
+    <p style="margin-bottom: 15px;">Las <strong style="color: #fbbf24;">capas ocultas + activaciones NO lineales</strong> permiten que la red aprenda <strong style="color: #22c55e;">transformaciones complejas</strong>. Matemáticamente, esto se debe al <strong style="color: #a78bfa;">Teorema de Aproximación Universal</strong>:</p>
+    <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; border: 1px solid rgba(167, 139, 250, 0.4);">
+      <p style="margin-bottom: 10px; font-style: italic; color: #c4b5fd;">"Una red con 1 capa oculta + activación no lineal puede aproximar cualquier función continua, dado suficientes neuronas."</p>
+      <ul style="margin: 10px 0 0 20px; color: #d1d5db;">
+        <li><strong style="color: #f87171;">Sin capas ocultas (o sin activación):</strong> Solo líneas/planos (funciones lineales)</li>
+        <li><strong style="color: #4ade80;">Con 1 capa oculta + ReLU:</strong> Funciones por partes (círculos, curvas)</li>
+        <li><strong style="color: #60a5fa;">Con múltiples capas:</strong> Patrones jerárquicos complejos</li>
+      </ul>
+    </div>
+    <p style="margin-top: 15px; font-size: 0.9em; color: #a5b4fc;">💡 <strong>Intuición:</strong> Es como "doblar" el espacio de datos. Los puntos azules/rojos que no eran separables en el espacio original, tras pasar por capas ocultas quedan en posiciones donde SÍ se puede trazar un plano divisorio.</p>
+    
+    <!-- Insight: Conocemos la función generadora -->
+    <div style="margin-top: 18px; padding: 14px; background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.1)); border: 2px solid rgba(251, 191, 36, 0.4); border-radius: 12px;">
+      <div style="display: flex; align-items: start; gap: 12px;">
+        <div style="font-size: 1.8em;">🎯</div>
+        <div>
+          <div style="color: #fbbf24; font-weight: bold; margin-bottom: 8px;">¿Por Qué Usamos Estos Ejemplos "de Juguete"?</div>
+          <p style="color: #e2e8f0; font-size: 0.92em; margin: 0 0 10px 0;">
+
+    <div style="background: #020617; padding: 18px 20px; border-radius: 12px; margin: 24px 0 8px; border: 1px solid #1f2937;">
+      <h4 style="color: #e5e7eb; margin: 0 0 8px;">📋 Código para copiar y pegar: círculo con y sin capas ocultas</h4>
+      <p style="color: #9ca3af; font-size: 0.9em; margin: 0 0 8px;">
+        A partir de los imports del <strong>Paso 0</strong>, este ejemplo genera puntos en un círculo, entrena primero
+        un <strong>modelo lineal</strong> (que no puede aprender bien la frontera curva) y luego una red con
+        <strong>capa oculta</strong> que sí se adapta al círculo.
+      </p>
+        <div style="background: #0b1120; border-radius: 10px; padding: 10px 12px; border: 1px solid #1e293b; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.8em; color: #e5e7eb; overflow-x: auto;">
+        <pre style="margin: 0;"><code>import torch
+    import torch.nn as nn
+
+    # Datos en c&iacute;rculo (clasificaci&oacute;n binaria)
+    def make_circle(n_puntos=400, radio=0.8):
+      X = torch.empty(n_puntos, 2).uniform_(-1.2, 1.2)
+      radios = X.pow(2).sum(dim=1).sqrt()
+      y = (radios &lt; radio).float().unsqueeze(1)
+      return X, y
+
+    X, y = make_circle()
+    print("Proporci&oacute;n clase 1 (interior del c&iacute;rculo):", y.mean().item())
+
+    # Modelo lineal: 2 -&gt; 1 con Sigmoid (frontera recta)
+    modelo_lineal = nn.Sequential(
+      nn.Linear(2, 1),
+      nn.Sigmoid()
+    )
+
+    criterio = nn.BCELoss()
+    opt_lineal = torch.optim.SGD(modelo_lineal.parameters(), lr=0.5)
+
+    for epoca in range(1000):
+      y_pred = modelo_lineal(X)
+      loss = criterio(y_pred, y)
+
+      opt_lineal.zero_grad()
+      loss.backward()
+      opt_lineal.step()
+
+      if epoca % 200 == 0:
+        print(f"[Lineal] Epoch {epoca} | Loss = {loss.item():.4f}")
+
+    with torch.no_grad():
+      probs_lin = modelo_lineal(X)
+      preds_lin = (probs_lin &gt;= 0.5).float()
+      acc_lin = (preds_lin == y).float().mean().item()
+    print(f"Exactitud modelo lineal: {acc_lin:.3f}")
+
+    # Modelo con capa oculta: 2 -&gt; 8 -&gt; 1 (frontera curva)
+    modelo_profundo = nn.Sequential(
+      nn.Linear(2, 8),
+      nn.ReLU(),
+      nn.Linear(8, 1),
+      nn.Sigmoid()
+    )
+
+    opt_profundo = torch.optim.SGD(modelo_profundo.parameters(), lr=0.5)
+
+    for epoca in range(1000):
+      y_pred = modelo_profundo(X)
+      loss = criterio(y_pred, y)
+
+      opt_profundo.zero_grad()
+      loss.backward()
+      opt_profundo.step()
+
+      if epoca % 200 == 0:
+        print(f"[Oculta] Epoch {epoca} | Loss = {loss.item():.4f}")
+
+    with torch.no_grad():
+      probs_deep = modelo_profundo(X)
+      preds_deep = (probs_deep &gt;= 0.5).float()
+      acc_deep = (preds_deep == y).float().mean().item()
+    print(f"Exactitud modelo con capa oculta: {acc_deep:.3f}")</code></pre>
+      </div>
+    </div>
+          </p>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 12px;">
+            <div style="background: rgba(15, 23, 42, 0.6); padding: 10px; border-radius: 8px;">
+              <div style="color: #f87171; font-weight: bold; font-size: 0.85em; margin-bottom: 4px;">🔳 XOR</div>
+              <div style="font-family: monospace; font-size: 0.85em; color: #e2e8f0;">
+                f*(x) = (x₁>0.5) ⊕ (x₂>0.5)
+              </div>
+            </div>
+            <div style="background: rgba(15, 23, 42, 0.6); padding: 10px; border-radius: 8px;">
+              <div style="color: #60a5fa; font-weight: bold; font-size: 0.85em; margin-bottom: 4px;">⭕ Círculo</div>
+              <div style="font-family: monospace; font-size: 0.85em; color: #e2e8f0;">
+                f*(x) = (x₁² + x₂² < r²)
+              </div>
+            </div>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.5); padding: 12px; border-radius: 8px; border-left: 3px solid #22c55e;">
+            <p style="color: #d1fae5; font-size: 0.88em; margin: 0;">
+              <strong style="color: #4ade80;">La red NO conoce estas fórmulas.</strong> Solo ve ejemplos (x, y) y trata de <em>descubrir</em> la regla subyacente.
+              En el mundo real, <strong>nunca conocemos f*</strong> — pero en estos ejemplos podemos verificar si la red la aproximó bien.
+              <br><br>
+              <span style="color: #94a3b8;">Esto es la esencia del aprendizaje supervisado: <strong style="color: #fbbf24;">aproximar una función desconocida a partir de ejemplos</strong>.</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- 🎮 SIMULADOR INTERACTIVO COMPACTO                                   -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <div id="nnSimulator" style="background: linear-gradient(135deg, #1e1b4b, #312e81); padding: 25px; border-radius: 20px; margin-top: 25px; color: white;">
+    <h3 style="text-align: center; margin: 0 0 20px; font-size: 1.5em;">🎮 Simulador Interactivo de Redes Neuronales</h3>
+    
+    <!-- GRID PRINCIPAL: 2 columnas -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+      
+      <!-- COLUMNA IZQUIERDA: Configuración -->
+      <div style="display: flex; flex-direction: column; gap: 15px;">
+        
+        <!-- Panel: Arquitectura -->
+        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; border: 1px solid rgba(139, 92, 246, 0.4);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span style="font-weight: bold; color: #c4b5fd; font-size: 0.9em;">🏗️ ARQUITECTURA</span>
+            <!-- Selector de Modo -->
+            <select id="simMode" style="padding: 4px 10px; border-radius: 8px; border: none; font-size: 0.75em; font-weight: bold; cursor: pointer; background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white;">
+              <option value="classification">📊 Clasificación</option>
+              <option value="regression">📈 Regresión</option>
+            </select>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+            <div style="text-align: center;">
+              <div style="color: #fbbf24; font-size: 0.75em; margin-bottom: 4px;">Capas</div>
+              <input type="range" id="simLayers" min="1" max="3" value="1" style="width: 100%; accent-color: #fbbf24;">
+              <div id="simLayersVal" style="background: #fbbf24; color: #1e1b4b; padding: 2px 8px; border-radius: 10px; font-weight: bold; font-size: 0.85em; display: inline-block; margin-top: 4px;">1</div>
+            </div>
+            <div style="text-align: center;">
+              <div style="color: #a78bfa; font-size: 0.75em; margin-bottom: 4px;">Neuronas</div>
+              <input type="range" id="simNeurons" min="1" max="5" value="3" style="width: 100%; accent-color: #a78bfa;">
+              <div id="simNeuronsVal" style="background: #a78bfa; color: #1e1b4b; padding: 2px 8px; border-radius: 10px; font-weight: bold; font-size: 0.85em; display: inline-block; margin-top: 4px;">3</div>
+            </div>
+            <div style="text-align: center;">
+              <div style="color: #34d399; font-size: 0.75em; margin-bottom: 4px;">Salidas</div>
+              <input type="range" id="simOutputs" min="1" max="3" value="1" style="width: 100%; accent-color: #34d399;">
+              <div id="simOutputsVal" style="background: #34d399; color: #1e1b4b; padding: 2px 8px; border-radius: 10px; font-weight: bold; font-size: 0.85em; display: inline-block; margin-top: 4px;">1</div>
+            </div>
+          </div>
+          
+          <!-- Activaciones -->
+          <div id="simActivations" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+            <!-- Generado dinámicamente -->
+          </div>
+          
+          <!-- Arquitectura texto -->
+          <div id="simArchText" style="text-align: center; margin-top: 10px; padding: 8px; background: rgba(139, 92, 246, 0.3); border-radius: 8px; font-family: monospace; font-size: 0.9em;">2 → [3/ReLU] → 1</div>
+        </div>
+        
+        <!-- Panel: Entradas y Targets -->
+        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.4);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span style="font-weight: bold; color: #93c5fd; font-size: 0.9em;">📥 DATOS</span>
+            <button id="simRandomBtn" style="background: #6366f1; color: white; border: none; padding: 5px 12px; border-radius: 15px; cursor: pointer; font-size: 0.75em;">🎲 Pesos Aleatorios</button>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div>
+              <div style="color: #60a5fa; font-size: 0.75em; margin-bottom: 6px;">Entradas (x₁, x₂)</div>
+              <div style="display: flex; gap: 8px;">
+                <input type="number" id="simX1" value="0.5" step="0.1" style="width: 60px; padding: 6px; border: 2px solid #3b82f6; border-radius: 6px; text-align: center; background: rgba(59,130,246,0.2); color: white;">
+                <input type="number" id="simX2" value="-0.3" step="0.1" style="width: 60px; padding: 6px; border: 2px solid #3b82f6; border-radius: 6px; text-align: center; background: rgba(59,130,246,0.2); color: white;">
+              </div>
+            </div>
+            <div>
+              <div style="color: #34d399; font-size: 0.75em; margin-bottom: 6px;">Target (y)</div>
+              <div id="simTargets" style="display: flex; gap: 8px;">
+                <input type="number" id="simY1" value="1" step="0.1" min="0" max="1" style="width: 60px; padding: 6px; border: 2px solid #10b981; border-radius: 6px; text-align: center; background: rgba(16,185,129,0.2); color: white;">
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Panel: Resultados -->
+        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.4);">
+          <div style="font-weight: bold; color: #6ee7b7; margin-bottom: 12px; font-size: 0.9em;">📤 RESULTADOS</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+            <div style="background: linear-gradient(135deg, #065f46, #047857); padding: 12px 8px; border-radius: 10px; text-align: center;">
+              <div style="color: #a7f3d0; font-size: 0.7em;">Predicción</div>
+              <div id="simPred" style="font-size: 1.3em; font-weight: bold;">0.00</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #991b1b, #b91c1c); padding: 12px 8px; border-radius: 10px; text-align: center;">
+              <div style="color: #fecaca; font-size: 0.7em;">Error</div>
+              <div id="simError" style="font-size: 1.3em; font-weight: bold;">0.00</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #92400e, #b45309); padding: 12px 8px; border-radius: 10px; text-align: center;">
+              <div style="color: #fde68a; font-size: 0.7em;">MSE Loss</div>
+              <div id="simLoss" style="font-size: 1.3em; font-weight: bold;">0.00</div>
+            </div>
+          </div>
+          <div id="simOutAct" style="text-align: center; margin-top: 8px; font-size: 0.75em; color: #9ca3af;">Salida: <span style="color: #34d399; font-weight: bold;">Sigmoid</span></div>
+        </div>
+        
+        <!-- Nota educativa -->
+        <div style="background: rgba(96, 165, 250, 0.2); padding: 12px; border-radius: 12px; border: 1px solid rgba(96, 165, 250, 0.4); font-size: 0.8em;">
+          <div style="color: #93c5fd; font-weight: bold; margin-bottom: 6px;">💡 ¿Qué estás viendo?</div>
+          <div style="color: #d1d5db; line-height: 1.4;">
+            Este es el <strong>forward pass</strong>: los datos fluyen de izquierda a derecha, 
+            multiplicándose por los pesos y pasando por las funciones de activación.
+            <br><br>
+            <span style="color: #4ade80;">Verde = peso positivo</span> | 
+            <span style="color: #f87171;">Rojo = peso negativo</span> | 
+            Grosor = magnitud
+          </div>
+        </div>
+      </div>
+      
+      <!-- COLUMNA DERECHA: Visualización -->
+      <div style="display: flex; flex-direction: column; gap: 15px;">
+        <!-- Visualización de la Red -->
+        <div style="background: rgba(255,255,255,0.95); border-radius: 12px; padding: 15px;">
+          <div style="text-align: center; color: #374151; font-weight: bold; margin-bottom: 10px; font-size: 0.9em;">🔗 Visualización de la Red</div>
+          <svg id="simSvg" viewBox="0 0 380 320" style="width: 100%; height: 320px;"></svg>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Cálculos detallados (colapsable) -->
+    <details style="margin-top: 15px; background: rgba(0,0,0,0.2); border-radius: 12px;">
+      <summary style="padding: 12px; cursor: pointer; color: #a5b4fc; font-size: 0.9em;">📖 Ver Cálculos Matemáticos Detallados</summary>
+      <div id="simCalcs" style="padding: 15px; font-family: monospace; font-size: 0.8em; max-height: 300px; overflow-y: auto; color: #e5e7eb;"></div>
+    </details>
+  </div>
+  
+  <!-- Explicación dinámica de la transformación -->
+  <div id="transformExplanation" style="background: linear-gradient(135deg, #78350f, #92400e); padding: 20px; border-radius: 12px; margin-top: 25px;">
+    <div style="font-weight: bold; color: #fbbf24; margin-bottom: 10px;">🔍 ¿Qué pasó aquí? (valores en tiempo real)</div>
+    <div id="transformDetails" style="margin-left: 20px; line-height: 1.8; color: #fde68a; font-family: monospace; font-size: 0.9em;">
+      <em>Modifica las entradas o la arquitectura para ver los cálculos actualizados...</em>
+    </div>
+  </div>
+
+  <div id="transformResult" style="background: linear-gradient(135deg, #312e81, #4c1d95); padding: 15px; border-radius: 10px; margin-top: 20px; text-align: center;">
+    <strong style="color: #c4b5fd;">🎯 Resultado:</strong> <span id="transformResultText" style="color: #e9d5ff;">La capa oculta transforma el espacio de entrada para hacer los datos separables.</span>
+  </div>
+
+  <div class="highlight success" style="margin-top: 30px; background: rgba(34, 197, 94, 0.2); border-color: rgba(34, 197, 94, 0.5);">
+    <div class="icon">💡</div>
+    <div style="color: #dcfce7;"><strong style="color: #22c55e;">La clave está en la ACTIVACIÓN.</strong> Sin ella, 100 capas lineales siguen siendo una línea. La activación añade la no-linealidad que hace "inteligente" a la red.</div>
+  </div>
+</section>
