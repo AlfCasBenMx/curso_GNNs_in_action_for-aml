@@ -5,8 +5,8 @@
 
 /* ---------- SECTION ORDER & STATE ---------- */
 const sectionOrder = [
-  'intro','gat_recap','n2v','gnn_emb','comparacion','metricas',
-  'semi_supervised','under_hood','aml','quiz1','quiz2','flashcards','ejercicios','resumen'
+  'intro','gat_recap','n2v','gnn_emb','comparacion','semi_supervised',
+  'under_hood','aml','quiz1','quiz2','flashcards','ejercicios','resumen'
 ];
 
 let completed = {};
