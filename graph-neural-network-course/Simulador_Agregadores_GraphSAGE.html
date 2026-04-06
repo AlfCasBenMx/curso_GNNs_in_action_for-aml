@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <title>🧪 Simulador Paso a Paso — Agregadores de GraphSAGE</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+  <style>
+    :root{--green:#059669;--purple:#7c3aed;--orange:#ea580c;--blue:#3b82f6;--gold:#fbbf24;--text:#1e293b;--text-light:#64748b;--bg:#f8fafc;--card:#fff;--border:#e5e7eb;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;font-size:16px;}
+
+    /* HERO */
+    .hero{background:linear-gradient(135deg,#059669 0%,#6366f1 50%,#8b5cf6 100%);color:#fff;padding:50px 24px;text-align:center;}
+    .hero h1{font-size:2.2rem;font-weight:300;margin-bottom:10px;}
+    .hero h1 strong{font-weight:700;color:#fbbf24;}
+    .hero p{font-size:1.05rem;opacity:.92;max-width:700px;margin:0 auto;}
+    .back-link{display:inline-block;margin-top:18px;background:#fbbf24;color:#1e293b;padding:8px 22px;border-radius:20px;font-weight:700;text-decoration:none;font-size:.9rem;}
+    .back-link:hover{transform:scale(1.04);box-shadow:0 4px 16px rgba(0,0,0,.2);}
+
+    /* CONTAINER */
+    .container{max-width:1050px;margin:0 auto;padding:30px 20px;}
+
+    /* CARD */
+    .card{background:var(--card);border-radius:16px;padding:30px;margin-bottom:24px;box-shadow:0 3px 15px rgba(0,0,0,.06);border:1px solid var(--border);}
+    .card h2{font-size:1.35rem;margin-bottom:16px;color:var(--green);}
+    .card h3{font-size:1.1rem;margin:18px 0 10px;color:var(--text);}
+
+    /* GRAPH MINI VIZ */
+    .graph-viz{display:flex;align-items:center;justify-content:center;gap:10px;margin:20px 0;flex-wrap:wrap;}
+    .gnode{border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-size:.78rem;color:#fff;box-shadow:0 3px 10px rgba(0,0,0,.15);}
+    .gnode.target{width:70px;height:70px;background:var(--gold);color:#1e293b;font-size:.85rem;}
+    .gnode.neighbor{width:58px;height:58px;background:var(--green);}
+    .gedge{width:40px;height:3px;background:var(--green);border-radius:2px;}
+
+    /* VECTOR INPUTS */
+    .vec-grid{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;align-items:center;margin:10px 0;}
+    .vec-label{font-weight:700;font-size:.88rem;white-space:nowrap;}
+    .vec-label.target-label{color:#92400e;}
+    .vec-label.n0{color:#059669;} .vec-label.n1{color:#3b82f6;} .vec-label.n2{color:#8b5cf6;}
+    .vec-inputs{display:flex;gap:6px;}
+    .vec-inputs input{width:52px;padding:6px 4px;text-align:center;border:2px solid var(--border);border-radius:8px;font-size:.95rem;font-family:monospace;font-weight:600;transition:border-color .2s;}
+    .vec-inputs input:focus{outline:none;border-color:var(--green);}
+    .vec-inputs input.target-input{border-color:#fbbf24;background:#fffbeb;}
+
+    /* TABS */
+    .tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+    .tab-btn{padding:12px 24px;border-radius:12px;border:3px solid var(--border);background:var(--card);font-weight:700;font-size:.95rem;cursor:pointer;transition:all .2s;}
+    .tab-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.1);}
+    .tab-btn.active-mean{border-color:var(--green);background:#d1fae5;color:#065f46;}
+    .tab-btn.active-max{border-color:var(--purple);background:#ede9fe;color:#5b21b6;}
+    .tab-btn.active-lstm{border-color:var(--orange);background:#fff7ed;color:#c2410c;}
+    .tab-content{display:none;}
+    .tab-content.active{display:block;}
+
+    /* STEP */
+    .step{background:#f1f5f9;border-radius:12px;padding:20px;margin:14px 0;border-left:5px solid var(--border);opacity:.4;transition:opacity .3s,border-color .3s;}
+    .step.visible{opacity:1;border-left-color:var(--green);}
+    .step.visible-max{opacity:1;border-left-color:var(--purple);}
+    .step.visible-lstm{opacity:1;border-left-color:var(--orange);}
+    .step-title{font-weight:700;font-size:1rem;margin-bottom:8px;}
+
+    /* MATRIX TABLE */
+    .matrix{border-collapse:collapse;margin:8px auto;font-family:monospace;font-size:.92rem;}
+    .matrix td{padding:5px 10px;text-align:center;border:1px solid #cbd5e1;min-width:42px;}
+    .matrix .header{background:#1e293b;color:#fbbf24;font-weight:700;font-size:.75rem;letter-spacing:.5px;}
+    .matrix .row-label{background:#f1f5f9;font-weight:700;color:var(--text-light);font-size:.78rem;}
+    .matrix .highlight-green{background:#d1fae5;font-weight:700;color:#065f46;}
+    .matrix .highlight-purple{background:#ede9fe;font-weight:700;color:#5b21b6;}
+    .matrix .highlight-orange{background:#fff7ed;font-weight:700;color:#c2410c;}
+    .matrix .highlight-gold{background:#fef9c3;font-weight:700;color:#92400e;}
+    .matrix .highlight-blue{background:#dbeafe;font-weight:700;color:#1e40af;}
+    .matrix .max-winner{background:#c4b5fd;font-weight:800;color:#3b0764;box-shadow:inset 0 0 0 2px #7c3aed;}
+    .matrix .dimmed{opacity:.35;}
+
+    /* RESULT VECTOR */
+    .result-vec{display:inline-flex;align-items:center;gap:4px;background:#1e293b;padding:6px 14px;border-radius:10px;font-family:monospace;font-weight:700;font-size:1rem;margin:6px 4px;}
+    .result-vec.green{color:#34d399;} .result-vec.purple{color:#c4b5fd;} .result-vec.orange{color:#fdba74;} .result-vec.gold{color:#fbbf24;} .result-vec.blue{color:#93c5fd;}
+
+    /* BTN */
+    .btn{display:inline-block;padding:10px 22px;border-radius:10px;border:none;font-weight:700;font-size:.9rem;cursor:pointer;transition:all .2s;}
+    .btn:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.12);}
+    .btn-green{background:#059669;color:#fff;} .btn-purple{background:#7c3aed;color:#fff;} .btn-orange{background:#ea580c;color:#fff;}
+    .btn-outline{background:transparent;border:2px solid var(--border);color:var(--text);}
+    .btn-outline:hover{background:#f1f5f9;}
+    .btn-sm{padding:7px 14px;font-size:.82rem;}
+
+    /* CONTROLS ROW */
+    .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0;}
+
+    /* INFO BOX */
+    .info{background:linear-gradient(135deg,#d1fae5,#a7f3d0);border-radius:12px;padding:16px 20px;margin:12px 0;border-left:4px solid var(--green);}
+    .info.purple{background:linear-gradient(135deg,#ede9fe,#ddd6fe);border-left-color:var(--purple);}
+    .info.orange{background:linear-gradient(135deg,#fff7ed,#fed7aa);border-left-color:var(--orange);}
+    .info p{margin:0;font-size:.9rem;}
+    .info strong{color:inherit;}
+
+    /* GATE VIZ */
+    .gate-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:10px 0;}
+    .gate-box{border-radius:10px;padding:12px;text-align:center;font-size:.82rem;}
+    .gate-box .gate-name{font-weight:700;font-size:.9rem;margin-bottom:4px;}
+    .gate-box .gate-val{font-family:monospace;font-weight:700;font-size:1.05rem;}
+    .gate-forget{background:#fee2e2;border:2px solid #ef4444;color:#991b1b;}
+    .gate-input{background:#dcfce7;border:2px solid #22c55e;color:#166534;}
+    .gate-candidate{background:#e0f2fe;border:2px solid #0ea5e9;color:#075985;}
+    .gate-output{background:#fef9c3;border:2px solid #eab308;color:#854d0e;}
+
+    /* COMPARISON TABLE */
+    .cmp-table{width:100%;border-collapse:collapse;margin:12px 0;}
+    .cmp-table th,.cmp-table td{padding:10px 12px;text-align:center;border-bottom:1px solid var(--border);}
+    .cmp-table th{background:linear-gradient(135deg,#059669,#6366f1);color:#fff;font-size:.85rem;}
+    .cmp-table tbody tr:hover{background:#f1f5f9;}
+
+    /* TOOLTIP */
+    .tip{position:relative;cursor:help;border-bottom:1px dashed var(--text-light);}
+    .tip:hover::after{content:attr(data-tip);position:absolute;bottom:120%;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:6px 12px;border-radius:8px;font-size:.78rem;white-space:nowrap;z-index:10;font-weight:400;}
+
+    /* SPEED CONTROL */
+    .speed-control{display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--text-light);}
+    .speed-control input[type=range]{width:100px;}
+
+    /* RESPONSIVE */
+    @media(max-width:700px){
+      .hero h1{font-size:1.6rem;}
+      .tabs{flex-direction:column;}
+      .gate-row{grid-template-columns:1fr 1fr;}
+      .vec-inputs input{width:44px;}
+    }
+
+    /* SHUFFLE ANIM */
+    @keyframes shufflePop{0%{transform:scale(1);}50%{transform:scale(1.15);}100%{transform:scale(1);}}
+    .shuffle-pop{animation:shufflePop .35s ease;}
+  </style>
+</head>
+<body>
+
+<header class="hero">
+  <h1>🧪 Simulador: <strong>Agregadores de GraphSAGE</strong></h1>
+  <p>Entiende <strong>Mean</strong>, <strong>Max Pooling</strong> y <strong>LSTM</strong> paso a paso, con cálculos reales y matrices con valores concretos.</p>
+  <a class="back-link" href="Chapter3_GraphSAGE_Explained.html#sec-6">← Volver al Capítulo 3</a>
+</header>
+
+<div class="container">
+
+<!-- ════════════════ INPUT PANEL ════════════════ -->
+<div class="card" id="inputPanel">
+  <h2>📐 Datos de entrada — Nodo target y sus 3 vecinos muestreados</h2>
+
+  <div style="background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border-radius:12px;padding:16px 20px;margin-bottom:14px;border-left:4px solid #059669;">
+    <p style="margin:0;font-size:.92rem;line-height:1.7;">
+      <strong>¿Qué estamos simulando?</strong> Imagina que GraphSAGE necesita calcular el embedding del nodo <strong style="color:#92400e;">Target $v$</strong> (por ejemplo, un artículo de PubMed). El <code>NeighborLoader</code> ya muestreó 3 vecinos. Cada nodo tiene un <strong>vector de features de 3 dimensiones</strong> (en PubMed real serían 500, aquí usamos 3 para poder seguir las operaciones a mano).<br><br>
+      Cada número abajo representa una característica del nodo. Por ejemplo, en un grafo de artículos médicos: $d_1$ podría ser "relevancia de diabetes tipo 1", $d_2$ "relevancia de diabetes tipo 2", etc. <strong>Puedes editar los valores</strong> para experimentar cómo cambia el resultado.
+    </p>
+  </div>
+
+  <div class="graph-viz">
+    <svg viewBox="0 0 340 260" style="max-width:380px;width:100%;height:auto;">
+      <!-- Edges -->
+      <line x1="65" y1="80" x2="170" y2="110" stroke="#059669" stroke-width="3"/>
+      <line x1="275" y1="80" x2="170" y2="110" stroke="#3b82f6" stroke-width="3"/>
+      <line x1="170" y1="110" x2="170" y2="210" stroke="#8b5cf6" stroke-width="3"/>
+      <!-- N1 -->
+      <circle cx="65" cy="80" r="30" fill="#059669"/>
+      <text x="65" y="76" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">N₁</text>
+      <text x="65" y="92" text-anchor="middle" fill="#d1fae5" font-size="9">vecino 1</text>
+      <!-- Target -->
+      <circle cx="170" cy="110" r="36" fill="#fbbf24" stroke="#fff" stroke-width="3"/>
+      <text x="170" y="106" text-anchor="middle" fill="#1e293b" font-size="13" font-weight="700">Target</text>
+      <text x="170" y="122" text-anchor="middle" fill="#78350f" font-size="11" font-style="italic">v</text>
+      <!-- N2 -->
+      <circle cx="275" cy="80" r="30" fill="#3b82f6"/>
+      <text x="275" y="76" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">N₂</text>
+      <text x="275" y="92" text-anchor="middle" fill="#dbeafe" font-size="9">vecino 2</text>
+      <!-- N3 -->
+      <circle cx="170" cy="210" r="30" fill="#8b5cf6"/>
+      <text x="170" y="206" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">N₃</text>
+      <text x="170" y="222" text-anchor="middle" fill="#ede9fe" font-size="9">vecino 3</text>
+    </svg>
+  </div>
+
+  <div class="vec-grid">
+    <span class="vec-label target-label">$h_v$ (target):</span>
+    <div class="vec-inputs" id="vecTarget">
+      <input type="number" value="1" step="0.5" class="target-input" data-idx="0">
+      <input type="number" value="3" step="0.5" class="target-input" data-idx="1">
+      <input type="number" value="2" step="0.5" class="target-input" data-idx="2">
+    </div>
+    <span class="vec-label n0">$h_1$ (Vecino 1):</span>
+    <div class="vec-inputs" id="vecN0">
+      <input type="number" value="2" step="0.5" data-idx="0">
+      <input type="number" value="1" step="0.5" data-idx="1">
+      <input type="number" value="5" step="0.5" data-idx="2">
+    </div>
+    <span class="vec-label n1">$h_2$ (Vecino 2):</span>
+    <div class="vec-inputs" id="vecN1">
+      <input type="number" value="4" step="0.5" data-idx="0">
+      <input type="number" value="0" step="0.5" data-idx="1">
+      <input type="number" value="3" step="0.5" data-idx="2">
+    </div>
+    <span class="vec-label n2">$h_3$ (Vecino 3):</span>
+    <div class="vec-inputs" id="vecN2">
+      <input type="number" value="1" step="0.5" data-idx="0">
+      <input type="number" value="7" step="0.5" data-idx="1">
+      <input type="number" value="2" step="0.5" data-idx="2">
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ WEIGHTS PANEL ════════════════ -->
+<div class="card">
+  <h2>⚙️ Matrices de pesos (pre-entrenadas)</h2>
+
+  <div style="background:#1e293b;border-radius:12px;padding:18px 22px;margin-bottom:16px;text-align:center;">
+    <p style="color:#94a3b8;font-size:.85rem;margin:0 0 6px;">Fórmula de actualización de GraphSAGE:</p>
+    <p style="color:#fbbf24;font-size:1.15rem;font-weight:700;margin:0;">$$h_v^{(\ell+1)} = \sigma\!\left(\underbrace{W_1}_{\text{2×3}}\, \underbrace{h_v^{(\ell)}}_{\text{3×1}} + \underbrace{W_2}_{\text{2×3}}\, \underbrace{m_i^{(\ell)}}_{\text{3×1}}\right)$$</p>
+  </div>
+
+  <div style="background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border-radius:12px;padding:16px 20px;margin-bottom:16px;border-left:4px solid #059669;">
+    <p style="margin:0;font-size:.9rem;line-height:1.75;">
+      <strong>¿Por qué las matrices son 2×3?</strong> El tamaño viene de la transformación que necesitamos:<br>
+      • Los vectores de entrada ($h_v$ y $m_i$) tienen <strong>3 dimensiones</strong> (las features de cada nodo) → eso fija el número de <strong>columnas</strong> de $W$ en 3.<br>
+      • Queremos que el embedding de salida tenga <strong>2 dimensiones</strong> (la capa oculta que elegimos) → eso fija el número de <strong>filas</strong> de $W$ en 2.<br>
+      • Resultado: $W_{2\times3} \cdot h_{3\times1} = \text{vector}_{2\times1}$.<br><br>
+      En PubMed real: $W$ sería <strong>64×500</strong> (500 features → 64 dimensiones ocultas). Aquí usamos 2×3 para poder seguir cada multiplicación a mano.<br><br>
+      <strong>$W_1$</strong> transforma la info propia del nodo ($h_v$). <strong>$W_2$</strong> transforma el resumen del vecindario ($m_i$). El modelo aprende ambas matrices durante el entrenamiento — aquí las mostramos con valores fijos de ejemplo.
+    </p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;flex-wrap:wrap;">
+    <div>
+      <h3>$W_1$ <span style="font-weight:400;font-size:.82rem;color:var(--text-light);">(pesos para info propia · 2×3)</span></h3>
+      <table class="matrix" id="matW1">
+        <tr class="header"><td></td><td>d₁</td><td>d₂</td><td>d₃</td></tr>
+        <tr><td class="row-label">out₁</td><td>0.5</td><td>-0.3</td><td>0.2</td></tr>
+        <tr><td class="row-label">out₂</td><td>0.1</td><td>0.4</td><td>-0.1</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>$W_2$ <span style="font-weight:400;font-size:.82rem;color:var(--text-light);">(pesos para vecindario · 2×3)</span></h3>
+      <table class="matrix" id="matW2">
+        <tr class="header"><td></td><td>d₁</td><td>d₂</td><td>d₃</td></tr>
+        <tr><td class="row-label">out₁</td><td>0.3</td><td>0.1</td><td>-0.2</td></tr>
+        <tr><td class="row-label">out₂</td><td>-0.1</td><td>0.6</td><td>0.2</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ TABS ════════════════ -->
+<div class="tabs">
+  <button class="tab-btn active-mean" id="tabMean" onclick="switchTab('mean')">📊 Mean</button>
+  <button class="tab-btn" id="tabMax" onclick="switchTab('max')">🔺 Max Pooling</button>
+  <button class="tab-btn" id="tabLstm" onclick="switchTab('lstm')">🧠 LSTM</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     TAB: MEAN
+     ══════════════════════════════════════════════════ -->
+<div class="tab-content active" id="panelMean">
+  <div class="card">
+    <h2 style="color:var(--green);">📊 Agregador Mean — Paso a paso</h2>
+    <div class="controls">
+      <button class="btn btn-green" onclick="runMean()">▶ Calcular paso a paso</button>
+      <button class="btn btn-outline btn-sm" onclick="resetSteps('mean')">↺ Reiniciar</button>
+    </div>
+
+    <div class="step" id="mean-s1">
+      <div class="step-title">Paso 1 · Colocar los vectores de vecinos lado a lado</div>
+      <p>Tenemos 3 vecinos muestreados. Listamos sus embeddings:</p>
+      <div id="mean-vecTable"></div>
+    </div>
+
+    <div class="step" id="mean-s2">
+      <div class="step-title">Paso 2 · Sumar columna por columna</div>
+      <p>Sumamos cada dimensión por separado:</p>
+      <div id="mean-sumTable"></div>
+    </div>
+
+    <div class="step" id="mean-s3">
+      <div class="step-title">Paso 3 · Dividir entre 3 → $m_i$</div>
+      <p>Dividimos la suma entre el número de vecinos (3):</p>
+      <div id="mean-divResult"></div>
+      <div class="info" style="margin-top:10px;">
+        <p><strong>📊 Mean:</strong> Promedia la información. Si un vecino tiene un valor extremo (ej. el 7 in $d_2$ de $h_3$), se "diluye" al dividir entre 3.</p>
+      </div>
+    </div>
+
+    <div class="step" id="mean-s4">
+      <div class="step-title">Paso 4 · Transformar: $W_1 h_v + W_2 m_i$</div>
+      <p>Aplicamos las matrices de pesos aprendidas:</p>
+      <div id="mean-transform"></div>
+    </div>
+
+    <div class="step" id="mean-s5">
+      <div class="step-title">Paso 5 · Aplicar ReLU → $h_v^{(\ell+1)}$</div>
+      <p>$\text{ReLU}(x) = \max(0, x)$ — los valores negativos se vuelven 0:</p>
+      <div id="mean-relu"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     TAB: MAX POOLING
+     ══════════════════════════════════════════════════ -->
+<div class="tab-content" id="panelMax">
+  <div class="card">
+    <h2 style="color:var(--purple);">🔺 Agregador Max Pooling — Paso a paso</h2>
+
+    <div class="info purple">
+      <p><strong>⚠️ Clave:</strong> Max pooling en GraphSAGE <strong>NO</strong> es simplemente tomar el máximo de los embeddings crudos. Primero se pasa cada vecino por una mini red neuronal $\phi$ (aprendida), y luego se toma el máximo componente a componente de las salidas transformadas.</p>
+    </div>
+
+    <div style="margin:12px 0;">
+      <h3>$W_\phi$ — Pesos de la red $\phi$: <span style="font-weight:400;font-size:.85rem;color:var(--text-light);">transformación aprendida antes del max (3×3 + bias)</span></h3>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:14px;align-items:start;">
+        <table class="matrix" id="matPhi">
+          <tr class="header"><td></td><td>d₁</td><td>d₂</td><td>d₃</td></tr>
+          <tr><td class="row-label">p₁</td><td>0.6</td><td>-0.2</td><td>0.3</td></tr>
+          <tr><td class="row-label">p₂</td><td>0.1</td><td>0.5</td><td>-0.4</td></tr>
+          <tr><td class="row-label">p₃</td><td>-0.3</td><td>0.4</td><td>0.7</td></tr>
+        </table>
+        <div>
+          <strong style="font-size:.85rem;">Bias $b_\phi$:</strong><br>
+          <span class="result-vec purple" id="phiBiasDisplay">[0.1, -0.1, 0.2]</span>
+        </div>
+      </div>
+
+      <div style="background:linear-gradient(135deg,#f5f3ff,#ede9fe);border-radius:12px;padding:16px 20px;margin-top:14px;border-left:4px solid #7c3aed;">
+        <p style="margin:0;font-size:.9rem;line-height:1.75;">
+          <strong>¿Qué es esta matriz?</strong> Es $W_\phi$, los pesos de la red neuronal $\phi$ que se aplica a <strong>cada vecino por separado</strong> antes de tomar el máximo. La transformación completa es:<br>
+          $$\phi(h_j) = \text{ReLU}(W_\phi \cdot h_j + b_\phi)$$
+          • Las filas <strong>p₁, p₂, p₃</strong> son las 3 filas de $W_\phi$ (una por cada neurona de salida).<br>
+          • Las columnas <strong>d₁, d₂, d₃</strong> corresponden a las 3 dimensiones del vector de entrada $h_j$.<br>
+          • Como la entrada tiene 3 dimensiones y la salida también 3, $W_\phi$ es <strong>3×3</strong>. El bias $b_\phi$ se suma después del producto matricial.<br><br>
+          Es una <strong>capa densa estándar</strong> (fully-connected + ReLU). El modelo aprende $W_\phi$ y $b_\phi$ durante el entrenamiento para extraer las características más relevantes de cada vecino <em>antes</em> de agregar con max.
+        </p>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-purple" onclick="runMax()">▶ Calcular paso a paso</button>
+      <button class="btn btn-outline btn-sm" onclick="resetSteps('max')">↺ Reiniciar</button>
+    </div>
+
+    <div class="step" id="max-s1">
+      <div class="step-title">Paso 1 · Aplicar $\phi$ a cada vecino: $\phi(h_j) = \text{ReLU}(W_\phi \cdot h_j + b)$</div>
+      <p>Cada vecino se transforma independientemente por la misma red $\phi$:</p>
+      <div id="max-phiCalc"></div>
+    </div>
+
+    <div class="step" id="max-s2">
+      <div class="step-title">Paso 2 · Tomar el máximo componente a componente</div>
+      <p>De los 3 vectores transformados, tomamos el máximo en cada dimensión:</p>
+      <div id="max-maxCalc"></div>
+      <div class="info purple" style="margin-top:10px;">
+        <p><strong>🔺 Max pooling:</strong> Preserva el rasgo más fuerte que existe en <em>cualquier</em> vecino. Si un vecino tiene una señal prominente en $p_2$, eso se conserva aunque los demás tengan valores bajos.</p>
+      </div>
+    </div>
+
+    <div class="step" id="max-s3">
+      <div class="step-title">Paso 3 · Transformar: $W_1 h_v + W_2 m_i$</div>
+      <div id="max-transform"></div>
+    </div>
+
+    <div class="step" id="max-s4">
+      <div class="step-title">Paso 4 · Aplicar ReLU → $h_v^{(\ell+1)}$</div>
+      <div id="max-relu"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     TAB: LSTM
+     ══════════════════════════════════════════════════ -->
+<div class="tab-content" id="panelLstm">
+  <div class="card">
+    <h2 style="color:var(--orange);">🧠 Agregador LSTM — Paso a paso</h2>
+
+    <div class="info orange">
+      <p><strong>⚠️ Importante:</strong> Los vecinos de un nodo en un grafo <strong>no tienen orden natural</strong>. La LSTM necesita una secuencia ordenada, así que GraphSAGE los baraja aleatoriamente. El resultado puede variar según el orden — ¡prueba el botón Shuffle!</p>
+    </div>
+
+    <div style="margin:12px 0;">
+      <h3>Pesos LSTM simplificados <span style="font-weight:400;font-size:.82rem;color:var(--text-light);">(input_dim=3, hidden_dim=3)</span></h3>
+      <p style="font-size:.85rem;color:var(--text-light);">Usamos valores simplificados para las 4 gates. En un modelo real, estas matrices se aprenden durante el entrenamiento.</p>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-orange" onclick="runLstm()">▶ Procesar secuencialmente</button>
+      <button class="btn btn-outline btn-sm" onclick="shuffleAndRun()" id="btnShuffle">🔀 Shuffle y repetir</button>
+      <button class="btn btn-outline btn-sm" onclick="resetSteps('lstm')">↺ Reiniciar</button>
+    </div>
+
+    <div id="lstm-order" style="margin:10px 0;font-size:.9rem;color:var(--text-light);"></div>
+
+    <div class="step" id="lstm-s0">
+      <div class="step-title">Estado inicial</div>
+      <p>$h_0 = [0, 0, 0]$ (estado oculto), $c_0 = [0, 0, 0]$ (cell state)</p>
+    </div>
+
+    <div id="lstm-steps-container"></div>
+
+    <div class="step" id="lstm-s-final">
+      <div class="step-title">Resultado: $m_i$ = estado oculto final</div>
+      <div id="lstm-finalMi"></div>
+    </div>
+
+    <div class="step" id="lstm-s-transform">
+      <div class="step-title">Transformar: $W_1 h_v + W_2 m_i$ → ReLU → $h_v^{(\ell+1)}$</div>
+      <div id="lstm-transform"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ COMPARISON ════════════════ -->
+<div class="card" id="comparisonPanel" style="display:none;">
+  <h2>⚖️ Comparación de los 3 resultados</h2>
+  <p style="color:var(--text-light);font-size:.9rem;margin-bottom:12px;">Mismos vecinos, distintos agregadores → distintos embeddings finales.</p>
+  <table class="cmp-table">
+    <thead>
+      <tr><th></th><th>$m_i$ (resumen vecindario)</th><th>$h_v^{(\ell+1)}$ (embedding final)</th><th>Carácter</th></tr>
+    </thead>
+    <tbody>
+      <tr><td style="font-weight:700;color:#065f46;">📊 Mean</td><td id="cmp-mean-mi">—</td><td id="cmp-mean-h">—</td><td style="font-size:.85rem;">Tendencia central</td></tr>
+      <tr><td style="font-weight:700;color:#5b21b6;">🔺 Max Pool</td><td id="cmp-max-mi">—</td><td id="cmp-max-h">—</td><td style="font-size:.85rem;">Rasgos extremos</td></tr>
+      <tr><td style="font-weight:700;color:#c2410c;">🧠 LSTM</td><td id="cmp-lstm-mi">—</td><td id="cmp-lstm-h">—</td><td style="font-size:.85rem;">Resumen aprendido</td></tr>
+    </tbody>
+  </table>
+  <div class="info">
+    <p><strong>Observa:</strong> Mean suaviza todo. Max pooling preserva señales fuertes de vecinos individuales. LSTM produce un resumen que depende del orden de lectura.</p>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<footer style="background:#1e293b;color:#fff;text-align:center;padding:30px 20px;margin-top:30px;">
+  <p>Simulador del <a href="Chapter3_GraphSAGE_Explained.html" style="color:#fbbf24;text-decoration:none;font-weight:700;">Capítulo 3: GraphSAGE</a> · Curso GNNs in Action</p>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+const W1 = [[0.5,-0.3,0.2],[0.1,0.4,-0.1]];
+const W2 = [[0.3,0.1,-0.2],[-0.1,0.6,0.2]];
+const Wphi = [[0.6,-0.2,0.3],[0.1,0.5,-0.4],[-0.3,0.4,0.7]];
+const bphi = [0.1,-0.1,0.2];
+
+// Simplified LSTM weights (for a 3→3 LSTM)
+// Each gate weight is 3×6 (concat of h_{t-1}(3) + x_t(3))
+// We use small, meaningful values
+const LSTM_Wf = [[0.3,0.0,0.1, 0.1,0.2,0.0],[0.0,0.3,0.0, 0.0,0.1,0.2],[0.1,0.0,0.3, 0.2,0.0,0.1]];
+const LSTM_bf = [0.5,0.5,0.5]; // bias toward remembering
+const LSTM_Wi = [[0.4,0.0,0.1, 0.2,0.1,0.0],[0.0,0.4,0.0, 0.0,0.2,0.1],[0.1,0.0,0.4, 0.1,0.0,0.2]];
+const LSTM_bi = [-0.2,-0.2,-0.2];
+const LSTM_Wc = [[0.5,-0.1,0.0, 0.3,0.0,0.1],[0.0,0.5,0.1, 0.0,0.3,0.0],[-0.1,0.0,0.5, 0.1,0.0,0.3]];
+const LSTM_bc = [0.0,0.0,0.0];
+const LSTM_Wo = [[0.3,0.1,0.0, 0.2,0.0,0.1],[0.0,0.3,0.1, 0.0,0.2,0.0],[0.0,0.0,0.3, 0.1,0.0,0.2]];
+const LSTM_bo = [0.0,0.0,0.0];
+
+let lstmOrder = [0,1,2];
+const completed = {mean:false, max:false, lstm:false};
+const results = {mean:{mi:null,h:null}, max:{mi:null,h:null}, lstm:{mi:null,h:null}};
+
+// ═══════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════
+function getVec(id){return Array.from(document.querySelectorAll('#'+id+' input')).map(i=>parseFloat(i.value)||0);}
+function r2(x){return Math.round(x*100)/100;}
+function relu(x){return Math.max(0,x);}
+function sigmoid(x){return 1/(1+Math.exp(-x));}
+function tanh_(x){return Math.tanh(x);}
+function matVec(M,v){return M.map(row=>r2(row.reduce((s,w,j)=>s+w*v[j],0)));}
+function vecAdd(a,b){return a.map((x,i)=>r2(x+b[i]));}
+function vecMul(a,b){return a.map((x,i)=>r2(x*b[i]));}
+function fmtVec(v,cls){return `<span class="result-vec ${cls||''}">[${v.map(x=>r2(x)).join(', ')}]</span>`;}
+
+function renderMath(el){
+  if(typeof renderMathInElement==='function'){
+    const target=typeof el==='string'?document.getElementById(el):el;
+    if(target)renderMathInElement(target,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+  }
+}
+function makeTable(rows, headers, highlights){
+  let h='<table class="matrix"><tr class="header"><td></td>';
+  headers.forEach(hd=>{h+=`<td>${hd}</td>`;});
+  h+='</tr>';
+  rows.forEach(row=>{
+    h+=`<tr><td class="row-label">${row.label}</td>`;
+    row.values.forEach((v,ci)=>{
+      let cls = (highlights && highlights[row.idx]?.[ci]) || '';
+      h+=`<td class="${cls}">${r2(v)}</td>`;
+    });
+    h+='</tr>';
+  });
+  h+='</table>';
+  return h;
+}
+
+function showStep(id,cls){
+  const el=document.getElementById(id);
+  if(el){el.classList.add(cls||'visible');}
+}
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// ═══════════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════════
+function switchTab(tab){
+  document.querySelectorAll('.tab-content').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>{b.className='tab-btn';});
+  document.getElementById('panel'+cap(tab)).classList.add('active');
+  document.getElementById('tab'+cap(tab)).classList.add('active-'+tab);
+}
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+
+// ═══════════════════════════════════════════════════════════
+// RESET
+// ═══════════════════════════════════════════════════════════
+function resetSteps(tab){
+  const prefix = tab+'-s';
+  document.querySelectorAll(`[id^="${prefix}"]`).forEach(el=>{
+    el.classList.remove('visible','visible-max','visible-lstm');
+  });
+  if(tab==='lstm'){
+    document.getElementById('lstm-steps-container').innerHTML='';
+    document.getElementById('lstm-s-final').classList.remove('visible-lstm');
+    document.getElementById('lstm-s-transform').classList.remove('visible-lstm');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// MEAN
+// ═══════════════════════════════════════════════════════════
+async function runMean(){
+  resetSteps('mean');
+  const n=[getVec('vecN0'),getVec('vecN1'),getVec('vecN2')];
+  const hv=getVec('vecTarget');
+  const D=3;
+  const colors=['highlight-green','highlight-blue','highlight-purple'];
+  const names=['$h_1$','$h_2$','$h_3$'];
+
+  // Step 1: show vectors
+  await sleep(100);
+  let t1=makeTable(
+    n.map((v,i)=>({label:names[i],values:v,idx:i})),
+    ['$d_1$','$d_2$','$d_3$'],
+    {0:{0:colors[0],1:colors[0],2:colors[0]},1:{0:colors[1],1:colors[1],2:colors[1]},2:{0:colors[2],1:colors[2],2:colors[2]}}
+  );
+  document.getElementById('mean-vecTable').innerHTML=t1;
+  renderMath('mean-vecTable');
+  showStep('mean-s1');
+
+  // Step 2: sums
+  await sleep(400);
+  const sums = [0,1,2].map(d=>r2(n[0][d]+n[1][d]+n[2][d]));
+  let t2 = '<p style="font-family:monospace;font-size:.9rem;">';
+  for(let d=0;d<D;d++){
+    t2+=`$d_${d+1}$: ${n[0][d]} + ${n[1][d]} + ${n[2][d]} = <strong>${sums[d]}</strong><br>`;
+  }
+  t2+='</p>';
+  t2+=`<p>Suma = ${fmtVec(sums,'gold')}</p>`;
+  document.getElementById('mean-sumTable').innerHTML=t2;
+  renderMath('mean-sumTable');
+  showStep('mean-s2');
+
+  // Step 3: divide
+  await sleep(400);
+  const mi = sums.map(s=>r2(s/3));
+  let t3=`<p style="font-family:monospace;font-size:.9rem;">`;
+  for(let d=0;d<D;d++){t3+=`$d_${d+1}$: ${sums[d]} ÷ 3 = <strong>${mi[d]}</strong><br>`;}
+  t3+='</p>';
+  t3+=`<p><strong>$m_i$ =</strong> ${fmtVec(mi,'green')}</p>`;
+  document.getElementById('mean-divResult').innerHTML=t3;
+  renderMath('mean-divResult');
+  showStep('mean-s3');
+
+  // Step 4: W1*hv + W2*mi
+  await sleep(400);
+  const w1h = matVec(W1,hv);
+  const w2m = matVec(W2,mi);
+  const pre_relu = vecAdd(w1h,w2m);
+  let t4 = `<p style="font-family:monospace;font-size:.88rem;">`;
+  t4+=`$W_1 \\cdot h_v$ = ${fmtVec(w1h,'gold')}<br>`;
+  t4+=`$W_2 \\cdot m_i$ = ${fmtVec(w2m,'green')}<br>`;
+  t4+=`Suma = ${fmtVec(pre_relu,'blue')}</p>`;
+  document.getElementById('mean-transform').innerHTML=t4;
+  renderMath('mean-transform');
+  showStep('mean-s4');
+
+  // Step 5: ReLU
+  await sleep(400);
+  const final = pre_relu.map(x=>r2(relu(x)));
+  let t5=`<p style="font-family:monospace;font-size:.88rem;">ReLU(${fmtVec(pre_relu,'blue')}) = ${fmtVec(final,'green')}</p>`;
+  t5+=`<p style="margin-top:8px;"><strong>$h_v^{(\\ell+1)}$ =</strong> ${fmtVec(final,'green')}</p>`;
+  document.getElementById('mean-relu').innerHTML=t5;
+  renderMath('mean-relu');
+  showStep('mean-s5');
+
+  results.mean={mi:mi,h:final};
+  completed.mean=true;
+  updateComparison();
+}
+
+// ═══════════════════════════════════════════════════════════
+// MAX POOLING
+// ═══════════════════════════════════════════════════════════
+async function runMax(){
+  resetSteps('max');
+  const n=[getVec('vecN0'),getVec('vecN1'),getVec('vecN2')];
+  const hv=getVec('vecTarget');
+  const names=['$h_1$','$h_2$','$h_3$'];
+  const colors=['n0','n1','n2'];
+  const D=3;
+
+  // Step 1: apply phi to each neighbor
+  await sleep(100);
+  const transformed=[];
+  let t1='';
+  for(let ni=0;ni<3;ni++){
+    const raw = matVec(Wphi, n[ni]);
+    const withBias = vecAdd(raw, bphi);
+    const afterRelu = withBias.map(x=>r2(relu(x)));
+    transformed.push(afterRelu);
+    t1+=`<div style="margin:8px 0;padding:10px;border-radius:8px;background:${['#ecfdf5','#eff6ff','#f5f3ff'][ni]};">`;
+    t1+=`<strong>${names[ni]}</strong> = [${n[ni].join(', ')}]<br>`;
+    t1+=`<span style="font-family:monospace;font-size:.85rem;">`;
+    t1+=`$W_\\phi \\cdot$ ${names[ni]} = [${raw.join(', ')}]<br>`;
+    t1+=`+ bias [${bphi.join(', ')}] = [${withBias.join(', ')}]<br>`;
+    t1+=`ReLU → <strong>[${afterRelu.join(', ')}]</strong>`;
+    t1+=`</span></div>`;
+  }
+  document.getElementById('max-phiCalc').innerHTML=t1;
+  renderMath('max-phiCalc');
+  showStep('max-s1','visible-max');
+
+  // Step 2: component-wise max
+  await sleep(500);
+  const mi=[];
+  const winners=[];
+  let t2='<table class="matrix"><tr class="header"><td></td><td>$p_1$</td><td>$p_2$</td><td>$p_3$</td></tr>';
+  for(let ni=0;ni<3;ni++){
+    t2+=`<tr><td class="row-label">$\\phi(h_${ni+1})$</td>`;
+    for(let d=0;d<D;d++){
+      t2+=`<td id="max-cell-${ni}-${d}">${r2(transformed[ni][d])}</td>`;
+    }
+    t2+='</tr>';
+  }
+  t2+=`<tr style="border-top:3px solid #7c3aed;"><td class="row-label" style="color:#5b21b6;font-weight:800;">MAX</td>`;
+  for(let d=0;d<D;d++){
+    let mx=-Infinity, wi=-1;
+    for(let ni=0;ni<3;ni++){if(transformed[ni][d]>mx){mx=transformed[ni][d];wi=ni;}}
+    mi.push(r2(mx));
+    winners.push(wi);
+    t2+=`<td class="max-winner">${r2(mx)}</td>`;
+  }
+  t2+='</tr></table>';
+  document.getElementById('max-maxCalc').innerHTML=t2+`<p><strong>$m_i$ =</strong> ${fmtVec(mi,'purple')}</p>`;
+  renderMath('max-maxCalc');
+  // Highlight winners
+  await sleep(200);
+  for(let d=0;d<D;d++){
+    const cell=document.getElementById(`max-cell-${winners[d]}-${d}`);
+    if(cell)cell.classList.add('max-winner');
+    // dim losers
+    for(let ni=0;ni<3;ni++){
+      if(ni!==winners[d]){
+        const c2=document.getElementById(`max-cell-${ni}-${d}`);
+        if(c2)c2.classList.add('dimmed');
+      }
+    }
+  }
+  showStep('max-s2','visible-max');
+
+  // Step 3: transform
+  await sleep(500);
+  const w1h=matVec(W1,hv);
+  const w2m=matVec(W2,mi);
+  const pre=vecAdd(w1h,w2m);
+  let t3=`<p style="font-family:monospace;font-size:.88rem;">$W_1 \\cdot h_v$ = ${fmtVec(w1h,'gold')}<br>`;
+  t3+=`$W_2 \\cdot m_i$ = ${fmtVec(w2m,'purple')}<br>`;
+  t3+=`Suma = ${fmtVec(pre,'blue')}</p>`;
+  document.getElementById('max-transform').innerHTML=t3;
+  renderMath('max-transform');
+  showStep('max-s3','visible-max');
+
+  // Step 4: ReLU
+  await sleep(400);
+  const final=pre.map(x=>r2(relu(x)));
+  let t4=`<p style="font-family:monospace;font-size:.88rem;">ReLU(${fmtVec(pre,'blue')}) = ${fmtVec(final,'purple')}</p>`;
+  t4+=`<p style="margin-top:8px;"><strong>$h_v^{(\\ell+1)}$ =</strong> ${fmtVec(final,'purple')}</p>`;
+  document.getElementById('max-relu').innerHTML=t4;
+  renderMath('max-relu');
+  showStep('max-s4','visible-max');
+
+  results.max={mi:mi,h:final};
+  completed.max=true;
+  updateComparison();
+}
+
+// ═══════════════════════════════════════════════════════════
+// LSTM
+// ═══════════════════════════════════════════════════════════
+function lstmStep(h_prev, c_prev, x_t){
+  const concat = [...h_prev, ...x_t]; // 6-dim
+  // Gates
+  const f_raw = vecAdd(matVec(LSTM_Wf, concat), LSTM_bf).map(sigmoid);
+  const i_raw = vecAdd(matVec(LSTM_Wi, concat), LSTM_bi).map(sigmoid);
+  const c_cand = vecAdd(matVec(LSTM_Wc, concat), LSTM_bc).map(tanh_);
+  const o_raw = vecAdd(matVec(LSTM_Wo, concat), LSTM_bo).map(sigmoid);
+  // Cell state
+  const c_new = vecAdd(vecMul(f_raw,c_prev), vecMul(i_raw,c_cand));
+  // Hidden state
+  const h_new = vecMul(o_raw, c_new.map(tanh_));
+  return {h:h_new.map(r2), c:c_new.map(r2), f:f_raw.map(r2), i:i_raw.map(r2), cand:c_cand.map(r2), o:o_raw.map(r2)};
+}
+
+async function runLstm(){
+  resetSteps('lstm');
+  const allN=[getVec('vecN0'),getVec('vecN1'),getVec('vecN2')];
+  const hv=getVec('vecTarget');
+  const nameMap=['$h_1$','$h_2$','$h_3$'];
+  const colorMap=['#059669','#3b82f6','#8b5cf6'];
+  const container=document.getElementById('lstm-steps-container');
+  container.innerHTML='';
+
+  // Show order
+  const orderStr=lstmOrder.map(i=>`<strong style="color:${colorMap[i]}">Vecino ${i+1}</strong>`).join(' → ');
+  document.getElementById('lstm-order').innerHTML=`📝 Orden de procesamiento: ${orderStr}`;
+
+  showStep('lstm-s0','visible-lstm');
+  await sleep(300);
+
+  let h=[0,0,0], c=[0,0,0];
+
+  for(let step=0;step<3;step++){
+    const ni=lstmOrder[step];
+    const x=allN[ni];
+    const res=lstmStep(h,c,x);
+
+    const stepId=`lstm-dyn-${step}`;
+    const div=document.createElement('div');
+    div.className='step';
+    div.id=stepId;
+
+    let html=`<div class="step-title" style="color:${colorMap[ni]};">Paso ${step+1} · Procesar Vecino ${ni+1}: [${x.join(', ')}]</div>`;
+    html+=`<p style="font-size:.85rem;color:var(--text-light);">$h_{${step}}$ = [${h.join(', ')}], $c_{${step}}$ = [${c.join(', ')}]</p>`;
+
+    // Gates
+    html+=`<div class="gate-row">`;
+    html+=`<div class="gate-box gate-forget"><div class="gate-name">Forget $f_t$</div><div class="gate-val">[${res.f.join(', ')}]</div><div style="font-size:.72rem;margin-top:2px;">¿Cuánto del cell state anterior conservar?</div></div>`;
+    html+=`<div class="gate-box gate-input"><div class="gate-name">Input $i_t$</div><div class="gate-val">[${res.i.join(', ')}]</div><div style="font-size:.72rem;margin-top:2px;">¿Cuánta info nueva aportar?</div></div>`;
+    html+=`<div class="gate-box gate-candidate"><div class="gate-name">Candidato $\\tilde{c}_t$</div><div class="gate-val">[${res.cand.join(', ')}]</div><div style="font-size:.72rem;margin-top:2px;">Info nueva propuesta</div></div>`;
+    html+=`<div class="gate-box gate-output"><div class="gate-name">Output $o_t$</div><div class="gate-val">[${res.o.join(', ')}]</div><div style="font-size:.72rem;margin-top:2px;">¿Cuánto del cell state exponer?</div></div>`;
+    html+=`</div>`;
+
+    // Cell state update
+    html+=`<p style="font-family:monospace;font-size:.82rem;margin-top:6px;">`;
+    html+=`$c_{${step+1}}$ = $f_t \\odot c_{${step}}$ + $i_t \\odot \\tilde{c}_t$ = ${fmtVec(res.c,'blue')}<br>`;
+    html+=`$h_{${step+1}}$ = $o_t \\odot \\tanh(c_{${step+1}})$ = ${fmtVec(res.h,'orange')}`;
+    html+=`</p>`;
+
+    div.innerHTML=html;
+    container.appendChild(div);
+    await sleep(500);
+    renderMath(div);
+    showStep(stepId,'visible-lstm');
+
+    h=res.h; c=res.c;
+  }
+
+  // Final mi
+  await sleep(400);
+  const mi=h;
+  document.getElementById('lstm-finalMi').innerHTML=`<p><strong>$m_i$ =</strong> ${fmtVec(mi,'orange')}</p>`;
+  renderMath('lstm-finalMi');
+  showStep('lstm-s-final','visible-lstm');
+
+  // Transform
+  await sleep(400);
+  const w1h=matVec(W1,hv);
+  const w2m=matVec(W2,mi);
+  const pre=vecAdd(w1h,w2m);
+  const final=pre.map(x=>r2(relu(x)));
+  let tf=`<p style="font-family:monospace;font-size:.88rem;">`;
+  tf+=`$W_1 \\cdot h_v$ = ${fmtVec(w1h,'gold')}<br>`;
+  tf+=`$W_2 \\cdot m_i$ = ${fmtVec(w2m,'orange')}<br>`;
+  tf+=`Suma = ${fmtVec(pre,'blue')}<br>`;
+  tf+=`ReLU → ${fmtVec(final,'orange')}</p>`;
+  tf+=`<p style="margin-top:8px;"><strong>$h_v^{(\\ell+1)}$ =</strong> ${fmtVec(final,'orange')}</p>`;
+  document.getElementById('lstm-transform').innerHTML=tf;
+  renderMath('lstm-transform');
+  showStep('lstm-s-transform','visible-lstm');
+
+  results.lstm={mi:mi,h:final};
+  completed.lstm=true;
+  updateComparison();
+}
+
+function shuffleAndRun(){
+  // Fisher-Yates shuffle
+  lstmOrder=[0,1,2];
+  for(let i=2;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [lstmOrder[i],lstmOrder[j]]=[lstmOrder[j],lstmOrder[i]];
+  }
+  const btn=document.getElementById('btnShuffle');
+  btn.classList.add('shuffle-pop');
+  setTimeout(()=>btn.classList.remove('shuffle-pop'),400);
+  runLstm();
+}
+
+// ═══════════════════════════════════════════════════════════
+// COMPARISON
+// ═══════════════════════════════════════════════════════════
+function updateComparison(){
+  const any=completed.mean||completed.max||completed.lstm;
+  document.getElementById('comparisonPanel').style.display=any?'block':'none';
+  if(completed.mean){
+    document.getElementById('cmp-mean-mi').innerHTML=fmtVec(results.mean.mi,'green');
+    document.getElementById('cmp-mean-h').innerHTML=fmtVec(results.mean.h,'green');
+  }
+  if(completed.max){
+    document.getElementById('cmp-max-mi').innerHTML=fmtVec(results.max.mi,'purple');
+    document.getElementById('cmp-max-h').innerHTML=fmtVec(results.max.h,'purple');
+  }
+  if(completed.lstm){
+    document.getElementById('cmp-lstm-mi').innerHTML=fmtVec(results.lstm.mi,'orange');
+    document.getElementById('cmp-lstm-h').innerHTML=fmtVec(results.lstm.h,'orange');
+  }
+}
+
+// Auto-rerun on input change (debounced)
+let debounceTimer;
+document.querySelectorAll('.vec-inputs input').forEach(inp=>{
+  inp.addEventListener('input',()=>{
+    clearTimeout(debounceTimer);
+    debounceTimer=setTimeout(()=>{
+      if(completed.mean)runMean();
+      if(completed.max)runMax();
+      if(completed.lstm)runLstm();
+    },600);
+  });
+});
+</script>
+</body>
+</html>
