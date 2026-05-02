@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GNNs para Detección de Tráfico de Petróleo en México — Perspectiva Bancaria</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        /* ---- extras específicos de este módulo ---- */
+        .risk-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.78em; font-weight: 700; letter-spacing: 0.5px; margin-left: 6px; vertical-align: middle; }
+        .risk-alto   { background: #FF6B6B; color: #fff; }
+        .risk-medio  { background: #FF9F43; color: #1a1a1a; }
+        .risk-bajo   { background: #03EF62; color: #05192D; }
+        .node-pill { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 0.82em; font-weight: 600; margin: 3px; }
+        .np-cuenta  { background: #4C8BF5; color: #fff; }
+        .np-empresa { background: #A855F7; color: #fff; }
+        .np-persona { background: #03EF62; color: #05192D; }
+        .np-ducto   { background: #FF9F43; color: #1a1a1a; }
+        .np-gasolinera { background: #FF6B6B; color: #fff; }
+        .edge-pill { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 0.82em; font-weight: 600; margin: 3px; border: 2px dashed; }
+        .ep-tx  { border-color: #4C8BF5; color: #4C8BF5; }
+        .ep-prop { border-color: #A855F7; color: #A855F7; }
+        .ep-geo  { border-color: #FF9F43; color: #FF9F43; }
+        .arch-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin: 20px 0; }
+        .arch-card { background: var(--dc-dark); border-radius: var(--dc-radius-lg); padding: 20px; text-align: center; position: relative; overflow: hidden; }
+        .arch-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+        .arch-gcn::before  { background: #4C8BF5; }
+        .arch-gat::before  { background: #A855F7; }
+        .arch-sage::before { background: #03EF62; }
+        .arch-gin::before  { background: #FF9F43; }
+        .arch-card h4 { font-size: 1.3em; margin-bottom: 6px; }
+        .arch-card p  { color: var(--dc-gray-300); font-size: 0.88em; line-height: 1.5; }
+        .arch-tag { font-size: 0.7em; font-weight: 700; letter-spacing: 0.8px; margin-bottom: 8px; display: block; }
+        .typology-card { background: var(--dc-gray-50); border: 1px solid var(--dc-gray-200); border-radius: var(--dc-radius-lg); padding: 20px 24px; margin: 14px 0; position: relative; }
+        .typology-card h4 { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+        .typology-num { background: var(--dc-dark); color: var(--dc-green); border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85em; flex-shrink: 0; }
+        .pipeline-flow { display: flex; align-items: stretch; gap: 0; margin: 24px 0; flex-wrap: wrap; }
+        .pf-step { flex: 1; min-width: 120px; background: var(--dc-dark); color: var(--dc-white); padding: 16px 12px; text-align: center; font-size: 0.82em; font-weight: 600; border-right: 3px solid var(--dc-dark2); }
+        .pf-step:last-child { border-right: none; }
+        .pf-step span { display: block; font-size: 1.7em; margin-bottom: 6px; }
+        .pf-step.highlight-step { background: #991B1B; }
+        .pf-step.green-step { background: #059669; }
+        .gnn-matrix { display: grid; grid-template-columns: auto repeat(4,1fr); border: 1px solid var(--dc-gray-200); border-radius: var(--dc-radius); overflow: hidden; margin: 20px 0; font-size: 0.88em; }
+        .gnn-matrix div { padding: 10px 14px; border-bottom: 1px solid var(--dc-gray-100); }
+        .gnn-matrix .hdr { background: var(--dc-dark); color: var(--dc-white); font-weight: 700; }
+        .gnn-matrix .row-lbl { background: var(--dc-dark2); color: var(--dc-green); font-weight: 700; }
+        .gnn-matrix .cell { background: var(--dc-white); color: var(--dc-gray-700); }
+        .gnn-matrix .cell.yes { color: #059669; font-weight: 600; }
+        .gnn-matrix .cell.no  { color: var(--dc-gray-300); }
+        .canvas-wrapper { background: var(--dc-gray-50); border: 1px solid var(--dc-gray-200); border-radius: var(--dc-radius-lg); padding: 16px; margin: 20px 0; }
+        .legend-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.82em; color: var(--dc-gray-700); }
+        .legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+        .score-badge { display: inline-block; padding: 6px 16px; border-radius: var(--dc-radius); background: var(--dc-dark); color: var(--dc-green); font-weight: 800; font-size: 1.1em; margin: 4px; }
+        .impl-step { display: flex; gap: 16px; align-items: flex-start; margin: 16px 0; padding: 18px; background: var(--dc-white); border: 1px solid var(--dc-gray-200); border-radius: var(--dc-radius-lg); }
+        .impl-num { background: var(--dc-dark); color: var(--dc-green); border-radius: var(--dc-radius); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1em; flex-shrink: 0; }
+        .impl-body h4 { margin: 0 0 6px; font-size: 1em; }
+        .impl-body p  { margin: 0; font-size: 0.92em; color: var(--dc-gray-500); }
+        .fc-label { font-size: 0.75em; font-weight: 700; letter-spacing: 1px; color: var(--dc-green); display: block; margin-bottom: 6px; }
+        .fc-term { font-size: 1.25em; font-weight: 800; margin-bottom: 6px; }
+        .fc-hint { font-size: 0.8em; color: var(--dc-gray-300); }
+        .fc-def { font-size: 1em; font-weight: 500; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- ====================== HEADER ====================== -->
+    <header>
+        <h1>GNNs para Detección de Tráfico de Petróleo en México</h1>
+        <p class="subtitle">Graph Neural Networks in Action — Perspectiva Bancaria AML</p>
+        <p class="book-info">Guía Interactiva | Basado en GNNs in Action (Broadwater) | AML / PEMEX / Huachicoleo</p>
+        <p style="margin-top:10px; color: var(--dc-green); font-weight:600; font-size: 0.9em; letter-spacing: 0.5px;">
+            HUACHICOLEO &nbsp;|&nbsp; PEMEX &nbsp;|&nbsp; DUCTOS CLANDESTINOS &nbsp;|&nbsp; LAVADO DE COMBUSTIBLE &nbsp;|&nbsp; GCN · GAT · GraphSAGE
+        </p>
+    </header>
+
+    <!-- ====================== PROGRESS ====================== -->
+    <div class="global-progress" id="globalProgress">
+        <span class="global-progress-label">Progreso del Módulo</span>
+        <div class="global-progress-bar"><div class="global-progress-fill" id="globalFill"></div></div>
+        <span class="global-progress-pct" id="globalPct">0%</span>
+    </div>
+
+    <!-- ====================== NAV ====================== -->
+    <nav id="mainNav">
+        <button data-section="intro"        onclick="navClick('intro',this)">Intro<span class="lock-icon"></span></button>
+        <button data-section="contexto"     onclick="navClick('contexto',this)">Contexto<span class="lock-icon"></span></button>
+        <button data-section="grafo"        onclick="navClick('grafo',this)">Modelado Grafo<span class="lock-icon"></span></button>
+        <button data-section="arquitectura" onclick="navClick('arquitectura',this)">Arquitecturas GNN<span class="lock-icon"></span></button>
+        <button data-section="tipologias"   onclick="navClick('tipologias',this)">Tipologías<span class="lock-icon"></span></button>
+        <button data-section="implementacion" onclick="navClick('implementacion',this)">Implementación<span class="lock-icon"></span></button>
+        <button data-section="quiz1"        onclick="navClick('quiz1',this)">Quiz<span class="lock-icon"></span></button>
+        <button data-section="flashcards"   onclick="navClick('flashcards',this)">Flashcards<span class="lock-icon"></span></button>
+        <button data-section="resumen"      onclick="navClick('resumen',this)">Resumen<span class="lock-icon"></span></button>
+    </nav>
+
+    <!-- ====================== INTRO ====================== -->
+    <div id="intro" class="section active">
+        <h2>¿Por qué el tráfico de petróleo necesita GNNs?</h2>
+
+        <div class="stat-cards">
+            <div class="stat-card"><div class="number">~$3B</div><div class="label">USD perdidos anualmente por huachicoleo (PEMEX)</div></div>
+            <div class="stat-card"><div class="number">12,000+</div><div class="label">Tomas clandestinas detectadas en un año récord</div></div>
+            <div class="stat-card"><div class="number">18</div><div class="label">Estados con actividad de huachicoleo significativa</div></div>
+            <div class="stat-card"><div class="number">3</div><div class="label">Capas de lavado (colocación, estratificación, integración)</div></div>
+        </div>
+
+        <h3>El problema desde la perspectiva bancaria</h3>
+        <p>El robo y tráfico de combustible en México —popularmente conocido como <strong>huachicoleo</strong>— genera miles de millones de dólares en flujos financieros ilícitos que terminan cruzando el sistema bancario. Para un banco, detectar estas operaciones mediante métodos tradicionales es <strong>extremadamente difícil</strong> porque:</p>
+
+        <div class="danger-box">
+            <h4>¿Por qué fallan los métodos clásicos de AML?</h4>
+            <ul>
+                <li><strong>Atomización:</strong> Las organizaciones dividen el efectivo en cientos de depósitos pequeños (structuring/smurfing) para evadir umbrales de reporte.</li>
+                <li><strong>Empresas fantasma:</strong> El dinero transita por cadenas de personas morales con actividades lícitas aparentes (gasolineras, distribuidoras, etc.).</li>
+                <li><strong>Geografía dispersa:</strong> Las células operan en múltiples estados; las reglas basadas en coordenadas o municipios son insuficientes.</li>
+                <li><strong>Relaciones ocultas:</strong> Los vínculos entre cuentas, personas y empresas no son evidentes en registros individuales; solo emergen al analizar <em>la red completa</em>.</li>
+            </ul>
+        </div>
+
+        <div class="success-box">
+            <h4>¿Por qué GNNs son la respuesta?</h4>
+            <p>Las GNNs están diseñadas exactamente para datos donde <strong>las relaciones son tan importantes como los atributos individuales</strong>. Al modelar cuentas, empresas y transacciones como un grafo, el banco puede capturar patrones de lavado que son <em>invisibles</em> en tablas planas pero <em>obvios</em> en la topología de la red.</p>
+        </div>
+
+        <h3>Flujo del huachicoleo — del ducto al banco</h3>
+        <div class="pipeline-flow">
+            <div class="pf-step highlight-step"><span>🛢️</span>Robo en ducto / refinería</div>
+            <div class="pf-step highlight-step"><span>🚚</span>Transporte / almacenamiento ilegal</div>
+            <div class="pf-step highlight-step"><span>⛽</span>Venta a gasolineras / industrias</div>
+            <div class="pf-step"><span>💵</span>Cobro en efectivo</div>
+            <div class="pf-step"><span>🏦</span>Depósitos fraccionados en bancos</div>
+            <div class="pf-step"><span>🏢</span>Empresas de fachada (lavado)</div>
+            <div class="pf-step green-step"><span>✅</span>Integración como dinero "limpio"</div>
+        </div>
+
+        <div class="highlight">
+            <h4>Idea central de este módulo</h4>
+            <p>Aprenderás a representar toda esta cadena como un <strong>grafo heterogéneo</strong>, aplicar arquitecturas GNN (GCN, GAT, GraphSAGE) para detectar nodos y comunidades sospechosas, e integrar el modelo en el flujo de monitoreo transaccional de un banco.</p>
+        </div>
+
+        <div class="checkpoint" id="cp-intro">
+            <h4>⚙ Checkpoint — Desbloquea la siguiente sección</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">¿Cuál es la razón principal por la que los métodos clásicos de AML (reglas + umbrales) fallan con el huachicoleo?</p>
+            <div class="cp-option" onclick="checkCP('intro',this,false)">Porque las transacciones involucran montos demasiado grandes para los sistemas actuales</div>
+            <div class="cp-option" onclick="checkCP('intro',this,true)">Porque las relaciones entre cuentas y entidades son invisibles en datos tabulares; solo emergen analizando la red completa</div>
+            <div class="cp-option" onclick="checkCP('intro',this,false)">Porque el huachicoleo siempre ocurre fuera del sistema bancario formal</div>
+            <div class="cp-feedback" id="cpFb-intro"></div>
+        </div>
+    </div>
+
+    <!-- ====================== CONTEXTO ====================== -->
+    <div id="contexto" class="section">
+        <h2>Contexto: Ecosistema del Tráfico de Petróleo en México</h2>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                ¿Qué es el huachicoleo y quiénes son los actores?
+                <span class="accordion-icon">▼</span>
+            </div>
+            <div class="accordion-body">
+                <p>El término <strong>huachicoleo</strong> se refiere al robo sistemático de combustibles (gasolina, diesel, turbosina, gas LP) de la infraestructura de PEMEX: ductos, refinerías, terminales de almacenamiento y buques-tanque. Ha evolucionado de pequeños robos locales a <strong>organizaciones criminales transnacionales</strong>.</p>
+                <h4>Actores principales (nodos del ecosistema):</h4>
+                <ul>
+                    <li><strong>Células de extracción:</strong> Realizan las tomas clandestinas físicas. Altamente especializadas.</li>
+                    <li><strong>Transportistas:</strong> Pipas, camiones cisterna, barcazas. A menudo son empresas con permisos legítimos de transporte.</li>
+                    <li><strong>Almacenistas:</strong> Bodegas y tambos clandestinos en zonas rurales o periurbanas.</li>
+                    <li><strong>Distribuidores:</strong> Venden el combustible a gasolineras, industrias y empresas de transporte que buscan precio reducido.</li>
+                    <li><strong>Lavadores financieros:</strong> Dueños de gasolineras, distribuidoras de gas, negocios de construcción, que mezclan ingresos ilícitos con ventas legítimas.</li>
+                    <li><strong>Prestanombres y mulas:</strong> Abren cuentas y empresas a nombre de terceros para fraccionar y mover el efectivo.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                ¿Cómo se lava el dinero del huachicoleo?
+                <span class="accordion-icon">▼</span>
+            </div>
+            <div class="accordion-body">
+                <h4>Las tres etapas clásicas adaptadas al sector:</h4>
+                <div class="arch-row">
+                    <div class="arch-card" style="border-top: 3px solid #FF6B6B;">
+                        <span class="arch-tag" style="color:#FF6B6B;">COLOCACIÓN</span>
+                        <h4 style="color:#fff;">💵 Ingreso al sistema</h4>
+                        <p>Depósitos fraccionados en cuentas de personas físicas cercanas a zonas de ductos. Operaciones en efectivo en casas de cambio o cajas de ahorro. Compras de bienes (vehículos, maquinaria).</p>
+                    </div>
+                    <div class="arch-card" style="border-top: 3px solid #FF9F43;">
+                        <span class="arch-tag" style="color:#FF9F43;">ESTRATIFICACIÓN</span>
+                        <h4 style="color:#fff;">🔄 Movimiento</h4>
+                        <p>Transferencias entre múltiples personas morales (holding → distribuidora → constructora). Pagos de "facturas" por servicios inexistentes. Remesas internacionales fragmentadas.</p>
+                    </div>
+                    <div class="arch-card" style="border-top: 3px solid #03EF62;">
+                        <span class="arch-tag" style="color:#03EF62;">INTEGRACIÓN</span>
+                        <h4 style="color:#fff;">🏗️ Regreso a economía legal</h4>
+                        <p>Inversión en bienes raíces, gasolineras "legales", franquicias de conveniencia. Dividendos y préstamos de empresas propias. Exportación sobreinvoiced.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                Geografía del riesgo en México
+                <span class="accordion-icon">▼</span>
+            </div>
+            <div class="accordion-body">
+                <p>El riesgo no es uniforme. El banco debe ponderar la <strong>ubicación geográfica</strong> de las entidades:</p>
+                <table>
+                    <tr>
+                        <th>Región / Estado</th>
+                        <th>Razón del Riesgo</th>
+                        <th>Nivel</th>
+                    </tr>
+                    <tr><td>Hidalgo, Puebla, Guanajuato</td><td>Corredor del ducto Tuxpan-Salamanca; máxima densidad de tomas clandestinas históricas</td><td><span class="risk-badge risk-alto">ALTO</span></td></tr>
+                    <tr><td>Tamaulipas, Veracruz</td><td>Infraestructura portuaria y refinería; presencia de crimen organizado consolidado</td><td><span class="risk-badge risk-alto">ALTO</span></td></tr>
+                    <tr><td>Jalisco, Michoacán</td><td>Redes de distribución y lavado mediante negocios de transporte</td><td><span class="risk-badge risk-medio">MEDIO</span></td></tr>
+                    <tr><td>CDMX, Nuevo León</td><td>Integración financiera: bienes raíces e importaciones sobreinvoiced</td><td><span class="risk-badge risk-medio">MEDIO</span></td></tr>
+                    <tr><td>Resto del país</td><td>Riesgo de punto final de lavado</td><td><span class="risk-badge risk-bajo">BAJO-MEDIO</span></td></tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                ¿Qué datos tiene el banco que son relevantes?
+                <span class="accordion-icon">▼</span>
+            </div>
+            <div class="accordion-body">
+                <h4>Fuentes de datos internos:</h4>
+                <ul>
+                    <li>Transacciones (monto, tipo, hora, sucursal, coordenadas del ATM/terminal)</li>
+                    <li>KYC: giro comercial (código SCIAN/SIC), domicilio, beneficiarios, RFC, accionistas</li>
+                    <li>Alertas SAR previas y casos cerrados (positivos y falsos positivos)</li>
+                    <li>Productos activos: créditos, garantías, líneas de crédito revolvente</li>
+                </ul>
+                <h4>Fuentes externas que se pueden integrar:</h4>
+                <ul>
+                    <li>Registros de permisos CRE (Comisión Reguladora de Energía) para distribución de combustible</li>
+                    <li>Listas OFAC, ONU, PEP, 69-B SAT (contribuyentes con operaciones inexistentes)</li>
+                    <li>Noticias negativas y datos geoespaciales de incidentes de tomas clandestinas (CNH/PEMEX)</li>
+                    <li>Registros públicos de personas morales (RPC, Buró de Crédito Empresarial)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="checkpoint" id="cp-contexto">
+            <h4>⚙ Checkpoint</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">En la etapa de <strong>estratificación</strong> del lavado de dinero del huachicoleo, ¿qué actividad es más característica?</p>
+            <div class="cp-option" onclick="checkCP('contexto',this,false)">Depósitos en efectivo fraccionados en múltiples sucursales bancarias</div>
+            <div class="cp-option" onclick="checkCP('contexto',this,false)">Inversión final en gasolineras y bienes raíces para integrar el dinero</div>
+            <div class="cp-option" onclick="checkCP('contexto',this,true)">Transferencias entre cadenas de personas morales y pago de facturas por servicios inexistentes</div>
+            <div class="cp-feedback" id="cpFb-contexto"></div>
+        </div>
+    </div>
+
+    <!-- ====================== GRAFO ====================== -->
+    <div id="grafo" class="section">
+        <h2>Modelado del Problema como Grafo</h2>
+
+        <p>La clave para aplicar GNNs es transformar los datos bancarios y externos en un <strong>grafo heterogéneo</strong> donde cada tipo de entidad es un nodo y cada relación significativa es una arista.</p>
+
+        <h3>Nodos del grafo financiero del huachicoleo</h3>
+        <div class="info-box">
+            <span class="node-pill np-cuenta">Cuenta bancaria</span>
+            <span class="node-pill np-empresa">Persona moral</span>
+            <span class="node-pill np-persona">Persona física</span>
+            <span class="node-pill np-gasolinera">Gasolinera / Distribuidora</span>
+            <span class="node-pill np-ducto">Zona de ducto / Incidente</span>
+            <h4 style="margin-top:14px;">Features de nodo (ejemplos):</h4>
+            <ul>
+                <li><strong>Cuenta:</strong> saldo promedio, volumen transaccional, antigüedad, % operaciones en efectivo, entidad federativa</li>
+                <li><strong>Persona moral:</strong> giro SCIAN, años de constitución, número de accionistas, ratio ingresos/empleados, presencia en listas negras</li>
+                <li><strong>Gasolinera/Distribuidora:</strong> permiso CRE vigente, volumen declarado vs. estimado, densidad de sucursales cercanas</li>
+                <li><strong>Zona de ducto:</strong> número de incidentes reportados, riesgo geoespacial, clasificación de cobertura</li>
+            </ul>
+        </div>
+
+        <h3>Aristas del grafo</h3>
+        <div class="highlight">
+            <span class="edge-pill ep-tx">Transacción</span>
+            <span class="edge-pill ep-prop">Propiedad / Control</span>
+            <span class="edge-pill ep-geo">Co-ubicación geográfica</span>
+            <h4 style="margin-top:12px;">Atributos de arista:</h4>
+            <ul>
+                <li><strong>Transacción:</strong> monto, fecha, canal (SPEI, efectivo, cheque), frecuencia acumulada en ventana de 30 días</li>
+                <li><strong>Propiedad/Control:</strong> porcentaje de participación, rol (accionista, apoderado, beneficiario final)</li>
+                <li><strong>Co-ubicación:</strong> distancia en km al incidente de toma clandestina más cercano, cuadrante de riesgo</li>
+            </ul>
+        </div>
+
+        <h3>Visualización conceptual del grafo</h3>
+        <div class="canvas-wrapper">
+            <canvas id="graphCanvas" width="720" height="340"></canvas>
+            <div class="legend-row">
+                <div class="legend-item"><div class="legend-dot" style="background:#4C8BF5;"></div>Cuenta bancaria</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#A855F7;"></div>Persona moral</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#03EF62;"></div>Persona física</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#FF9F43;"></div>Gasolinera / Distribuidora</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#FF6B6B;"></div>Nodo de alto riesgo GNN</div>
+            </div>
+        </div>
+        <p style="font-size:0.85em; color:var(--dc-gray-500); text-align:center;">Red simplificada. En producción, el grafo puede contener millones de nodos y decenas de millones de aristas.</p>
+
+        <h3>¿Grafo estático o dinámico?</h3>
+        <div class="concepts-grid">
+            <div class="concept-card">
+                <h4>Grafo Estático (Batch)</h4>
+                <p>Snapshot de un periodo (ej: 3 meses). Útil para investigaciones retrospectivas y entrenamiento inicial del modelo GNN. GCN y GAT son ideales aquí.</p>
+            </div>
+            <div class="concept-card">
+                <h4>Grafo Dinámico (Streaming)</h4>
+                <p>Se actualiza con cada nueva transacción. Requiere modelos inductivos como <strong>GraphSAGE</strong> que puedan generalizar a nodos nunca vistos durante el entrenamiento.</p>
+            </div>
+            <div class="concept-card">
+                <h4>Multi-relacional (Heterogéneo)</h4>
+                <p>Diferentes tipos de nodos y aristas. Requiere variantes como <strong>R-GCN</strong> (Relational GCN) o HAN (Heterogeneous Attention Network) para manejar la heterogeneidad.</p>
+            </div>
+        </div>
+
+        <div class="checkpoint" id="cp-grafo">
+            <h4>⚙ Checkpoint</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">Un banco quiere detectar nuevas cuentas sospechosas en tiempo real, sin re-entrenar el modelo cada vez. ¿Qué tipo de grafo y qué arquitectura GNN debe usar?</p>
+            <div class="cp-option" onclick="checkCP('grafo',this,false)">Grafo estático con GCN, porque es el modelo más sencillo de implementar</div>
+            <div class="cp-option" onclick="checkCP('grafo',this,true)">Grafo dinámico con GraphSAGE, porque es inductivo y generaliza a nodos nuevos sin re-entrenamiento</div>
+            <div class="cp-option" onclick="checkCP('grafo',this,false)">Grafo estático con Node2Vec, porque genera los mejores embeddings para detección de fraude</div>
+            <div class="cp-feedback" id="cpFb-grafo"></div>
+        </div>
+    </div>
+
+    <!-- ====================== ARQUITECTURA ====================== -->
+    <div id="arquitectura" class="section">
+        <h2>Arquitecturas GNN para Detección de Tráfico de Petróleo</h2>
+
+        <p>No todas las GNNs son igual de adecuadas para este problema. La elección depende del tamaño del grafo, si es estático o dinámico, y si se necesita interpretabilidad para los equipos de cumplimiento.</p>
+
+        <h3>Comparativa de arquitecturas</h3>
+        <div class="arch-row">
+            <div class="arch-card arch-gcn">
+                <span class="arch-tag" style="color:#4C8BF5;">GRAPH CONVOLUTIONAL NETWORK</span>
+                <h4 style="color:#4C8BF5;">GCN</h4>
+                <p>Agrega features de todos los vecinos con peso uniforme normalizado por grado. <strong>Baseline ideal</strong> para grafos estáticos de tamaño mediano. Rápido de entrenar.</p>
+                <p style="margin-top:8px;"><strong>Uso en este caso:</strong> Clasificación de cuentas bancarias existentes en batch mensual.</p>
+            </div>
+            <div class="arch-card arch-gat">
+                <span class="arch-tag" style="color:#A855F7;">GRAPH ATTENTION NETWORK</span>
+                <h4 style="color:#A855F7;">GAT</h4>
+                <p>Asigna pesos de atención α<sub>ij</sub> a cada vecino. <strong>Más expresivo</strong>: aprende qué transacciones/relaciones son más relevantes para determinar si un nodo es sospechoso.</p>
+                <p style="margin-top:8px;"><strong>Uso en este caso:</strong> Priorizar transacciones de alto monto o alta frecuencia como señales de riesgo.</p>
+            </div>
+            <div class="arch-card arch-sage">
+                <span class="arch-tag" style="color:#03EF62;">GRAPHSAGE</span>
+                <h4 style="color:#03EF62;">GraphSAGE</h4>
+                <p>Aprende una función de agregación generalizable. Es <strong>inductivo</strong>: puede predecir sobre nodos que no estaban en el grafo de entrenamiento. Escala a millones de nodos.</p>
+                <p style="margin-top:8px;"><strong>Uso en este caso:</strong> Scoring en tiempo real de cuentas nuevas y entidades recién incorporadas al KYC.</p>
+            </div>
+            <div class="arch-card arch-gin">
+                <span class="arch-tag" style="color:#FF9F43;">GRAPH ISOMORPHISM NET</span>
+                <h4 style="color:#FF9F43;">GIN</h4>
+                <p>Maximiza poder expresivo (tan poderoso como el test Weisfeiler-Lehman). Ideal para detectar <strong>subgrafos isomorfos</strong>: redes de lavado que tienen la misma "forma" aunque usen entidades distintas.</p>
+                <p style="margin-top:8px;"><strong>Uso en este caso:</strong> Identificar estructuras de "rueda" o "embudo" típicas del layering.</p>
+            </div>
+        </div>
+
+        <h3>Tabla de decisión: ¿Qué modelo usar?</h3>
+        <div class="gnn-matrix">
+            <div class="hdr">Criterio</div>
+            <div class="hdr">GCN</div>
+            <div class="hdr">GAT</div>
+            <div class="hdr">GraphSAGE</div>
+            <div class="hdr">GIN</div>
+
+            <div class="row-lbl">Grafo dinámico / nodos nuevos</div>
+            <div class="cell no">✗</div>
+            <div class="cell no">✗</div>
+            <div class="cell yes">✓</div>
+            <div class="cell no">✗</div>
+
+            <div class="row-lbl">Interpretabilidad para cumplimiento</div>
+            <div class="cell no">Media</div>
+            <div class="cell yes">Alta (α<sub>ij</sub>)</div>
+            <div class="cell no">Media</div>
+            <div class="cell no">Baja</div>
+
+            <div class="row-lbl">Grafos muy grandes (&gt;10M nodos)</div>
+            <div class="cell no">✗</div>
+            <div class="cell no">✗</div>
+            <div class="cell yes">✓ (mini-batch)</div>
+            <div class="cell no">✗</div>
+
+            <div class="row-lbl">Detectar patrones de red (isomorfismo)</div>
+            <div class="cell no">Media</div>
+            <div class="cell no">Media</div>
+            <div class="cell no">Media</div>
+            <div class="cell yes">Alta</div>
+
+            <div class="row-lbl">Facilidad de baseline inicial</div>
+            <div class="cell yes">Alta</div>
+            <div class="cell no">Media</div>
+            <div class="cell no">Media</div>
+            <div class="cell no">Baja</div>
+        </div>
+
+        <h3>Message Passing en contexto bancario</h3>
+        <div class="info-box">
+            <h4>¿Cómo "aprende" la GNN que una cuenta es sospechosa?</h4>
+            <p>A través del mecanismo de <strong>message passing</strong>:</p>
+            <ol>
+                <li><strong>AGGREGATE:</strong> La cuenta <em>X</em> recolecta los embeddings de todas sus cuentas vecinas (co-titulares, contrapartes de SPEI, empresas relacionadas).</li>
+                <li><strong>TRANSFORM:</strong> Aplica una transformación lineal aprendida (peso W) al vector agregado para comprimir la información del vecindario.</li>
+                <li><strong>UPDATE:</strong> Combina la información propia de <em>X</em> con la del vecindario para generar un nuevo embedding más rico.</li>
+            </ol>
+            <p>Después de <em>k</em> capas, el embedding de <em>X</em> captura el contexto de sus vecinos a <em>k</em> saltos. En redes de lavado de combustible, <em>k=2 o 3</em> capas suelen ser suficientes para conectar una mula financiera con la red principal.</p>
+        </div>
+
+        <div class="flow-diagram">
+            <div class="flow-step">Capa 0: Features crudos de la cuenta (monto promedio, % efectivo, giro, geo)</div>
+            <div class="flow-arrow">↓ Message Passing (capa 1)</div>
+            <div class="flow-step green">Capa 1: Embedding enriquecido con info de cuentas vecinas directas</div>
+            <div class="flow-arrow">↓ Message Passing (capa 2)</div>
+            <div class="flow-step orange">Capa 2: Embedding captura vecinos de vecinos (2 saltos = red de distribución)</div>
+            <div class="flow-arrow">↓ Clasificador (MLP)</div>
+            <div class="flow-step pink">Score de riesgo: P(cuenta pertenece a red de huachicoleo)</div>
+        </div>
+
+        <div class="checkpoint" id="cp-arquitectura">
+            <h4>⚙ Checkpoint</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">El oficial de cumplimiento necesita <strong>explicar al regulador</strong> por qué el sistema marcó a la empresa "Distribuidora X" como sospechosa. ¿Qué arquitectura GNN facilita más esta explicación?</p>
+            <div class="cp-option" onclick="checkCP('arquitectura',this,false)">GCN, porque asigna el mismo peso a todos los vecinos y es más fácil de describir</div>
+            <div class="cp-option" onclick="checkCP('arquitectura',this,false)">GIN, porque tiene el mayor poder expresivo matemático</div>
+            <div class="cp-option" onclick="checkCP('arquitectura',this,true)">GAT, porque los pesos de atención α<sub>ij</sub> muestran exactamente qué transacciones o relaciones dispararon la alerta</div>
+            <div class="cp-feedback" id="cpFb-arquitectura"></div>
+        </div>
+    </div>
+
+    <!-- ====================== TIPOLOGIAS ====================== -->
+    <div id="tipologias" class="section">
+        <h2>Tipologías de Lavado del Tráfico de Petróleo — Señales en el Grafo</h2>
+
+        <p>Las tipologías son patrones de comportamiento sospechoso reconocidos. En un grafo financiero, cada tipología se manifiesta como una <strong>subred con forma característica</strong> que la GNN aprende a detectar.</p>
+
+        <div class="typology-card">
+            <h4><span class="typology-num">1</span> Smurfing geolocalizado en zonas de ducto <span class="risk-badge risk-alto">ALTO</span></h4>
+            <p><strong>Patrón en grafo:</strong> Múltiples cuentas de personas físicas (nodos de grado bajo individual) con aristas de depósito en efectivo que convergen hacia una cuenta empresarial central. Las cuentas físicas están geolocalizadas dentro de un radio de 30 km de incidentes de toma clandestina.</p>
+            <p style="margin-top:8px;"><strong>Feature que dispara la GNN:</strong> Clúster de nodos con alta densidad de aristas de efectivo + atributo geográfico de riesgo &gt; umbral.</p>
+            <div class="info-box" style="margin-top:10px;">
+                <strong>Dato de interés:</strong> La GNN puede descubrir este patrón incluso si cada depósito individual está por debajo de $10,000 MXN (umbral de reporte). La señal emerge en la <em>estructura de la red</em>, no en las transacciones individuales.
+            </div>
+        </div>
+
+        <div class="typology-card">
+            <h4><span class="typology-num">2</span> Cadenas de personas morales (layering) <span class="risk-badge risk-alto">ALTO</span></h4>
+            <p><strong>Patrón en grafo:</strong> Secuencia lineal o en árbol de empresas donde los fondos avanzan como SPEI entre Empresa A → B → C → D, con cada empresa con diferente giro SCIAN pero conectadas por los mismos accionistas o domicilio fiscal.</p>
+            <p style="margin-top:8px;"><strong>Feature que dispara la GNN:</strong> Path de longitud ≥ 3 con nodos empresariales compartiendo beneficiario final + volumen transaccional inconsistente con el giro declarado.</p>
+        </div>
+
+        <div class="typology-card">
+            <h4><span class="typology-num">3</span> Gasolineras con ingresos anómalos <span class="risk-badge risk-medio">MEDIO-ALTO</span></h4>
+            <p><strong>Patrón en grafo:</strong> Nodo de gasolinera con permiso CRE activo pero con ingresos depositados significativamente superiores al volumen autorizado por CRE × precio de mercado. Recibe fondos de múltiples personas físicas desconectadas entre sí.</p>
+            <p style="margin-top:8px;"><strong>Feature que dispara la GNN:</strong> Desviación estándar de ingresos mensuales &gt; 3σ respecto a gasolineras con características similares (aprendido por embeddings del capítulo 2).</p>
+        </div>
+
+        <div class="typology-card">
+            <h4><span class="typology-num">4</span> Empresas de transporte con rutas sobre ductos <span class="risk-badge risk-medio">MEDIO-ALTO</span></h4>
+            <p><strong>Patrón en grafo:</strong> Persona moral con giro de transporte de carga que tiene aristas de propiedad hacia vehículos con permisos SCT geolocalizados en corredores de ductos de alto riesgo. Opera mayormente en efectivo o con transferencias a destinatarios en listas 69-B.</p>
+            <p style="margin-top:8px;"><strong>Feature que dispara la GNN:</strong> Nodo empresa con vecinos en lista sancionados + aristas geográficas de alta cobertura de ductos.</p>
+        </div>
+
+        <div class="typology-card">
+            <h4><span class="typology-num">5</span> Inversión en bienes raíces (integración) <span class="risk-badge risk-medio">MEDIO</span></h4>
+            <p><strong>Patrón en grafo:</strong> Flujos de capital desde nodos de alta densidad transaccional hacia empresas desarrolladoras o notarías. Seguido de creación de nuevas empresas inmobiliarias con los mismos accionistas. Ciclo de préstamos cruzados entre las nuevas entidades.</p>
+            <p style="margin-top:8px;"><strong>Feature que dispara la GNN:</strong> Cambio brusco de tipo de aristas (de operativas a patrimoniales) + aparición de nodos con giro inmobiliario en el vecindario a 2 saltos.</p>
+        </div>
+
+        <div class="typology-card">
+            <h4><span class="typology-num">6</span> Uso de criptomonedas como puente (emerging) <span class="risk-badge risk-medio">EMERGENTE</span></h4>
+            <p><strong>Patrón en grafo:</strong> Cuentas que depositan efectivo y al poco tiempo registran retiros hacia exchanges de cripto. Las contrapartes cripto eventualmente reconvierten a FIAT en otras cuentas del mismo grafo. Ciclo difícil de rastrear con sistemas legacy.</p>
+            <p style="margin-top:8px;"><strong>Feature que dispara la GNN:</strong> Aristas bank→exchange→bank con tiempo de ciclo corto + coincidencia en montos (minus fees) sugiriendo misma liquidez.</p>
+        </div>
+
+        <div class="checkpoint" id="cp-tipologias">
+            <h4>⚙ Checkpoint</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">La tipología de <strong>smurfing geolocalizado</strong> es especialmente difícil de detectar con reglas tradicionales porque:</p>
+            <div class="cp-option" onclick="checkCP('tipologias',this,false)">Los montos individuales son tan grandes que saturan los sistemas</div>
+            <div class="cp-option" onclick="checkCP('tipologias',this,true)">La señal de alerta no está en una transacción individual, sino en la estructura de la red de cuentas y su relación geográfica con zonas de riesgo</div>
+            <div class="cp-option" onclick="checkCP('tipologias',this,false)">Porque solo ocurre en zonas sin cobertura bancaria formal</div>
+            <div class="cp-feedback" id="cpFb-tipologias"></div>
+        </div>
+    </div>
+
+    <!-- ====================== IMPLEMENTACION ====================== -->
+    <div id="implementacion" class="section">
+        <h2>Implementación Bancaria: De los Datos al Modelo en Producción</h2>
+
+        <p>Llevar una GNN desde un notebook a un sistema de monitoreo transaccional de un banco requiere considerar aspectos técnicos, regulatorios y operativos.</p>
+
+        <h3>Fases de implementación</h3>
+
+        <div class="impl-step">
+            <div class="impl-num">1</div>
+            <div class="impl-body">
+                <h4>Construcción del grafo transaccional</h4>
+                <p>Extraer de los sistemas core (CBS, AML engine, KYC) todos los nodos y aristas relevantes. Unificar con fuentes externas (CRE, SAT 69-B, OFAC). Cargar en un grafo distribuido (Neo4j, Amazon Neptune, o DGL/PyG sobre Spark).</p>
+            </div>
+        </div>
+
+        <div class="impl-step">
+            <div class="impl-num">2</div>
+            <div class="impl-body">
+                <h4>Feature engineering del grafo</h4>
+                <p>Calcular features por nodo (grado, betweenness, ratio efectivo/total) y por arista (monto, frecuencia, canal). Normalizar y manejar nulos propios de datos financieros reales. Aplicar técnicas de balanceo (el grafo es altamente desequilibrado: &lt;1% nodos son ilícitos).</p>
+            </div>
+        </div>
+
+        <div class="impl-step">
+            <div class="impl-num">3</div>
+            <div class="impl-body">
+                <h4>Generación de embeddings (Capítulo 2 del curso)</h4>
+                <p>Usar Node2Vec para un embedding inicial (transductivo, sin features). Luego, una GCN/GAT para embeddings supervisados. El embedding final es una representación vectorial de cada cuenta que captura su posición en la red financiera.</p>
+            </div>
+        </div>
+
+        <div class="impl-step">
+            <div class="impl-num">4</div>
+            <div class="impl-body">
+                <h4>Entrenamiento supervisado y semi-supervisado</h4>
+                <p>Usar los casos de AML cerrados (SARs confirmados) como etiquetas positivas. Con semi-supervised learning (Capítulo 2), el modelo puede aprender incluso con pocas etiquetas. Métricas clave: Precision, Recall, AUC-ROC, y especialmente <strong>False Positive Rate</strong> (FPR) para no bloquear clientes legítimos.</p>
+            </div>
+        </div>
+
+        <div class="impl-step">
+            <div class="impl-num">5</div>
+            <div class="impl-body">
+                <h4>Scoring en tiempo real con GraphSAGE</h4>
+                <p>Desplegar el modelo GraphSAGE entrenado en un servicio de inferencia. Con cada nueva transacción, agregar el nodo al grafo y ejecutar inference sin re-entrenamiento completo. Generar un score de riesgo 0-1 por cuenta que se incorpora al semáforo del motor AML existente.</p>
+            </div>
+        </div>
+
+        <div class="impl-step">
+            <div class="impl-num">6</div>
+            <div class="impl-body">
+                <h4>Explicabilidad para el oficial de cumplimiento</h4>
+                <p>Los pesos de atención de GAT permiten visualizar cuáles transacciones o contrapartes dispararon la alerta. Generar un "mapa de red" con las k conexiones más relevantes. Esto es indispensable para la narrativa del SAR (Reporte de Actividad Sospechosa) y la documentación regulatoria (CNBV, GAFI).</p>
+            </div>
+        </div>
+
+        <div class="impl-step">
+            <div class="impl-num">7</div>
+            <div class="impl-body">
+                <h4>Monitoreo y reentrenamiento continuo</h4>
+                <p>Las redes de lavado evolucionan para evadir los modelos. Implementar un pipeline de reentrenamiento periódico (mensual o trimestral) con los nuevos casos cerrados. Monitorear el data drift: si los embeddings del grafo cambian significativamente, es señal de adaptación criminal.</p>
+            </div>
+        </div>
+
+        <h3>Stack tecnológico recomendado</h3>
+        <div class="arch-row">
+            <div class="arch-card" style="border-top: 3px solid #4C8BF5;">
+                <span class="arch-tag" style="color:#4C8BF5;">GRAFO / ALMACENAMIENTO</span>
+                <h4 style="color:#fff; font-size:1em;">Neo4j · Amazon Neptune · DGL</h4>
+                <p>Base de datos de grafos para almacenar y consultar la red financiera. Escalan a billones de relaciones.</p>
+            </div>
+            <div class="arch-card" style="border-top: 3px solid #03EF62;">
+                <span class="arch-tag" style="color:#03EF62;">MODELADO GNN</span>
+                <h4 style="color:#fff; font-size:1em;">PyTorch Geometric · DGL · Spektral</h4>
+                <p>Frameworks del libro. PyG es el estándar del curso. DGL escala mejor en entornos distribuidos Spark.</p>
+            </div>
+            <div class="arch-card" style="border-top: 3px solid #A855F7;">
+                <span class="arch-tag" style="color:#A855F7;">ORQUESTACIÓN</span>
+                <h4 style="color:#fff; font-size:1em;">Apache Airflow · MLflow · Kubeflow</h4>
+                <p>Pipelines de re-entrenamiento, versionado de modelos y trazabilidad de experimentos.</p>
+            </div>
+            <div class="arch-card" style="border-top: 3px solid #FF9F43;">
+                <span class="arch-tag" style="color:#FF9F43;">INFERENCIA EN PROD</span>
+                <h4 style="color:#fff; font-size:1em;">FastAPI · TorchServe · Kafka</h4>
+                <p>Servicio REST de scoring en tiempo real. Kafka para ingesta de eventos transaccionales en streaming.</p>
+            </div>
+        </div>
+
+        <h3>Consideraciones regulatorias (México)</h3>
+        <div class="danger-box">
+            <ul>
+                <li><strong>CNBV (Circular única de bancos):</strong> El banco debe documentar la metodología de riesgo; el uso de IA/ML debe ser explicable y auditado.</li>
+                <li><strong>GAFI Recomendación 10:</strong> Debida diligencia reforzada para clientes en sectores de alto riesgo (distribución de combustible, transporte de carga en zonas de ductos).</li>
+                <li><strong>Ley Federal de Prevención e Identificación de Operaciones con Recursos de Procedencia Ilícita (LFPIORPI):</strong> Los patrones detectados por la GNN que superen umbrales de riesgo deben reportarse como Operaciones Inusuales (OI) o SARs ante la UIF.</li>
+                <li><strong>Protección de datos (LGPDPPSO):</strong> Los embeddings de personas físicas deben tratarse como datos personales sensibles; requieren anonimización o pseudonimización.</li>
+            </ul>
+        </div>
+
+        <div class="checkpoint" id="cp-implementacion">
+            <h4>⚙ Checkpoint</h4>
+            <p class="cp-subtitle">Responde correctamente para continuar</p>
+            <p style="color:var(--dc-white); margin-bottom:12px;">¿Por qué es crítico mantener una <strong>tasa de falsos positivos baja</strong> (FPR) en el modelo GNN de un banco?</p>
+            <div class="cp-option" onclick="checkCP('implementacion',this,false)">Porque los modelos con alta FPR consumen más memoria GPU durante el entrenamiento</div>
+            <div class="cp-option" onclick="checkCP('implementacion',this,false)">Porque el regulador CNBV penaliza directamente el número de alertas generadas</div>
+            <div class="cp-option" onclick="checkCP('implementacion',this,true)">Porque un FPR alto bloquea o investiga a clientes legítimos, dañando la experiencia y generando carga operativa innecesaria para los analistas de AML</div>
+            <div class="cp-feedback" id="cpFb-implementacion"></div>
+        </div>
+    </div>
+
+    <!-- ====================== QUIZ ====================== -->
+    <div id="quiz1" class="section">
+        <h2>Quiz de Conocimientos</h2>
+        <p>Pon a prueba tu comprensión. Necesitas <strong>8 de 10 correctas</strong> para completar esta sección.</p>
+
+        <div id="quiz1ScoreBox" style="display:none;" class="score-display">Respuestas correctas: <span id="quiz1Correct">0</span> / 10</div>
+
+        <!-- Q1 -->
+        <div class="quiz-question">
+            <h4>1. ¿Cuál es la ventaja fundamental de modelar transacciones bancarias como un grafo para detectar huachicoleo?</h4>
+            <div class="option" onclick="answerQ(this,1,true)" data-q="q1">Permite capturar relaciones entre entidades que no son visibles en datos tabulares individuales</div>
+            <div class="option" onclick="answerQ(this,1,false)" data-q="q1">Reduce el tiempo de procesamiento de transacciones en el core bancario</div>
+            <div class="option" onclick="answerQ(this,1,false)" data-q="q1">Elimina la necesidad de reglas de negocio para AML</div>
+            <div class="feedback" id="fb-q1"></div>
+        </div>
+
+        <!-- Q2 -->
+        <div class="quiz-question">
+            <h4>2. En el grafo del huachicoleo, ¿qué representan las <em>aristas</em>?</h4>
+            <div class="option" onclick="answerQ(this,2,false)" data-q="q2">Los montos de las transacciones individuales como valores escalares</div>
+            <div class="option" onclick="answerQ(this,2,true)" data-q="q2">Las relaciones entre entidades: transacciones, propiedad/control, co-ubicación geográfica</div>
+            <div class="option" onclick="answerQ(this,2,false)" data-q="q2">Los modelos de riesgo asignados por el analista</div>
+            <div class="feedback" id="fb-q2"></div>
+        </div>
+
+        <!-- Q3 -->
+        <div class="quiz-question">
+            <h4>3. ¿Qué característica de GraphSAGE lo hace especialmente útil para scoring en tiempo real en un banco?</h4>
+            <div class="option" onclick="answerQ(this,3,false)" data-q="q3">Usa atención multi-cabeza para priorizar las transacciones más relevantes</div>
+            <div class="option" onclick="answerQ(this,3,false)" data-q="q3">Es el modelo con mayor poder expresivo (equivalente al test Weisfeiler-Lehman)</div>
+            <div class="option" onclick="answerQ(this,3,true)" data-q="q3">Es <em>inductivo</em>: generaliza a nodos nuevos sin necesidad de re-entrenar el modelo completo</div>
+            <div class="feedback" id="fb-q3"></div>
+        </div>
+
+        <!-- Q4 -->
+        <div class="quiz-question">
+            <h4>4. ¿Qué tipo de grafo requiere el uso de arquitecturas como R-GCN (Relational GCN)?</h4>
+            <div class="option" onclick="answerQ(this,4,false)" data-q="q4">Grafo estático con nodos de un solo tipo</div>
+            <div class="option" onclick="answerQ(this,4,true)" data-q="q4">Grafo heterogéneo con múltiples tipos de nodos y aristas</div>
+            <div class="option" onclick="answerQ(this,4,false)" data-q="q4">Grafo acíclico dirigido (DAG) de aprobaciones</div>
+            <div class="feedback" id="fb-q4"></div>
+        </div>
+
+        <!-- Q5 -->
+        <div class="quiz-question">
+            <h4>5. El mecanismo de <em>message passing</em> en una GNN con k=2 capas captura información de:</h4>
+            <div class="option" onclick="answerQ(this,5,false)" data-q="q5">Solo los atributos del propio nodo, sin considerar vecinos</div>
+            <div class="option" onclick="answerQ(this,5,false)" data-q="q5">Únicamente los vecinos directos (1 salto)</div>
+            <div class="option" onclick="answerQ(this,5,true)" data-q="q5">Los vecinos a 2 saltos de distancia (vecinos de vecinos)</div>
+            <div class="feedback" id="fb-q5"></div>
+        </div>
+
+        <!-- Q6 -->
+        <div class="quiz-question">
+            <h4>6. ¿Cuál de los siguientes estados de México tiene el MAYOR riesgo de huachicoleo según el módulo?</h4>
+            <div class="option" onclick="answerQ(this,6,false)" data-q="q6">Jalisco — por sus redes de distribución de combustible</div>
+            <div class="option" onclick="answerQ(this,6,true)" data-q="q6">Hidalgo / Puebla / Guanajuato — corredor del ducto Tuxpan-Salamanca</div>
+            <div class="option" onclick="answerQ(this,6,false)" data-q="q6">Ciudad de México — por el volumen de transacciones financieras</div>
+            <div class="feedback" id="fb-q6"></div>
+        </div>
+
+        <!-- Q7 -->
+        <div class="quiz-question">
+            <h4>7. ¿Por qué los pesos de atención α<sub>ij</sub> de GAT son útiles para los oficiales de cumplimiento?</h4>
+            <div class="option" onclick="answerQ(this,7,true)" data-q="q7">Permiten mostrar exactamente qué transacciones o relaciones dispararon la alerta, facilitando la narrativa del SAR</div>
+            <div class="option" onclick="answerQ(this,7,false)" data-q="q7">Reducen automáticamente el número de falsos positivos al 0%</div>
+            <div class="option" onclick="answerQ(this,7,false)" data-q="q7">Hacen que el modelo sea más rápido que GCN en todos los escenarios</div>
+            <div class="feedback" id="fb-q7"></div>
+        </div>
+
+        <!-- Q8 -->
+        <div class="quiz-question">
+            <h4>8. En la tipología de <em>smurfing geolocalizado</em>, ¿qué combina la GNN para generar la alerta?</h4>
+            <div class="option" onclick="answerQ(this,8,false)" data-q="q8">El monto individual de cada transacción por encima del umbral de $10,000 MXN</div>
+            <div class="option" onclick="answerQ(this,8,true)" data-q="q8">La estructura de la red de cuentas (clúster convergente) combinada con el atributo geográfico de riesgo</div>
+            <div class="option" onclick="answerQ(this,8,false)" data-q="q8">El nombre de la empresa beneficiaria si aparece en listas OFAC</div>
+            <div class="feedback" id="fb-q8"></div>
+        </div>
+
+        <!-- Q9 -->
+        <div class="quiz-question">
+            <h4>9. ¿Qué ley mexicana obliga al banco a reportar las operaciones inusuales detectadas por el modelo a la UIF?</h4>
+            <div class="option" onclick="answerQ(this,9,false)" data-q="q9">La Ley del Mercado de Valores (LMV)</div>
+            <div class="option" onclick="answerQ(this,9,true)" data-q="q9">La LFPIORPI (Ley Federal de Prevención e Identificación de Operaciones con Recursos de Procedencia Ilícita)</div>
+            <div class="option" onclick="answerQ(this,9,false)" data-q="q9">La Ley de Transparencia y Acceso a la Información Pública</div>
+            <div class="feedback" id="fb-q9"></div>
+        </div>
+
+        <!-- Q10 -->
+        <div class="quiz-question">
+            <h4>10. En el contexto del huachicoleo, ¿qué etapa del lavado de dinero corresponde a la <em>inversión en bienes raíces</em>?</h4>
+            <div class="option" onclick="answerQ(this,10,false)" data-q="q10">Colocación — primera etapa, ingreso del efectivo al sistema</div>
+            <div class="option" onclick="answerQ(this,10,false)" data-q="q10">Estratificación — movimiento entre múltiples capas de empresas</div>
+            <div class="option" onclick="answerQ(this,10,true)" data-q="q10">Integración — última etapa, el dinero se mezcla con la economía legal</div>
+            <div class="feedback" id="fb-q10"></div>
+        </div>
+
+        <div id="quiz1UnlockMsg" style="display:none; padding:16px; border-radius:8px; margin-top:16px; font-weight:600;"></div>
+        <div class="checkpoint" id="cp-quiz1" style="display:none;"></div>
+    </div>
+
+    <!-- ====================== FLASHCARDS ====================== -->
+    <div id="flashcards" class="section">
+        <h2>Flashcards — Términos Clave</h2>
+        <p>Haz clic en cada tarjeta para ver la definición. Cuando domines todas, marca la sección como completada.</p>
+
+        <div class="flashcards-grid" id="flashcardsGrid"></div>
+
+        <div style="text-align:center; margin-top:28px;">
+            <button class="btn btn-primary" onclick="completeSection('flashcards')">✓ He repasado todas las tarjetas — Continuar</button>
+        </div>
+    </div>
+
+    <!-- ====================== RESUMEN ====================== -->
+    <div id="resumen" class="section">
+        <h2>Resumen del Módulo</h2>
+
+        <div class="success-box">
+            <h4>🎓 Lo que aprendiste en este módulo</h4>
+            <ol>
+                <li>El <strong>huachicoleo</strong> genera miles de millones en flujos financieros ilícitos que transitan por el sistema bancario mexicano en tres etapas: colocación, estratificación e integración.</li>
+                <li>Los métodos clásicos de AML (reglas + umbrales) fallan porque las señales están en <strong>la topología de la red</strong>, no en transacciones individuales.</li>
+                <li>Al modelar cuentas, empresas y relaciones como un <strong>grafo heterogéneo</strong>, las GNNs pueden capturar esos patrones mediante message passing.</li>
+                <li><strong>GCN</strong> es el baseline más simple; <strong>GAT</strong> ofrece interpretabilidad; <strong>GraphSAGE</strong> escala y permite scoring en tiempo real de nodos nuevos; <strong>GIN</strong> detecta patrones estructurales.</li>
+                <li>Las <strong>6 tipologías</strong> clave (smurfing geolocalizado, layering de empresas, gasolineras anómalas, transportes sobre ductos, bienes raíces e integración cripto) tienen formas características en el grafo que la GNN aprende a reconocer.</li>
+                <li>La implementación bancaria requiere considerar: construcción del grafo, feature engineering, semi-supervised learning, scoring en tiempo real y <strong>explicabilidad regulatoria</strong> (CNBV, LFPIORPI, GAFI).</li>
+            </ol>
+        </div>
+
+        <h3>Mapa conceptual de conexiones</h3>
+        <div class="flow-diagram">
+            <div class="flow-step blue">Ecosistema Huachicoleo → Flujos financieros ilícitos → Sistema bancario</div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-step">Datos bancarios + KYC + CRE + SAT 69-B + Geodatos</div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-step green">Grafo Heterogéneo: nodos (cuentas, empresas, personas, zonas) + aristas (tx, propiedad, geo)</div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-step orange">GNN (GCN/GAT/GraphSAGE/GIN) → Embeddings → Clasificador → Score de riesgo</div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-step pink">Alertas explicables → Oficial de cumplimiento → SAR a UIF → Investigación</div>
+        </div>
+
+        <h3>Conexión con el curso GNNs in Action</h3>
+        <div class="info-box">
+            <table style="width:100%;">
+                <tr>
+                    <th>Capítulo del libro</th>
+                    <th>Concepto aplicado en este módulo</th>
+                </tr>
+                <tr><td>Cap. 1: Discovering GNNs</td><td>Justificación de por qué usar GNNs vs. métodos tabulares para AML de petróleo</td></tr>
+                <tr><td>Cap. 2: Graph Embeddings (Node2Vec, GCN)</td><td>Generación de embeddings de cuentas y empresas para detección de comunidades</td></tr>
+                <tr><td>Cap. 3: GraphSAGE</td><td>Scoring inductivo en tiempo real de nuevas cuentas y entidades KYC</td></tr>
+                <tr><td>Cap. 4: GAT</td><td>Explicabilidad mediante pesos de atención α<sub>ij</sub> para narrativas de SAR</td></tr>
+                <tr><td>Cap. 5: GIN</td><td>Detección de patrones estructurales (rueda, embudo) en redes de layering</td></tr>
+            </table>
+        </div>
+
+        <div style="text-align:center; margin-top:32px;">
+            <button class="btn btn-primary" onclick="completeSection('resumen')">🏁 Módulo Completado</button>
+            <button class="btn btn-secondary" style="margin-left:12px;" onclick="resetAllProgress()">🔄 Reiniciar Progreso</button>
+        </div>
+    </div>
+
+</div><!-- /container -->
+
+<script src="../js/app.js"></script>
+<script>
+// ======================== MODULE CONFIG ========================
+sectionOrder = ['intro','contexto','grafo','arquitectura','tipologias','implementacion','quiz1','flashcards','resumen'];
+unlocked = { intro: true };
+completed = {};
+scores = { 1: 0 };
+answered = { 1: 0 };
+totals = { 1: 10 };
+
+// ======================== GRAPH CANVAS ========================
+window.addEventListener('load', function() {
+    loadProgress();
+    updateNavState();
+    updateGlobalProgress();
+    drawNetworkGraph();
+    initFlashcardsData();
+});
+
+function drawNetworkGraph() {
+    var canvas = document.getElementById('graphCanvas');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    var nodes = [
+        // Cuentas bancarias (azul)
+        { id:0, x:120, y:80,  r:14, color:'#4C8BF5', label:'Cta. Física 1',  type:'cuenta' },
+        { id:1, x:80,  y:200, r:14, color:'#4C8BF5', label:'Cta. Física 2',  type:'cuenta' },
+        { id:2, x:160, y:280, r:14, color:'#4C8BF5', label:'Cta. Física 3',  type:'cuenta' },
+        { id:3, x:310, y:160, r:20, color:'#FF6B6B', label:'Cta. Empresa A', type:'alerta' },
+        { id:4, x:470, y:100, r:16, color:'#A855F7', label:'Holding SA',     type:'empresa' },
+        { id:5, x:500, y:240, r:16, color:'#A855F7', label:'Distrib. SA',    type:'empresa' },
+        { id:6, x:380, y:300, r:14, color:'#FF9F43', label:'Gasolinera',     type:'gas' },
+        { id:7, x:600, y:170, r:16, color:'#A855F7', label:'Inmobiliaria',   type:'empresa' },
+        { id:8, x:200, y:170, r:12, color:'#03EF62', label:'Accionista X',   type:'persona' },
+        { id:9, x:640, y:290, r:12, color:'#03EF62', label:'Benef. Final',   type:'persona' },
+        { id:10,x:310, y:50,  r:12, color:'#4C8BF5', label:'Cta. Física 4', type:'cuenta' },
+    ];
+
+    var edges = [
+        {s:0,t:3,w:2,dash:false},
+        {s:1,t:3,w:2,dash:false},
+        {s:2,t:3,w:2,dash:false},
+        {s:10,t:3,w:2,dash:false},
+        {s:3,t:4,w:3,dash:false},
+        {s:3,t:5,w:2,dash:false},
+        {s:4,t:7,w:2,dash:false},
+        {s:5,t:6,w:2,dash:false},
+        {s:8,t:4,w:1,dash:true},
+        {s:8,t:3,w:1,dash:true},
+        {s:9,t:7,w:1,dash:true},
+        {s:9,t:5,w:1,dash:true},
+        {s:6,t:3,w:1.5,dash:false},
+    ];
+
+    // Draw edges
+    edges.forEach(function(e) {
+        var s = nodes[e.s], t = nodes[e.t];
+        ctx.beginPath();
+        ctx.strokeStyle = e.dash ? 'rgba(160,160,160,0.5)' : 'rgba(100,130,180,0.7)';
+        ctx.lineWidth = e.w;
+        if (e.dash) ctx.setLineDash([5,4]); else ctx.setLineDash([]);
+        ctx.moveTo(s.x, s.y);
+        ctx.lineTo(t.x, t.y);
+        ctx.stroke();
+    });
+    ctx.setLineDash([]);
+
+    // Draw nodes
+    nodes.forEach(function(n) {
+        // glow for alert node
+        if (n.type === 'alerta') {
+            ctx.beginPath();
+            ctx.arc(n.x, n.y, n.r + 8, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,107,107,0.18)';
+            ctx.fill();
+        }
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+        ctx.fillStyle = n.color;
+        ctx.shadowColor = n.color;
+        ctx.shadowBlur = 8;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Label
+        ctx.fillStyle = '#1A1A1A';
+        ctx.font = '600 10px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(n.label, n.x, n.y + n.r + 12);
+    });
+
+    // Risk label on alert node
+    ctx.fillStyle = '#FF6B6B';
+    ctx.font = 'bold 9px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('⚠ ALERTA GNN', nodes[3].x, nodes[3].y - nodes[3].r - 6);
+}
+
+// ======================== QUIZ LOGIC (module-specific) ========================
+var quizAnswered = {};
+
+function answerQ(el, qNum, correct) {
+    var qId = 'q' + qNum;
+    if (quizAnswered[qId]) return;
+    quizAnswered[qId] = true;
+
+    var fb = document.getElementById('fb-' + qId);
+    var allOpts = el.parentElement.querySelectorAll('.option');
+    allOpts.forEach(function(o) { o.style.pointerEvents = 'none'; });
+
+    if (correct) {
+        el.classList.add('correct');
+        fb.className = 'feedback show correct-fb';
+        fb.textContent = '✅ Correcto.';
+        scores[1]++;
+    } else {
+        el.classList.add('incorrect');
+        fb.className = 'feedback show incorrect-fb';
+        fb.textContent = '❌ Incorrecto. Revisa la sección correspondiente.';
+        // Mark the correct option
+        allOpts.forEach(function(o) {
+            if (o.getAttribute('data-q') === qId && o !== el) {
+                // highlight correct is done by just moving on
+            }
+        });
+    }
+
+    answered[1]++;
+    var sb = document.getElementById('quiz1ScoreBox');
+    sb.style.display = 'block';
+    document.getElementById('quiz1Correct').textContent = scores[1];
+
+    if (answered[1] >= totals[1]) {
+        var msgEl = document.getElementById('quiz1UnlockMsg');
+        msgEl.style.display = 'block';
+        var required = 8;
+        if (scores[1] >= required) {
+            msgEl.style.cssText = 'display:block; padding:16px; border-radius:8px; margin-top:16px; font-weight:600; background:rgba(5,150,105,0.15); border-left:4px solid #059669; color:#6EE7B7;';
+            msgEl.textContent = '🎉 Aprobado con ' + scores[1] + '/10. ¡Siguiente sección desbloqueada!';
+            completed['quiz1'] = true;
+            unlockNext('quiz1');
+            saveProgress();
+            updateNavState();
+            updateGlobalProgress();
+        } else {
+            msgEl.style.cssText = 'display:block; padding:16px; border-radius:8px; margin-top:16px; font-weight:600; background:rgba(255,107,107,0.15); border-left:4px solid #FF6B6B; color:#FCA5A5;';
+            msgEl.textContent = '😕 Obtuviste ' + scores[1] + '/10. Necesitas al menos ' + required + '. Recarga la página para reintentar.';
+        }
+    }
+}
+
+// ======================== FLASHCARDS ========================
+var flashcardsData = [];
+
+function initFlashcardsData() {
+    flashcardsData = [
+        { term:'Huachicoleo', def:'Término mexicano para el robo sistemático de combustibles de la infraestructura de PEMEX (ductos, refinerías, terminales). Ha evolucionado a crimen organizado transnacional.' },
+        { term:'Smurfing / Estructuración', def:'Técnica de lavado que consiste en dividir grandes sumas de efectivo en múltiples depósitos pequeños para evadir umbrales de reporte. En huachicoleo, ocurre cerca de zonas de ductos.' },
+        { term:'Layering (Estratificación)', def:'Segunda etapa del lavado de dinero: mover fondos a través de múltiples capas de empresas, cuentas o instrumentos para ocultar su origen. Genera cadenas de personas morales en el grafo.' },
+        { term:'Message Passing', def:'Mecanismo central de las GNNs: cada nodo agrega los embeddings de sus vecinos, los transforma y actualiza su propio embedding. Permite capturar información de vecinos a k saltos.' },
+        { term:'GCN (Graph Convolutional Network)', def:'Arquitectura GNN que agrega features de vecinos con peso uniforme normalizado por grado. Es el baseline más simple para grafos estáticos. Rápida de entrenar.' },
+        { term:'GAT (Graph Attention Network)', def:'GNN que asigna pesos de atención α_ij aprendidos a cada vecino. Más expresiva que GCN y ofrece interpretabilidad natural para oficiales de cumplimiento.' },
+        { term:'GraphSAGE', def:'GNN inductiva que aprende una función de agregación generalizable. Puede hacer inferencia sobre nodos nunca vistos durante el entrenamiento. Ideal para scoring en tiempo real de nuevas cuentas.' },
+        { term:'GIN (Graph Isomorphism Network)', def:'GNN con el máximo poder expresivo teórico (equivalente al test WL). Óptima para detectar patrones estructurales isomorfos como redes de layering con la misma "forma".' },
+        { term:'Grafo Heterogéneo', def:'Grafo con múltiples tipos de nodos (cuentas, empresas, personas) y múltiples tipos de aristas (transacciones, propiedad, geolocalización). Requiere variantes como R-GCN o HAN.' },
+        { term:'UIF (Unidad de Inteligencia Financiera)', def:'Organismo de la SHCP en México que recibe los reportes de operaciones inusuales (SARs) de los bancos. Analiza patrones de lavado incluyendo tráfico de combustible.' },
+        { term:'SAR (Suspicious Activity Report)', def:'Reporte de Actividad Sospechosa. Documento que el banco envía a la UIF cuando detecta operaciones que no coinciden con el perfil del cliente. Las GNNs ayudan a generar la narrativa.' },
+        { term:'CRE (Comisión Reguladora de Energía)', def:'Organismo regulador mexicano que otorga permisos para la distribución, almacenamiento y comercialización de combustibles. Sus registros son una fuente clave de features para el grafo.' },
+        { term:'Embedding de nodo', def:'Representación vectorial de baja dimensión de un nodo en el grafo, generada por la GNN. Captura la identidad del nodo y su posición en la red. Dos nodos con comportamiento similar tendrán embeddings cercanos.' },
+        { term:'Inductive vs Transductive', def:'Transductivo: el modelo solo puede hacer predicciones sobre nodos vistos en entrenamiento (Node2Vec, GCN). Inductivo: generaliza a nodos nuevos (GraphSAGE). Los bancos necesitan modelos inductivos para producción.' },
+        { term:'LFPIORPI', def:'Ley Federal de Prevención e Identificación de Operaciones con Recursos de Procedencia Ilícita. Marco legal mexicano que obliga a bancos a reportar operaciones inusuales y mantener programas AML.' },
+    ];
+
+    var grid = document.getElementById('flashcardsGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    flashcardsData.forEach(function(fc, i) {
+        var div = document.createElement('div');
+        div.className = 'flashcard-container';
+        div.innerHTML = '<div class="flashcard" id="fc'+i+'" onclick="flipCard('+i+')">' +
+            '<div class="flashcard-front"><span class="fc-label">TÉRMINO</span><div class="fc-term">'+fc.term+'</div><div class="fc-hint">Clic para ver definición</div></div>' +
+            '<div class="flashcard-back"><span class="fc-label" style="color:rgba(255,255,255,0.7);">DEFINICIÓN</span><div class="fc-def">'+fc.def+'</div></div>' +
+            '</div>';
+        grid.appendChild(div);
+    });
+}
+
+function flipCard(i) {
+    document.getElementById('fc'+i).classList.toggle('flipped');
+}
+
+// Re-init flashcards when section is shown
+var origShowSection = showSection;
+showSection = function(id) {
+    origShowSection(id);
+    if (id === 'flashcards') setTimeout(initFlashcardsData, 100);
+    if (id === 'grafo') setTimeout(drawNetworkGraph, 200);
+};
+
+// Override initFlashcards in app.js to use our data
+window.initFlashcards = initFlashcardsData;
+</script>
+</body>
+</html>
